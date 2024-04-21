@@ -30,6 +30,39 @@ def send_message():
     # Send message to chatbot and get response
     pass
 
+@app.route('/upload_video', methods=['POST'])
+
+def upload_video():
+  # Get the uploaded video file
+  uploaded_video = request.files['file']
+
+  # Check if a file was uploaded
+  if uploaded_video.filename == '':
+    return jsonify({'error': 'No video file uploaded'}), 400
+
+  # Validate file type (optional)
+  # You can add logic to check if the uploaded file is a valid video format
+
+  # Generate a unique filename (optional)
+  # This helps prevent filename conflicts
+  filename = secure_filename(uploaded_video.filename)
+
+  # Create a Cloud Storage client
+  storage_client = storage.Client()
+
+  # Define the bucket name
+  bucket_name = 'lia_videos' 
+
+  # Create a blob object referring to the video file in the bucket
+  bucket = storage_client.bucket(bucket_name)
+  blob = bucket.blob(f'videos/{filename}')
+
+  # Upload the video file to the blob
+  blob.upload_from_string(uploaded_video.read(), content_type=uploaded_video.content_type)
+
+  # Return a success message
+  return jsonify({'message': 'Video uploaded successfully'})
+    
 @app.route('/get-signed-url', methods=['GET'])
 def get_signed_url():
     storage_client = storage.Client()
