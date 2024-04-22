@@ -49,18 +49,18 @@ function Chatbot() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       videoRef.current.srcObject = stream;
       const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = (e) => {
+      recorder.ondataavailable = async (e) => {
         const blob = new Blob([e.data], { type: 'video/webm' });
-        uploadToGCP(blob);
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+        await axios.post('http://localhost:5000/upload_video', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       };
       setIsRecording(true);
       recorder.start();
-
-      // Save the recorded chunks
-      const recordedChunks = [];
-      recorder.ondataavailable = e => recordedChunks.push(e.data);
-
-
     } catch (err) {
       setError('Cannot access media devices. Make sure to give permission.');
       console.error('Error starting recording:', err);
@@ -114,3 +114,30 @@ function Chatbot() {
 
 export default Chatbot;
 
+
+
+
+// # Original start recording
+  // // Function to start recording
+  // const startRecording = async () => {
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  //     videoRef.current.srcObject = stream;
+  //     const recorder = new MediaRecorder(stream);
+  //     recorder.ondataavailable = (e) => {
+  //       const blob = new Blob([e.data], { type: 'video/webm' });
+  //       uploadToGCP(blob);
+  //     };
+  //     setIsRecording(true);
+  //     recorder.start();
+
+  //     // Save the recorded chunks
+  //     const recordedChunks = [];
+  //     recorder.ondataavailable = e => recordedChunks.push(e.data);
+
+
+  //   } catch (err) {
+  //     setError('Cannot access media devices. Make sure to give permission.');
+  //     console.error('Error starting recording:', err);
+  //   }
+  // };
