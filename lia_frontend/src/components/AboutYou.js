@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// Define variables for URLs
+
 function AboutYou() {
   const [resume, setResume] = useState(null);
   const [profile, setProfile] = useState({
@@ -26,7 +28,8 @@ function AboutYou() {
     formData.append('file', resume);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/upload_resume', formData, {
+      const response = await axios.post('https://backend-4e4b4qv3cq-uc.a.run.app/upload_resume', formData, {
+        withCredentials: true,
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -46,7 +49,7 @@ function AboutYou() {
       <button onClick={() => document.querySelector('input[type=file]').click()}>
         Upload Resume
       </button>
-      <button onClick={handleSubmit}>Submit About You</button>
+      
 
       <input 
         type="text" 
@@ -76,6 +79,7 @@ function AboutYou() {
         value={profile.companyWebsite}
         onChange={handleInputChange}
       />
+      <button onClick={handleSubmit}>Submit About You</button>
     </div>
   );
 }
