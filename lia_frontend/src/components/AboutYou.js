@@ -24,13 +24,16 @@ function AboutYou() {
     event.preventDefault();
     const formData = new FormData();
     formData.append('file', resume);
+
     try {
-      await axios.post('/upload_resume', formData);
-      await axios.post('/submit_about', profile);
-      // Handle success, clear form, etc.
+      const response = await axios.post('http://127.0.0.1:5000/upload_resume', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log(response.data);
     } catch (error) {
-      console.error('Error submitting form', error);
-      // Handle errors
+      console.error('Error uploading resume', error);
     }
   };
   
@@ -39,8 +42,11 @@ function AboutYou() {
     <div className="AboutYou">
       <h1>Welcome to LIA - Large Interview Advisor</h1>
       <input type="file" onChange={handleResumeUpload} />
-      <button onClick={() => document.querySelector('input[type=file]').click()}>Submit Resume</button>
-      <button onClick={handleSubmit}>Assess Resume</button>
+      <input type="file" onChange={handleResumeUpload} style={{ display: 'none' }} />
+      <button onClick={() => document.querySelector('input[type=file]').click()}>
+        Upload Resume
+      </button>
+      <button onClick={handleSubmit}>Submit About You</button>
 
       <input 
         type="text" 
