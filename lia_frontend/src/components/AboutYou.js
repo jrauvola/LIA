@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 // Define variables for URLs
+const GOOGLE_URL = 'https://backend-4e4b4qv3cq-uc.a.run.app';
+const LOCAL_URL = 'http://0.0.0.0:80/';
+
+// if in development, use the local URL, otherwise use the Google Cloud Run URL
+const API_URL = process.env.NODE_ENV === 'development' ? LOCAL_URL : GOOGLE_URL;
+
+const UPLOAD_RESUME_URL = `${API_URL}/upload_resume`;
 
 function AboutYou() {
   const [resume, setResume] = useState(null);
@@ -28,7 +35,7 @@ function AboutYou() {
     formData.append('file', resume);
 
     try {
-      const response = await axios.post('https://backend-4e4b4qv3cq-uc.a.run.app/upload_resume', formData, {
+      const response = await axios.post(UPLOAD_RESUME_URL, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'multipart/form-data'
