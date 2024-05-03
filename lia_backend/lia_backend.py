@@ -19,13 +19,16 @@ from langchain.chains import RetrievalQA
 
 
 class interview_class:
-    def __init__(self, personal_profile):
+    def __init__(self, personal_profile, experience, industry, role):
         self.interview_dict = {
             0:  {"question": "Hi I'm Lia! Let's get started. Tell me a little about yourself!",
                  "answer": "",
                  "response": "Okay. Let's jump into the interview."}
         }
-        self.personal_profile = personal_profile
+        self.personal_profile = {"personal_profile": personal_profile,
+                                 "experience": experience, 
+                                 "industry": industry, 
+                                 "role": role}
         self.evaluator = {}
         
     def add_answer(self, new_answer) -> dict:
@@ -218,9 +221,9 @@ def remove_text_before_state(text):
         return text
 
 
-def create_interview_class(lemmatized_words):
+def create_interview_class(lemmatized_words, experience, industry, role):
     # Create a new instance of the Interview class
-    interview = interview_class(lemmatized_words)
+    interview = interview_class(lemmatized_words, experience, industry, role)
 
     print(interview)
     
@@ -229,29 +232,39 @@ def create_interview_class(lemmatized_words):
 @app.route('/upload_resume', methods=['POST'])
 def upload_resume():
     # Get the uploaded file
+    print("In Upload Resume")
     uploaded_file = request.files.get('file')
+
+    experience = request.form.get('experience')
+    print("Experience: ", experience)
+    industry = request.form.get('industry')
+    print("Industry: ", industry)
+    role = request.form.get('role')
+    print("Role: ", role)
 
     clean_text = clean_resume_text(uploaded_file)
 
     clean_text = remove_long_numbers(clean_text)
 
-    clean_text = censor_text(clean_text)
+    #clean_text = censor_text(clean_text)
 
     clean_text = remove_text_before_state(clean_text)
 
-    clean_text = process_resume_text(clean_text)
+    #clean_text = process_resume_text(clean_text)
     
     lemmatized_words = process_resume_text(clean_text)
 
-    create_interview_class(lemmatized_words)
+    print(lemmatized_words)
+
+    global interview_class
+
+    interview_class = create_interview_class(lemmatized_words, experience, industry, role)
 
     #store_resume(uploaded_file)
 
     return jsonify({'message': 'File Parsed successfully'})
 
-
 ### ___________________ INTERVIEW PROCESS ___________________ ###
-
 
 def initialize_rag(project_name, bucket_name, prefix):
     loader = GCSDirectoryLoader(
@@ -293,7 +306,7 @@ def retrievalQA(retr_docs_num):
 def generate_resume_questions(interview_class):
     qa_prompt = f"""
                     Context: ```blah blah```
-                    Prompt: ***  You are a recruiter interviewing a candidate for the role in the user personal profile in the industry space {industry}. Here is the resume of the candidate: {lemmatized_words}. Ask the candidate two technical interview questions for the role of {role} on relevant experience in their resume.***
+                    Prompt: ***  You are a recruiter interviewing a candidate for the role in the user personal profile in the industry space {interview_class.personal_profile['experience']}. Here is the resume of the candidate: {interview_class.personal_profile['lemmatized_words']}. Ask the candidate two technical interview questions for the role of {interview_class.personal_profile['role']} on relevant experience in their resume.***
                     Personal Profile: '''{interview_class.personal_profile}'''
                     Interview Conversations: '''{interview_class.interview_dict}'''
                     Answer: """
@@ -333,8 +346,6 @@ def generate_dynamic_questions(interview_class, question_num):
 #     for i in range(response_num):
 #         interview_class.add_response(response["result"])
 #         i += 1
-
-
 
 
 def start_interview(interview):

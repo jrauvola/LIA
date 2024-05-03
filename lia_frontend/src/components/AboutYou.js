@@ -15,7 +15,7 @@ function AboutYou() {
   const [resume, setResume] = useState(null);
   const [profile, setProfile] = useState({
     experience: '',
-    industry: '',
+    industry: 'Finance',
     role: ''
   });
 
