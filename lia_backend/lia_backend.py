@@ -31,28 +31,22 @@ class interview_class:
                                  "role": role}
         self.evaluator = {}
         
-    def add_answer(self, new_answer) -> dict:
-        i = len(self.interview_dict) - 1
-        self.interview_dict[i].update(answer=new_answer) 
+    def add_answer(self, new_answer, question_num) -> dict:
+        i = question_num
+        self.interview_dict[i]["answer"] = new_answer
         return self.interview_dict
         
-    def add_response(self, new_response) -> dict:
-        i = len(self.interview_dict) - 1 
-        self.interview_dict[i].update(response=new_response)
-        return self.interview_dict
-        
-    def add_question(self, new_question) -> dict:
-        #make new dictionary
-        i = len(self.interview_dict)
-        self.interview_dict[i] = {"question": new_question, "answer": "", "response": ""}
+    def add_question(self, new_question, question_num) -> dict:
+        i = question_num
+        self.interview_dict[i] = {"question": new_question}
         return self.interview_dict
     
     def _repr_(self):
         return (f"Interview Class Instance:\n"
                 f"Personal Profile: {self.personal_profile}\n"
-                #f"Prompts: {self.prompt}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
+
 
 # Define variables for URLs
 GOOGLE_ORIGINS = 'https://firstapp-4e4b4qv3cq-uc.a.run.app'
@@ -303,49 +297,36 @@ def retrievalQA(retr_docs_num):
     )
     return qa
     
-def generate_resume_questions(interview_class):
+def generate_resume_questions(interview_class, question_num):
     qa_prompt = f"""
-                    Context: ```blah blah```
-                    Prompt: ***  You are a recruiter interviewing a candidate for the role in the user personal profile in the industry space {interview_class.personal_profile['experience']}. Here is the resume of the candidate: {interview_class.personal_profile['lemmatized_words']}. Ask the candidate two technical interview questions for the role of {interview_class.personal_profile['role']} on relevant experience in their resume.***
+                    Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
+                    Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
                     Personal Profile: '''{interview_class.personal_profile}'''
                     Interview Conversations: '''{interview_class.interview_dict}'''
-                    Answer: """
-    qa = retrievalQA(retr_docs_num=3)
+                     """
+    qa = retrievalQA(retr_docs_num=4)
     response = qa({"query": qa_prompt})
-    for j in range(len(response)):
-        interview_class.add_answer(response[j]["result"])
-        j += 1
+    
+    question_num = question_num
+    interview_class.add_question(response["result"], question_num = question_num)
         
 def generate_dynamic_questions(interview_class, question_num):
-    for key in range(question_num-2, question_num):
-        window_dict[key] = interview_class.interview_dict[key]
+    window_dict = {}
+    if question_num > 1:
+        for key in range(question_num-2, question_num):
+            window_dict[key] = interview_class.interview_dict[key]
+    else:
+        window_dict = interview_class.interview_dict
     qa_prompt = f"""
-                    Context: ```blah blah```
-                    Prompt: *** For the next two questions, try to find a middle ground or overlap between the two answers I specify. Come up with one follow-up technical interview question based on user answers {1,2}. Come up with one follow-up technical interview question based on user answers {2,3}***
-                    Personal Profile: '''{interview_class.personal_profile}'''
+                    Context: ```You are a nice recruiter interviewing a candidate for the data science role. Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations.```
+                    Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate the question as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
                     Interview Conversations: '''{window_dict}'''
                     Answer: """
     qa = retrievalQA(retr_docs_num=3)
     response = qa({"query": qa_prompt})
-    for j in range(len(response)):
-        #### need khushi to define the output format in the prompt as a list of questions
-        ### and also the context
-        interview_class.add_answer(response[j]["result"])
-        j += 1
-        
-
-# def generate_reponses(interview_class, response_num):
-   
-#     qa_prompt = f"""
-#                     Context: ```you are ```
-#                     Prompt: *** generate {response_num} responses ***
-#                     Interview Conversations: '''{interview_class.interview_dict}'''
-#                     Answer: """
-#     qa = retrievalQA(retr_docs_num=3)
-#     response = qa({"query": qa_prompt})
-#     for i in range(response_num):
-#         interview_class.add_response(response["result"])
-#         i += 1
+     
+    question_num = question_num
+    interview_class.add_question(response["result"], question_num = question_num)
 
 
 def start_interview(interview):
