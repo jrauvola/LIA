@@ -10,36 +10,44 @@ import re
 from collections import Counter
 import PyPDF2 as pypdf
 from io import BytesIO
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_google_vertexai import VertexAI
+from langchain_google_community import GCSDirectoryLoader
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 
 
 class interview_class:
     def __init__(self, personal_profile):
-        self.prompt = ['prompt 1','prompt 2']
         self.interview_dict = {
-            0:  {"question": "Hi I'm Lia, let's get started. Tell me a little about yourself!",
+            0:  {"question": "Hi I'm Lia! Let's get started. Tell me a little about yourself!",
                  "answer": "",
                  "response": "Okay. Let's jump into the interview."}
         }
         self.personal_profile = personal_profile
         self.evaluator = {}
-    
-    def add_answer(self, interview_dict: dict, answer) -> dict:
-        self.interview_dict = interview_dict
+        
+    def add_answer(self, new_answer) -> dict:
+        i = len(self.interview_dict) - 1
+        self.interview_dict[i].update(answer=new_answer) 
         return self.interview_dict
         
-    def add_response(self, interview_dict: dict, response) -> dict:
-        self.interview_dict = interview_dict
+    def add_response(self, new_response) -> dict:
+        i = len(self.interview_dict) - 1 
+        self.interview_dict[i].update(response=new_response)
         return self.interview_dict
         
-    def add_question(self, interview_dict: dict, question) -> dict:
-        self.interview_dict = interview_dict
+    def add_question(self, new_question) -> dict:
+        #make new dictionary
+        i = len(self.interview_dict)
+        self.interview_dict[i] = {"question": new_question, "answer": "", "response": ""}
         return self.interview_dict
-    
     
     def _repr_(self):
         return (f"Interview Class Instance:\n"
                 f"Personal Profile: {self.personal_profile}\n"
-                f"Prompts: {self.prompt}\n"
+                #f"Prompts: {self.prompt}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
 
@@ -77,6 +85,13 @@ CORS(app, resources={
 
 ### ___________________ RESUME PARSING/STORAGE ___________________ ###
 
+# working order for final reduced text:
+# clean_resume_text() <-> clean_text()  
+# remove_long_numbers()  
+# censor_text()  
+# remove_text_before_state()  
+# process_resume_text() 
+
 def store_resume(uploaded_file):
     # Check if the file was uploaded
     if not uploaded_file:
@@ -101,11 +116,13 @@ def store_resume(uploaded_file):
     return jsonify({'message': 'File uploaded successfully'})
 
 def clean_text(text):
+    # input to function should be a string
+    
     # Define regular expression pattern to match allowed characters
     pattern = re.compile(r'[^a-z0-9%./]+')
     # Remove unwanted characters from the text
     cleaned_text = re.sub(pattern, ' ', text.lower())
-    return cleaned_text
+    return cleaned_text # string
 
 def clean_resume_text(file):
     print("Parsing PDF...")
@@ -115,15 +132,17 @@ def clean_resume_text(file):
     text = ""
     for page in pdfReader.pages:
         text += page.extract_text()
+        # text here is raw resume text (string with no formatting)
     if text:
         # Clean the text
         cleaned_text = clean_text(text)
-        return cleaned_text
+        return cleaned_text # string
     else:
         print("No text found on this page.")
 
 def process_resume_text(cleaned_text):
-    nlp = sp.load("en_core_web_sm")
+    # lemmatization
+    nlp = sp.load("en_core_web_sm") # re-load every fxn call ???
 
     # Process the resume text
     doc = nlp(cleaned_text)
@@ -132,7 +151,72 @@ def process_resume_text(cleaned_text):
     lemmatized_words = [token.lemma_ for token in doc if not token.is_stop]
     
     # return entities, lemmatized_words, top_keywords
-    return lemmatized_words
+    return lemmatized_words # list
+
+def remove_long_numbers(text):
+    #remove phone numbers
+    # Remove characters like ()-
+    cleaned_text = re.sub(r'[-()]+', '', text)
+    
+    # Look for numbers separated by a space, and only remove that space between consecutive numbers
+    cleaned_text = re.sub(r'(\d)\s+(\d)', r'\1\2', cleaned_text)
+    
+    # Delete numbers with at least 10 digits
+    cleaned_text = re.sub(r'\b\d{10,}\b', '', cleaned_text)
+    
+    return cleaned_text # string
+
+def censor_text(text, words):
+# remove user sensitive information
+  # Lowercase both text and words for case-insensitive matching
+  text_lower = text.lower()
+  words_lower = [word.lower() for word in words]
+
+  # Create a set of all possible combinations of words (including single words)
+  all_combos = set()
+  for word in words_lower:
+    all_combos.add(word)
+    for i in range(1, len(word)):
+      all_combos.add(word[:i] + word[i:])  # Add all substrings
+
+  censored_text = text_lower
+  for combo in all_combos:
+    # Replace all occurrences of the combination (case-insensitive)
+    censored_text = censored_text.replace(combo, "")
+
+  # Return the censored text with the original casing
+  return ''.join([c if c.islower() else c.upper() for c in censored_text])
+
+def remove_text_before_state(text):
+    # remove text before first state instance, which is usually personal info
+    # Define a dictionary mapping state abbreviations to their full names
+    state_abbr_to_name = {
+        'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+        'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+        'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+        'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+        'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+        'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+        'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+        'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+        'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+        'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+    }
+    
+    # Create a regex pattern to match state abbreviations and full names
+    state_pattern = r'\b(?:' + '|'.join(re.escape(state) for state in state_abbr_to_name.values()) + r'|' + \
+                    '|'.join(re.escape(abbr) for abbr in state_abbr_to_name.keys()) + r')\b'
+    
+    # Find the first occurrence of a state or its abbreviation
+    match = re.search(state_pattern, text)
+    
+    if match:
+        # If a match is found, remove all text before it
+        return text[match.start()+len(match.group()):]
+    else:
+        # If no match is found, return the original text
+        return text
+
 
 def create_interview_class(lemmatized_words):
     # Create a new instance of the Interview class
@@ -148,6 +232,14 @@ def upload_resume():
     uploaded_file = request.files.get('file')
 
     clean_text = clean_resume_text(uploaded_file)
+
+    clean_text = remove_long_numbers(clean_text)
+
+    clean_text = censor_text(clean_text)
+
+    clean_text = remove_text_before_state(clean_text)
+
+    clean_text = process_resume_text(clean_text)
     
     lemmatized_words = process_resume_text(clean_text)
 
@@ -160,14 +252,102 @@ def upload_resume():
 
 ### ___________________ INTERVIEW PROCESS ___________________ ###
 
-def generate_questions():
-    # Generate questions based on the resume
-    pass
+
+def initialize_rag(project_name, bucket_name, prefix):
+    loader = GCSDirectoryLoader(
+    project_name=project_name, 
+    bucket=bucket_name,
+    prefix=prefix
+    )
+    documents = loader.load()
+
+    embeddings = VertexAIEmbeddings(model_name = "textembedding-gecko@003")
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    docs = text_splitter.split_documents(documents)
+
+    vector_db = Chroma.from_documents(docs, embeddings)
+
+    return vector_db
+
+def retrievalQA(retr_docs_num):
+    vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", prefix = "data_science")
+    retriever = vector_db.as_retriever(
+    search_type="similarity", search_kwargs={"k": retr_docs_num} #k: Number of Documents to return, defaults to 4.
+    )
+
+    llm = VertexAI(
+    model_name="text-bison-32k",
+    max_output_tokens=256,
+    temperature=0.1,
+    top_p=0.8,
+    top_k=40,
+    verbose=True,
+    )  
+
+    qa = RetrievalQA.from_chain_type(
+        llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True
+    )
+    return qa
+    
+def generate_resume_questions(interview_class):
+    qa_prompt = f"""
+                    Context: ```blah blah```
+                    Prompt: ***  You are a recruiter interviewing a candidate for the role in the user personal profile in the industry space {industry}. Here is the resume of the candidate: {lemmatized_words}. Ask the candidate two technical interview questions for the role of {role} on relevant experience in their resume.***
+                    Personal Profile: '''{interview_class.personal_profile}'''
+                    Interview Conversations: '''{interview_class.interview_dict}'''
+                    Answer: """
+    qa = retrievalQA(retr_docs_num=3)
+    response = qa({"query": qa_prompt})
+    for j in range(len(response)):
+        interview_class.add_answer(response[j]["result"])
+        j += 1
+        
+def generate_dynamic_questions(interview_class, question_num):
+    for key in range(question_num-2, question_num):
+        window_dict[key] = interview_class.interview_dict[key]
+    qa_prompt = f"""
+                    Context: ```blah blah```
+                    Prompt: *** For the next two questions, try to find a middle ground or overlap between the two answers I specify. Come up with one follow-up technical interview question based on user answers {1,2}. Come up with one follow-up technical interview question based on user answers {2,3}***
+                    Personal Profile: '''{interview_class.personal_profile}'''
+                    Interview Conversations: '''{window_dict}'''
+                    Answer: """
+    qa = retrievalQA(retr_docs_num=3)
+    response = qa({"query": qa_prompt})
+    for j in range(len(response)):
+        #### need khushi to define the output format in the prompt as a list of questions
+        ### and also the context
+        interview_class.add_answer(response[j]["result"])
+        j += 1
+        
+
+# def generate_reponses(interview_class, response_num):
+   
+#     qa_prompt = f"""
+#                     Context: ```you are ```
+#                     Prompt: *** generate {response_num} responses ***
+#                     Interview Conversations: '''{interview_class.interview_dict}'''
+#                     Answer: """
+#     qa = retrievalQA(retr_docs_num=3)
+#     response = qa({"query": qa_prompt})
+#     for i in range(response_num):
+#         interview_class.add_response(response["result"])
+#         i += 1
+
+
+
 
 def start_interview(interview):
-    # Start the interview
-    pass
-
+    for question_num in range(5):
+        # give the question to the front end
+        ####################
+        if question_num == 0:
+            generate_resume_questions(interview)
+        elif question_num:
+            generate_dynamic_questions(interview, question_num = question_num)
+        
+        interview.add_answer(answer_text)
+        
 
 @app.route('/submit_about', methods=['POST'])
 def submit_about():
@@ -204,7 +384,6 @@ def toggle_theme():
 @app.route('/')
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
-
 
 
 if __name__ == '__main__':

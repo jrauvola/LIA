@@ -9,15 +9,14 @@ const LOCAL_URL = 'http://0.0.0.0:80/';
 const API_URL = process.env.NODE_ENV === 'development' ? LOCAL_URL : GOOGLE_URL;
 
 const UPLOAD_RESUME_URL = `${API_URL}/upload_resume`;
+// const GET_PROFILE_URL = `${API_URL}/get_profile`;
 
 function AboutYou() {
   const [resume, setResume] = useState(null);
   const [profile, setProfile] = useState({
-    education: '',
-    impressiveProject: '',
-    improvement: '',
-    industry: 'Technology',
-    companyWebsite: ''
+    experience: '',
+    industry: '',
+    role: ''
   });
 
   const handleResumeUpload = (event) => {
@@ -33,6 +32,9 @@ function AboutYou() {
     event.preventDefault();
     const formData = new FormData();
     formData.append('file', resume);
+    formData.append('experience', profile.experience);
+    formData.append('industry', profile.industry);
+    formData.append('role', profile.role);
 
     try {
       const response = await axios.post(UPLOAD_RESUME_URL, formData, {
@@ -61,8 +63,8 @@ function AboutYou() {
       <input 
         type="text" 
         placeholder="Describe your educational and professional experience."
-        name="education"
-        value={profile.education}
+        name="experience"
+        value={profile.experience}
         onChange={handleInputChange}
       />
 
@@ -81,9 +83,9 @@ function AboutYou() {
 
       <input 
         type="text" 
-        placeholder="Company Website:"
-        name="companyWebsite"
-        value={profile.companyWebsite}
+        placeholder="Role you are looking to apply for:"
+        name="role"
+        value={profile.role}
         onChange={handleInputChange}
       />
       <button onClick={handleSubmit}>Submit About You</button>
