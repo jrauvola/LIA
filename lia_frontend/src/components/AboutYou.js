@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'; // Update this line
 // const UPLOAD_RESUME_URL = `${API_URL}/upload_resume`;
 
 function AboutYou() {
+  // const [resume, setResume] = useState(null);
   const [profile, setProfile] = useState({ experience: '', industry: 'Finance', role: '' });
   const resumeRef = useRef(null);
   const navigate = useNavigate(); // Update this line
