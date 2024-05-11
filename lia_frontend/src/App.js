@@ -1,6 +1,6 @@
 // App.js
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AboutYou from './components/AboutYou';
 // import Assessment from './components/Assessment';
 // import RoadMap from './components/RoadMap';
@@ -18,18 +18,16 @@ function App() {
     <ThemeProvider>
       <Router>
         <NavigationBar />
-        <Switch>
-          <Route path="/about-you" component={AboutYou} />
-          {/* <Route path="/assessment" component={Assessment} />
-          <Route path="/road-map" component={RoadMap} /> */}
-          <Route path="/chatbot" component={Chatbot} />
+        <Routes>
+          <Route path="/about-you" element={<AboutYou />} />
+          {/* <Route path="/assessment" element={<Assessment />} />
+          <Route path="/road-map" element={<RoadMap />} /> */}
+          <Route path="/chatbot" element={<Chatbot />} />
           {/* ...other routes */}
-        </Switch>
+        </Routes>
       </Router>
     </ThemeProvider>
   );
 }
 
 export default App;
-
-
