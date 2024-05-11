@@ -19,7 +19,6 @@ from langchain_google_community import GCSDirectoryLoader
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 import moviepy.editor as mp
-nlp = sp.load("en_core_web_sm") # re-load every fxn call ???
 
 # # Define variables for URLs
 app = Flask(__name__, static_folder='client/build', static_url_path='')
@@ -186,7 +185,7 @@ def clean_resume_text(file):
     else:
         print("No text found on this page.")
 
-def process_resume_text(cleaned_text):
+def process_resume_text(cleaned_text, nlp):
     # lemmatization
     # Process the resume text
     doc = nlp(cleaned_text)
@@ -285,13 +284,14 @@ def upload_resume(): #generate personal profile
     print("Industry: ", industry)
     role = request.form.get('role')
     print("Role: ", role)
+    nlp = sp.load("en_core_web_sm")
 
     # problem area start
     clean_text = clean_resume_text(uploaded_file)  
     clean_text = remove_long_numbers(clean_text)
     # clean_text = censor_text(clean_text)
     clean_text = remove_text_before_state(clean_text)
-    lemmatized_words = process_resume_text(clean_text)
+    lemmatized_words = process_resume_text(clean_text, nlp)
     return 'ok'
     # global interview_class
     # interview_class = create_interview_class(lemmatized_words, experience, industry, role)
