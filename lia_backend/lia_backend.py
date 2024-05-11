@@ -132,16 +132,16 @@ def get_recordings():
     transcript_url = bucket_save('lia_transcript', 'txt', transcript_file)
 
     # Get the current question_num from the interview instance
-    question_num = interview_class.question_num
+    question_num = interview_instance.question_num
 
     # Process the user's answer and add it to the interview.interview_dict
-    interview_class.add_answer(transcript, question_num)
+    interview_instance.add_answer(transcript, question_num)
 
     # Generate the next question based on the user's answer
-    generate_dynamic_questions(interview_class, question_num + 1)
+    generate_dynamic_questions(interview_instance, question_num + 1)
 
     # Get the next question from the interview_dict
-    next_question = interview_class.interview_dict[question_num + 1]["question"]
+    next_question = interview_instance.interview_dict[question_num + 1]["question"]
     return 'ok'
     # return jsonify({
     #     'message': 'Files uploaded successfully',
@@ -260,15 +260,6 @@ def remove_text_before_state(text):
         # If no match is found, return the original text
         return text
 
-
-def create_interview_class(lemmatized_words, experience, industry, role):
-    # Create a new instance of the Interview class
-    interview_class = interview_class(lemmatized_words, experience, industry, role)
-
-    print(interview_class)
-    
-    return interview_class
-
 #for testing and debugging. delete after.
 def test(word):
     return(word)
@@ -292,17 +283,17 @@ def upload_resume(): #generate personal profile
     # clean_text = censor_text(clean_text)
     clean_text = remove_text_before_state(clean_text)
     lemmatized_words = process_resume_text(clean_text, nlp)
+
+    interview_instance = interview_class(lemmatized_words, experience, industry, role)
     return 'ok'
-    # global interview_class
-    # interview_class = create_interview_class(lemmatized_words, experience, industry, role)
-    # # Save the resume file to the 'lia_resumes' bucket
+    # Save the resume file to the 'lia_resumes' bucket
     # resume_url = bucket_save('lia_resumes', 'pdf', uploaded_file)
 
     # response = jsonify({
     #     'message': 'Resume processed successfully',
     #     'resumeUrl': resume_url,
     #     'interviewInstance': interview_class.__dict__,
-    #     'initialQuestion': interview_class.interview_dict[0]["question"]
+    #     'initialQuestion': interview_instance.interview_dict[0]["question"]
     # })
     # return response
 
@@ -345,26 +336,26 @@ def retrievalQA(retr_docs_num):
     )
     return qa
     
-# def generate_resume_questions(interview_class, question_num):
+# def generate_resume_questions(interview_instance, question_num):
 #     qa_prompt = f"""
 #                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
 #                     Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
-#                     Personal Profile: '''{interview_class.personal_profile}'''
-#                     Interview Conversations: '''{interview_class.interview_dict}'''
+#                     Personal Profile: '''{interview_instance.personal_profile}'''
+#                     Interview Conversations: '''{interview_instance.interview_dict}'''
 #                      """
 #     qa = retrievalQA(retr_docs_num=4)
 #     response = qa({"query": qa_prompt})
     
 #     question_num = question_num
-#     interview_class.add_question(response["result"], question_num = question_num)
+#     interview_instance.add_question(response["result"], question_num = question_num)
         
-def generate_dynamic_questions(interview_class, question_num):
+def generate_dynamic_questions(interview_instance, question_num):
     window_dict = {}
     if question_num > 1:
         for key in range(question_num-2, question_num):
-            window_dict[key] = interview_class.interview_dict[key]
+            window_dict[key] = interview_instance.interview_dict[key]
     else:
-        window_dict = interview_class.interview_dict
+        window_dict = interview_instance.interview_dict
     qa_prompt = f"""
                     Context: ```You are a nice recruiter interviewing a candidate for the data science role. Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations.```
                     Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate the question as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
@@ -374,7 +365,7 @@ def generate_dynamic_questions(interview_class, question_num):
     response = qa({"query": qa_prompt})
      
     question_num = question_num
-    interview_class.add_question(response["result"], question_num = question_num)
+    interview_instance.add_question(response["result"], question_num = question_num)
 
 # def start_interview(interview): # Generate the first question(s)
 #     for question_num in range(5):
