@@ -29,7 +29,6 @@ function AboutYou() {
     if (resumeFile) {
       formData.append('file', resumeFile);
     }
-
     formData.append('experience', profile.experience);
     formData.append('industry', profile.industry);
     formData.append('role', profile.role);
@@ -39,15 +38,14 @@ function AboutYou() {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
       console.log(response.data);
-      const initialQuestion = response.data.initialQuestion;
-      navigate('/chatbot', { state: { initialQuestion } });
     } catch (error) {
       console.error('Error uploading resume', error);
-      navigate('/chatbot'); // Navigate to the chatbot page even if there's an error
     }
-  };
+  
+    // Move navigate outside the try-catch block
+    navigate('/chatbot'); // Navigate to the chatbot page after the try-catch blocks
+};
 
   return (
     <div className="AboutYou">
