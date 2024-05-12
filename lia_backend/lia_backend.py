@@ -30,7 +30,7 @@ CORS(app, resources={
         "origins": "https://firstapp-4e4b4qv3cq-uc.a.run.app",
         "supports_credentials": True # Set to True to allow credentials
     },
-    r"/submit_about": {
+    r"/user_recording": {
         "origins": "https://firstapp-4e4b4qv3cq-uc.a.run.app",
         "supports_credentials": True  # Set to True to allow credentials
     }
@@ -89,7 +89,7 @@ def bucket_save(bucket_name, file_type, uploaded_file):
     # Upload the file to the bucket
     blob.upload_from_file(uploaded_file)
     # Generate a signed URL for the uploaded recording
-    url = blob.generate_signed_url(version='v4', expiration=600, method='GET')
+    url = blob.generate_signed_url(version='v4', expiration=600, method='PUT')
     return url
 
 @app.route('/user_recording', methods=['POST'])
@@ -142,7 +142,7 @@ def get_recordings():
 
     # Get the next question from the interview_dict
     next_question = interview_instance.interview_dict[question_num + 1]["question"]
-    return 'ok'
+
     # return jsonify({
     #     'message': 'Files uploaded successfully',
     #     'videoUrl': video_url,
@@ -268,13 +268,14 @@ def test(word):
 def upload_resume(): #generate personal profile
     # Get the uploaded file
     uploaded_file = request.files.get('file')
+
+    # Check if no file was uploaded
+    if uploaded_file is None:
+        return jsonify({'error': 'No file uploaded'}), 400
     
     experience = request.form.get('experience')
-    print("Experience: ", experience)
     industry = request.form.get('industry')
-    print("Industry: ", industry)
     role = request.form.get('role')
-    print("Role: ", role)
     nlp = sp.load("en_core_web_sm")
 
     # problem area start
@@ -285,17 +286,30 @@ def upload_resume(): #generate personal profile
     lemmatized_words = process_resume_text(clean_text, nlp)
 
     interview_instance = interview_class(lemmatized_words, experience, industry, role)
-    return 'ok'
-    # Save the resume file to the 'lia_resumes' bucket
-    # resume_url = bucket_save('lia_resumes', 'pdf', uploaded_file)
 
-    # response = jsonify({
-    #     'message': 'Resume processed successfully',
-    #     'resumeUrl': resume_url,
-    #     'interviewInstance': interview_class.__dict__,
-    #     'initialQuestion': interview_instance.interview_dict[0]["question"]
-    # })
-    # return response
+    try:
+        storage_client = storage.Client()
+        # Define bucket name and object name (timestamps)
+        bucket_name = "lia_resumes"
+        object_name = f"resume_lemmatized_{datetime.datetime.now().isoformat()}.txt"
+        bucket = storage_client.bucket(bucket_name)
+        # Create a blob object
+        blob = bucket.blob(object_name)
+        # Convert lemmatized words to a string
+        lemmatized_text = " ".join(lemmatized_words)
+        # Upload the lemmatized text to the bucket
+        blob.upload_from_string(lemmatized_text, content_type='text/plain')
+        # Generate the resume URL
+        resume_url = blob.public_url
+
+        return jsonify({
+            'message': 'Lemmatized words uploaded successfully',
+            'resumeUrl': resume_url
+        })
+       
+    except Exception as e:
+        logging.error(f"Error saving lemmatized words to bucket: {str(e)}")
+        return jsonify({'error': 'Failed to save lemmatized words to bucket'}), 500
 
 ### ___________________ INTERVIEW PROCESS ___________________ ###
 
@@ -377,9 +391,9 @@ def generate_dynamic_questions(interview_instance, question_num):
 #             generate_dynamic_questions(interview, question_num = question_num)
 #         interview.add_answer(transcript)
 
-@app.route('/status')
-def status():
-    return 'Ok'
+# @app.route('/status')
+# def status():
+#     return 'Ok'
 
 @app.route('/')
 def serve():
