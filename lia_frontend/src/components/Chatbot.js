@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+// import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import styled from 'styled-components';
 
@@ -51,20 +51,20 @@ const QuestionText = styled.p`
 `;
 
 function Chatbot() {
-  const [recordedChunks, setRecordedChunks] = useState([]);
+  // const [recordedChunks, setRecordedChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState('');
   const [videoUrl, setVideoUrl] = useState(null);
   const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
   const videoRef = useRef();
-  const location = useLocation();
-  const initialQuestion = location.state?.initialQuestion;
+  // const location = useLocation();
+  // const initialQuestion = location.state?.initialQuestion;
   
-  useEffect(() => {
-    if (initialQuestion) {
-      setQuestion(initialQuestion);
-    }
-  }, [initialQuestion]);
+  // useEffect(() => {
+  //   if (initialQuestion) {
+  //     setQuestion(initialQuestion);
+  //   }
+  // }, [initialQuestion]);
 
   // Function to start recording
   const startRecording = async () => {
