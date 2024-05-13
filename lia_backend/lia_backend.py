@@ -23,6 +23,8 @@ import logging
 import tempfile
 import subprocess
 from pydub import AudioSegment
+import vertexai
+from vertexai.language_models import (TextGenerationModel)
 
 # # Define variables for URLs
 app = Flask(__name__, static_folder='client/build', static_url_path='')
@@ -55,7 +57,8 @@ class interview_class:
                                  "experience": experience, 
                                  "industry": industry, 
                                  "role": role}
-        self.evaluator = {}
+        self.evaluator = {},
+        self.question_num = 0
         
     def add_answer(self, new_answer, question_num) -> dict:
         i = question_num
@@ -108,78 +111,88 @@ def get_recordings():
         # Generate the resume URL
         video_url = blob.public_url
 
-        # Save the video file to a temporary location
-        with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
-            temp_file.write(video_file.read())
-            temp_file_path = temp_file.name
+        # # Save the video file to a temporary location
+        # with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+        #     temp_file.write(video_file.read())
+        #     temp_file_path = temp_file.name
+        #
+        # # Extract the audio using ffmpeg
+        # command = ['ffmpeg', '-v', 'debug', '-i', temp_file_path, '-vn', '-acodec', 'libmp3lame', '-f', 'mp3', '-']
+        # try:
+        #     audio_data = subprocess.check_output(command, stderr=subprocess.PIPE)
+        # except subprocess.CalledProcessError as e:
+        #     app.logger.error(f"Error extracting audio: {e.stderr.decode()}")
+        #     return jsonify({'error': 'Error extracting audio'}), 500
+        #
+        # # Delete the temporary video file
+        # os.unlink(temp_file_path)
+        #
+        # audio_file = BytesIO(audio_data)
+        # audio_file.seek(0)
+        #
+        # # Delete the temporary video file
+        # os.unlink(temp_file_path)
+        #
+        # storage_client = storage.Client()
+        # bucket_name = "lia_audio"
+        # object_name = f"audio_{datetime.datetime.now().isoformat()}.mp3"
+        # bucket = storage_client.bucket(bucket_name)
+        # blob = bucket.blob(object_name)
+        # blob.upload_from_file(audio_file)
+        # audio_gcs_uri = f"gs://{bucket_name}/{object_name}"
+        #
+        # app.logger.info("Converting audio to text using Google Speech-to-Text API")
+        # # Convert the audio to text using Google Speech-to-Text API
+        # try:
+        #     client = speech.SpeechClient()
+        #
+        #     # Create a RecognitionAudio object and set the URI
+        #     audio = speech.RecognitionAudio(uri=audio_gcs_uri)
+        #
+        #     # Create a RecognitionConfig object
+        #     config = speech.RecognitionConfig(
+        #         encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+        #         sample_rate_hertz=44100,
+        #         language_code='en-US'
+        #     )
+        #
+        #     # Make the speech recognition request
+        #     response = client.recognize(config=config, audio=audio)
+        #
+        #     # Get the transcript from the response
+        #     transcript = response.results[0].alternatives[0].transcript
+        # except Exception as e:
+        #     app.logger.error(f"Error converting audio to text: {str(e)}")
+        #     return {'error': 'Could not convert audio to text: {0}'.format(e)}
+        #
+        # app.logger.info("Saving transcript to 'lia_transcript' bucket")
+        # # Save the transcript to the 'lia_transcript' bucket
+        # transcript_file = BytesIO(transcript.encode('utf-8'))
+        #
+        # storage_client = storage.Client()
+        # bucket_name = "lia_transcript"
+        # object_name = f"transcript_{datetime.datetime.now().isoformat()}.txt"
+        # bucket = storage_client.bucket(bucket_name)
+        # blob = bucket.blob(object_name)
+        # blob.upload_from_file(audio_file)
+        # audio_url = blob.public_url
 
-        # Extract the audio using ffmpeg
-        command = ['ffmpeg', '-v', 'debug', '-i', temp_file_path, '-vn', '-acodec', 'libmp3lame', '-f', 'mp3', '-']
-        try:
-            audio_data = subprocess.check_output(command, stderr=subprocess.PIPE)
-        except subprocess.CalledProcessError as e:
-            app.logger.error(f"Error extracting audio: {e.stderr.decode()}")
-            return jsonify({'error': 'Error extracting audio'}), 500
-
-        # Delete the temporary video file
-        os.unlink(temp_file_path)
-
-        audio_file = BytesIO(audio_data)
-        audio_file.seek(0)
-
-        # Delete the temporary video file
-        os.unlink(temp_file_path)
-
-        storage_client = storage.Client()
-        bucket_name = "lia_audio"
-        object_name = f"audio_{datetime.datetime.now().isoformat()}.mp3"
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(object_name)
-        blob.upload_from_file(audio_file)
-        audio_gcs_uri = f"gs://{bucket_name}/{object_name}"
-
-        app.logger.info("Converting audio to text using Google Speech-to-Text API")
-        # Convert the audio to text using Google Speech-to-Text API
-        try:
-            client = speech.SpeechClient()
-
-            # Create a RecognitionAudio object and set the URI
-            audio = speech.RecognitionAudio(uri=audio_gcs_uri)
-
-            # Create a RecognitionConfig object
-            config = speech.RecognitionConfig(
-                encoding=speech.RecognitionConfig.AudioEncoding.MP3,
-                sample_rate_hertz=44100,
-                language_code='en-US'
-            )
-
-            # Make the speech recognition request
-            response = client.recognize(config=config, audio=audio)
-
-            # Get the transcript from the response
-            transcript = response.results[0].alternatives[0].transcript
-        except Exception as e:
-            app.logger.error(f"Error converting audio to text: {str(e)}")
-            return {'error': 'Could not convert audio to text: {0}'.format(e)}
-
-        app.logger.info("Saving transcript to 'lia_transcript' bucket")
-        # Save the transcript to the 'lia_transcript' bucket
-        transcript_file = BytesIO(transcript.encode('utf-8'))
-
-        storage_client = storage.Client()
-        bucket_name = "lia_transcript"
-        object_name = f"transcript_{datetime.datetime.now().isoformat()}.txt"
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(object_name)
-        blob.upload_from_file(audio_file)
-        audio_url = blob.public_url
-
+        print("Question Num")
         # Get the current question_num from the interview instance
-        question_num = interview_instance.question_num
+        question_num = 0
+
+        transcript = [
+            'Hi everyone, I am Katy! My fascination with data began during my graduate studies in Master of Applied Data Science. Witnessing the power of data analysis to uncover hidden patterns and solve complex problems sparked a passion in me I could not ignore.This passion led me to pursue a Master degree in Data Science, where I honed my skills in Python, R, statistical modeling, and machine learning. During my internship at [Company Name], I had the opportunity to work on a project that [briefly describe the project and its impact]. This experience solidified my desire to leverage data science to drive meaningful insights and solutions.',
+            'In my previous role, I had to explain the concept of machine learning to our marketing team. I used the analogy of teaching a child to recognize different types of fruit. Just as you would show a child many examples to help them learn, a machine learning model is trained with data. This analogy helped make a complex concept more relatable and easier to understand.',
+            'In one project, I worked with a colleague who had a very different working style. To resolve our differences, I scheduled a meeting to understand his perspective. We found common ground in our project goals and agreed on a shared approach. This experience taught me the value of open communication and empathy in teamwork.',
+            'In my last role, I had to balance the need for data-driven decisions with ethical considerations. I ensured that all data usage complied with ethical standards and privacy laws, and I presented alternatives when necessary. This approach helped in making informed decisions while respecting ethical boundaries.',
+            'In a previous project, the requirements changed frequently. I adapted by maintaining open communication with stakeholders to understand their needs. I also used agile methodologies to be more flexible in my approach, which helped in accommodating changes effectively.',
+            'I stay updated by reading industry journals, attending webinars, and participating in online forums. I also set aside time each week to experiment with new tools and techniques. This not only helps me stay current but also continuously improves my skills.'
+            ]
 
         app.logger.info(f"Processing user's answer for question_num: {question_num}")
         # Process the user's answer and add it to the interview.interview_dict
-        interview_instance.add_answer(transcript, question_num)
+        interview_instance.add_answer(transcript[0], question_num)
 
         app.logger.info(f"Generating next question for question_num: {question_num + 1}")
         # Generate the next question based on the user's answer
@@ -330,9 +343,11 @@ def upload_resume(): #generate personal profile
     clean_text = remove_text_before_state(clean_text)
     lemmatized_words = process_resume_text(clean_text, nlp)
 
+    global interview_instance
     interview_instance = interview_class(lemmatized_words, experience, industry, role)
 
-    try:
+
+    try: # put in full personal profile IMPORTANT!
         storage_client = storage.Client()
         # Define bucket name and object name (timestamps)
         bucket_name = "lia_resumes"
@@ -350,6 +365,9 @@ def upload_resume(): #generate personal profile
             'message': 'Lemmatized words uploaded successfully',
             'resumeUrl': resume_url
         }
+        print("Generating Resume Questions")
+        generate_resume_questions()
+        print("New Questions: ", interview_instance.interview_dict)
         logging.debug(f"Response data: {response_data}")
         return jsonify(response_data)
        
@@ -357,31 +375,39 @@ def upload_resume(): #generate personal profile
         logging.error(f"Error occurred: {str(e)}")
         return jsonify({'error': 'Failed to save lemmatized words to bucket'}), 500
 
+
 ### ___________________ INTERVIEW PROCESS ___________________ ###
 
 def initialize_rag(project_name, bucket_name, prefix):
+    print("Loader")
     loader = GCSDirectoryLoader(
     project_name=project_name, 
     bucket=bucket_name,
     prefix=prefix
     )
+    print("Loader: ", loader)
     documents = loader.load()
+    print("Documents Loaded")
 
     embeddings = VertexAIEmbeddings(model_name = "textembedding-gecko@003")
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     docs = text_splitter.split_documents(documents)
-
+    print("Vector DB")
     vector_db = Chroma.from_documents(docs, embeddings)
 
     return vector_db
 
 def retrievalQA(retr_docs_num):
+    print("Initializing Rag")
     vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", prefix = "data_science")
+    print("Grabbing Retriever")
     retriever = vector_db.as_retriever(
     search_type="similarity", search_kwargs={"k": retr_docs_num} #k: Number of Documents to return, defaults to 4.
     )
-
+    print("Initialize retriever")
+    vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
+    print("Grab LLM")
     llm = VertexAI(
     model_name="text-bison-32k",
     max_output_tokens=256,
@@ -389,25 +415,27 @@ def retrievalQA(retr_docs_num):
     top_p=0.8,
     top_k=40,
     verbose=True,
-    )  
-
+    )
+    print("RETRIEVE")
     qa = RetrievalQA.from_chain_type(
         llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True
     )
     return qa
     
-# def generate_resume_questions(interview_instance, question_num):
-#     qa_prompt = f"""
-#                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
-#                     Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
-#                     Personal Profile: '''{interview_instance.personal_profile}'''
-#                     Interview Conversations: '''{interview_instance.interview_dict}'''
-#                      """
-#     qa = retrievalQA(retr_docs_num=4)
-#     response = qa({"query": qa_prompt})
+def generate_resume_questions():
+    qa_prompt = f"""
+                    Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
+                    Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
+                    Personal Profile: '''{interview_instance.personal_profile}'''
+                     """
+
+    print("QA Retrieval")
+    qa = retrievalQA(retr_docs_num=4)
+    print("QA Response")
+    response = qa({"query": qa_prompt})
     
-#     question_num = question_num
-#     interview_instance.add_question(response["result"], question_num = question_num)
+    interview_instance.question_num = interview_instance.question_num + 1
+    interview_instance.add_question(response["result"], question_num = interview_instance.question_num)
         
 def generate_dynamic_questions(interview_instance, question_num):
     window_dict = {}
@@ -427,15 +455,16 @@ def generate_dynamic_questions(interview_instance, question_num):
     question_num = question_num
     interview_instance.add_question(response["result"], question_num = question_num)
 
-# def start_interview(interview): # Generate the first question(s)
-#     for question_num in range(5):
-#         # give the question to the front end
-#         ####################
-#         if question_num == 0:
-#             generate_resume_questions(interview)
-#         elif question_num:
-#             generate_dynamic_questions(interview, question_num = question_num)
-#         interview.add_answer(transcript)
+def start_interview(): # Generate the first question(s)
+    for question_num in range(5):
+        # give the question to the front end
+        ####################
+        if question_num == 0:
+            generate_resume_questions(interview)
+        elif question_num:
+            generate_dynamic_questions(interview, question_num = question_num)
+        #get_recordings()
+        interview.add_answer(transcript)
 
 # @app.route('/status')
 # def status():
