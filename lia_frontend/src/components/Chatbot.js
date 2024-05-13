@@ -69,7 +69,7 @@ function Chatbot() {
   // Function to start recording
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
       videoRef.current.srcObject = stream;
       const videoRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       const recordedChunks = [];
@@ -99,13 +99,19 @@ function Chatbot() {
 
   const uploadToGCP = async (blob) => {
     try {
+      console.log('Starting file upload to GCP...'); // Added logging statement
+
       const formData = new FormData();
       formData.append('file', blob, 'recording.webm');
 
-      const response = await axios.post('https://backend-4e4b4qv3cq-uc.a.run.app/user_recording', formData, {
+      console.log('Sending POST request to /user_recording endpoint...'); // Added logging statement
+
+      const response = await axios.post('http://127.0.0.1/user_recording', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
+      console.log('Response received from /user_recording endpoint:', response.data); // Added logging statement
 
       if (response.data.nextQuestion) {
         setQuestion(response.data.nextQuestion);
@@ -113,10 +119,13 @@ function Chatbot() {
       }
 
       if (response.data.signedUrl) {
+        console.log('Signed URL received:', response.data.signedUrl); // Added logging statement
         setVideoUrl(response.data.signedUrl);
       } else {
         console.error('Error uploading media:', response.data.error);
       }
+
+      console.log('File upload to GCP completed successfully.'); // Added logging statement
     } catch (error) {
       console.error('Error uploading media:', error.message);
     }

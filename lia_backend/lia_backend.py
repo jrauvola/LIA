@@ -19,23 +19,28 @@ from langchain_google_community import GCSDirectoryLoader
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 import moviepy.editor as mp
+import logging
+import tempfile
+import subprocess
+from pydub import AudioSegment
 
 # # Define variables for URLs
 app = Flask(__name__, static_folder='client/build', static_url_path='')
-# CORS(app, resources={r"/*": {"origins": "https://firstapp-4e4b4qv3cq-uc.a.run.app", "supports_credentials": True}}) #logging=True
-# logging.getLogger('flask_cors').level = logging.DEBUG
-
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000/", "supports_credentials": True}})
+logging.basicConfig(level=logging.DEBUG)
 CORS(app, resources={
     r"/upload_resume": {
-        "origins": "https://firstapp-4e4b4qv3cq-uc.a.run.app",
+        "origins": "http://localhost:3000",
         "supports_credentials": True # Set to True to allow credentials
     },
     r"/user_recording": {
-        "origins": "https://firstapp-4e4b4qv3cq-uc.a.run.app",
+        "origins": "http://localhost:3000",
         "supports_credentials": True  # Set to True to allow credentials
     }
 })
 
+# Enable CORS logging
+logging.getLogger('flask_cors').level = logging.DEBUG
 # Increase max file size
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
@@ -76,80 +81,124 @@ class interview_class:
 
 ### ___________________ RECORDING-TO-TRANSCRIPT ___________________ ###
 
-## function to save stuff to buckets
-def bucket_save(bucket_name, file_type, uploaded_file):
-    # Initialize Google Cloud Storage client
-    storage_client = storage.Client()
-    # Set the name of your Google Cloud Storage bucket
-    bucket = storage_client.bucket(bucket_name)
-    # Define object name (timestamps)
-    object_name = f"{datetime.datetime.now().isoformat()}.{file_type}"
-    # Create a blob object
-    blob = bucket.blob(object_name)
-    # Upload the file to the bucket
-    blob.upload_from_file(uploaded_file)
-    # Generate a signed URL for the uploaded recording
-    url = blob.generate_signed_url(version='v4', expiration=600, method='PUT')
-    return url
-
 @app.route('/user_recording', methods=['POST'])
 def get_recordings():
-    # Get the uploaded webm file from the request
-    video_file = request.files.get('file')
-
-    # Check if the file was uploaded
-    if not video_file:
-        return jsonify({'error': 'No file uploaded'}), 400
-
-    # Save the video file to the 'lia_videos' bucket
-    video_url = bucket_save('lia_videos', 'webm', video_file)
-
-    # Use moviepy to extract the audio track from the webm file
-    audio = mp.VideoFileClip(video_file)
-    audio_file = BytesIO()
-    audio.write_audiofile(audio_file, codec='mp3')  # Save the audio track as an mp3 file in memory
-    audio_file.seek(0)
-
-    # Save the audio file to the 'lia_audio' bucket
-    audio_url = bucket_save('lia_audio', 'mp3', audio_file)
-
-    # Convert the audio to text using Google Speech-to-Text API
     try:
-        client = speech.SpeechClient()
-        audio = speech.RecognitionAudio(content=audio_data)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.MP3,
-            sample_rate_hertz=44100,
-            language_code='en-US'
-        )
-        response = client.recognize(config=config, audio=audio)
-        transcript = response.results[0].alternatives[0].transcript
+        app.logger.info("Received request at /user_recording endpoint")
+
+        # Get the uploaded webm file from the request
+        video_file = request.files.get('file')
+
+        # Check if the file was uploaded
+        if not video_file:
+            app.logger.error("No file uploaded")
+            return jsonify({'error': 'No file uploaded'}), 400
+
+        app.logger.info("Saving video file to 'lia_videos' bucket")
+        # # Save the video file to the 'lia_videos' bucket
+        # video_url = bucket_save('lia_videos', 'webm', video_file)
+        storage_client = storage.Client()
+        # Define bucket name and object name (timestamps)
+        bucket_name = "lia_videos"
+        object_name = f"video_{datetime.datetime.now().isoformat()}.webm"
+        bucket = storage_client.bucket(bucket_name)
+        # Create and upload a blob object
+        blob = bucket.blob(object_name)
+        blob.upload_from_file(video_file)
+        # Generate the resume URL
+        video_url = blob.public_url
+
+        # Save the video file to a temporary location
+        with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+            temp_file.write(video_file.read())
+            temp_file_path = temp_file.name
+
+        # Extract the audio using ffmpeg
+        command = ['ffmpeg', '-v', 'debug', '-i', temp_file_path, '-vn', '-acodec', 'libmp3lame', '-f', 'mp3', '-']
+        try:
+            audio_data = subprocess.check_output(command, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as e:
+            app.logger.error(f"Error extracting audio: {e.stderr.decode()}")
+            return jsonify({'error': 'Error extracting audio'}), 500
+
+        # Delete the temporary video file
+        os.unlink(temp_file_path)
+
+        audio_file = BytesIO(audio_data)
+        audio_file.seek(0)
+
+        # Delete the temporary video file
+        os.unlink(temp_file_path)
+
+        storage_client = storage.Client()
+        bucket_name = "lia_audio"
+        object_name = f"audio_{datetime.datetime.now().isoformat()}.mp3"
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(object_name)
+        blob.upload_from_file(audio_file)
+        audio_gcs_uri = f"gs://{bucket_name}/{object_name}"
+
+        app.logger.info("Converting audio to text using Google Speech-to-Text API")
+        # Convert the audio to text using Google Speech-to-Text API
+        try:
+            client = speech.SpeechClient()
+
+            # Create a RecognitionAudio object and set the URI
+            audio = speech.RecognitionAudio(uri=audio_gcs_uri)
+
+            # Create a RecognitionConfig object
+            config = speech.RecognitionConfig(
+                encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+                sample_rate_hertz=44100,
+                language_code='en-US'
+            )
+
+            # Make the speech recognition request
+            response = client.recognize(config=config, audio=audio)
+
+            # Get the transcript from the response
+            transcript = response.results[0].alternatives[0].transcript
+        except Exception as e:
+            app.logger.error(f"Error converting audio to text: {str(e)}")
+            return {'error': 'Could not convert audio to text: {0}'.format(e)}
+
+        app.logger.info("Saving transcript to 'lia_transcript' bucket")
+        # Save the transcript to the 'lia_transcript' bucket
+        transcript_file = BytesIO(transcript.encode('utf-8'))
+
+        storage_client = storage.Client()
+        bucket_name = "lia_transcript"
+        object_name = f"transcript_{datetime.datetime.now().isoformat()}.txt"
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(object_name)
+        blob.upload_from_file(audio_file)
+        audio_url = blob.public_url
+
+        # Get the current question_num from the interview instance
+        question_num = interview_instance.question_num
+
+        app.logger.info(f"Processing user's answer for question_num: {question_num}")
+        # Process the user's answer and add it to the interview.interview_dict
+        interview_instance.add_answer(transcript, question_num)
+
+        app.logger.info(f"Generating next question for question_num: {question_num + 1}")
+        # Generate the next question based on the user's answer
+        generate_dynamic_questions(interview_instance, question_num + 1)
+
+        # Get the next question from the interview_dict
+        next_question = interview_instance.interview_dict[question_num + 1]["question"]
+
+        app.logger.info("Sending response with uploaded files and next question")
+        return jsonify({
+            'message': 'Files uploaded successfully',
+            'videoUrl': video_url,
+            'audioUrl': audio_gcs_uri,
+            'transcriptUrl': transcript_url,
+            'nextQuestion': next_question
+        })
     except Exception as e:
-        return {'error': 'Could not convert audio to text: {0}'.format(e)}
-
-    # Save the transcript to the 'lia_transcript' bucket
-    transcript_file = BytesIO(transcript.encode('utf-8'))
-    transcript_url = bucket_save('lia_transcript', 'txt', transcript_file)
-
-    # Get the current question_num from the interview instance
-    question_num = interview_instance.question_num
-
-    # Process the user's answer and add it to the interview.interview_dict
-    interview_instance.add_answer(transcript, question_num)
-
-    # Generate the next question based on the user's answer
-    generate_dynamic_questions(interview_instance, question_num + 1)
-
-    # Get the next question from the interview_dict
-    next_question = interview_instance.interview_dict[question_num + 1]["question"]
-
-    # return jsonify({
-    #     'message': 'Files uploaded successfully',
-    #     'videoUrl': video_url,
-    #     'audioUrl': audio_url,
-    #     'transcriptUrl': transcript_url,
-    #     'nextQuestion': next_question
-    # })
+        app.logger.error(f"Error processing /user_recording: {str(e)}")
+        return jsonify({'error': 'Internal Server Error'}), 500
 
 ### ___________________ RESUME PARSING/STORAGE ___________________ ###
 
@@ -260,10 +309,6 @@ def remove_text_before_state(text):
         # If no match is found, return the original text
         return text
 
-#for testing and debugging. delete after.
-def test(word):
-    return(word)
-
 @app.route('/upload_resume', methods=['POST'])
 def upload_resume(): #generate personal profile
     # Get the uploaded file
@@ -301,14 +346,15 @@ def upload_resume(): #generate personal profile
         blob.upload_from_string(lemmatized_text, content_type='text/plain')
         # Generate the resume URL
         resume_url = blob.public_url
-
-        return jsonify({
+        response_data = {
             'message': 'Lemmatized words uploaded successfully',
             'resumeUrl': resume_url
-        })
+        }
+        logging.debug(f"Response data: {response_data}")
+        return jsonify(response_data)
        
     except Exception as e:
-        logging.error(f"Error saving lemmatized words to bucket: {str(e)}")
+        logging.error(f"Error occurred: {str(e)}")
         return jsonify({'error': 'Failed to save lemmatized words to bucket'}), 500
 
 ### ___________________ INTERVIEW PROCESS ___________________ ###

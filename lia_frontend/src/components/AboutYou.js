@@ -21,30 +21,39 @@ function AboutYou() {
     setProfile({ ...profile, [name]: value });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const formData = new FormData();
-    const resumeFile = resumeRef.current.files[0];
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  const formData = new FormData();
+  const resumeFile = resumeRef.current.files[0];
 
-    if (resumeFile) {
-      formData.append('file', resumeFile);
-    }
-    formData.append('experience', profile.experience);
-    formData.append('industry', profile.industry);
-    formData.append('role', profile.role);
+  if (resumeFile) {
+    formData.append('file', resumeFile);
+  }
+  formData.append('experience', profile.experience);
+  formData.append('industry', profile.industry);
+  formData.append('role', profile.role);
 
-    try {
-      const response = await axios.post('https://backend-4e4b4qv3cq-uc.a.run.app/upload_resume', formData, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.error('Error uploading resume', error);
-    }
-  
-    // Move navigate outside the try-catch block
-    navigate('/chatbot'); // Navigate to the chatbot page after the try-catch blocks
+  try {
+    console.log('Request Config:', {
+      method: 'post',
+      url: 'http://127.0.0.1/upload_resume',
+      data: formData,
+      withCredentials: true,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    const response = await axios.post('http://127.0.0.1/upload_resume', formData, {
+      withCredentials: true,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    console.log('Response Data:', response.data);
+  } catch (error) {
+    console.error('Error uploading resume', error);
+  }
+
+  // Move navigate outside the try-catch block
+  navigate('/chatbot'); // Navigate to the chatbot page after the try-catch blocks
 };
 
   return (
