@@ -16,6 +16,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_google_vertexai import VertexAI
 from langchain_google_community import GCSDirectoryLoader
+from langchain_google_community import GCSFileLoader
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 import moviepy.editor as mp
@@ -59,23 +60,17 @@ class interview_class:
                                  "role": role}
         self.evaluator = {},
         self.question_num = 0
-        
+
     def add_answer(self, new_answer, question_num) -> dict:
         i = question_num
         self.interview_dict[i]["answer"] = new_answer
         return self.interview_dict
-        
-    def add_response(self, new_response) -> dict:
-        i = len(self.interview_dict) - 1 
-        self.interview_dict[i].update(response=new_response)
+
+    def add_question(self, new_question, question_num) -> dict:
+        i = question_num
+        self.interview_dict[i] = {"question": new_question}
         return self.interview_dict
-        
-    def add_question(self, new_question) -> dict:
-        #make new dictionary
-        i = len(self.interview_dict)
-        self.interview_dict[i] = {"question": new_question, "answer": "", "response": ""}
-        return self.interview_dict
-    
+
     def _repr_(self):
         return (f"Interview Class Instance:\n"
                 f"Personal Profile: {self.personal_profile}\n"
@@ -110,6 +105,7 @@ def get_recordings():
         blob.upload_from_file(video_file)
         # Generate the resume URL
         video_url = blob.public_url
+
 
         # # Save the video file to a temporary location
         # with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
@@ -205,8 +201,8 @@ def get_recordings():
         return jsonify({
             'message': 'Files uploaded successfully',
             'videoUrl': video_url,
-            'audioUrl': audio_gcs_uri,
-            'transcriptUrl': transcript_url,
+            # 'audioUrl': audio_gcs_uri,
+            # 'transcriptUrl': transcript_url,
             'nextQuestion': next_question
         })
     except Exception as e:
@@ -346,7 +342,6 @@ def upload_resume(): #generate personal profile
     global interview_instance
     interview_instance = interview_class(lemmatized_words, experience, industry, role)
 
-
     try: # put in full personal profile IMPORTANT!
         storage_client = storage.Client()
         # Define bucket name and object name (timestamps)
@@ -378,12 +373,12 @@ def upload_resume(): #generate personal profile
 
 ### ___________________ INTERVIEW PROCESS ___________________ ###
 
-def initialize_rag(project_name, bucket_name, prefix):
+def initialize_rag(project_name, bucket_name, blob):
     print("Loader")
-    loader = GCSDirectoryLoader(
+    loader = GCSFileLoader(
     project_name=project_name, 
     bucket=bucket_name,
-    prefix=prefix
+    blob=blob
     )
     print("Loader: ", loader)
     documents = loader.load()
@@ -400,7 +395,7 @@ def initialize_rag(project_name, bucket_name, prefix):
 
 def retrievalQA(retr_docs_num):
     print("Initializing Rag")
-    vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", prefix = "data_science")
+    vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", blob = "data_science.txt")
     print("Grabbing Retriever")
     retriever = vector_db.as_retriever(
     search_type="similarity", search_kwargs={"k": retr_docs_num} #k: Number of Documents to return, defaults to 4.
