@@ -19,11 +19,11 @@ from langchain_google_community import GCSDirectoryLoader
 from langchain_google_community import GCSFileLoader
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-import moviepy.editor as mp
-import logging
-import tempfile
-import subprocess
-from pydub import AudioSegment
+# import moviepy.editor as mp
+# import logging
+# import tempfile
+# import subprocess
+# from pydub import AudioSegment
 import vertexai
 from vertexai.language_models import (TextGenerationModel)
 
