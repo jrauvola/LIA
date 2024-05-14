@@ -1,7 +1,8 @@
-# print(hello)
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+import logging
 from google.cloud import storage
+from google.cloud import speech
 import datetime
 import os
 import pandas as pd
@@ -15,9 +16,36 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_google_vertexai import VertexAI
 from langchain_google_community import GCSDirectoryLoader
-from langchain.vectorstores import Chroma
+from langchain_google_community import GCSFileLoader
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+import moviepy.editor as mp
+import logging
+import tempfile
+import subprocess
+from pydub import AudioSegment
+import vertexai
+from vertexai.language_models import (TextGenerationModel)
 
+# # Define variables for URLs
+app = Flask(__name__, static_folder='client/build', static_url_path='')
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000/", "supports_credentials": True}})
+logging.basicConfig(level=logging.DEBUG)
+CORS(app, resources={
+    r"/upload_resume": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True # Set to True to allow credentials
+    },
+    r"/user_recording": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True  # Set to True to allow credentials
+    }
+})
+
+# Enable CORS logging
+logging.getLogger('flask_cors').level = logging.DEBUG
+# Increase max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
 class interview_class:
     def __init__(self, personal_profile, experience, industry, role):
@@ -30,56 +58,156 @@ class interview_class:
                                  "experience": experience, 
                                  "industry": industry, 
                                  "role": role}
-        self.evaluator = {}
-        
+        self.evaluator = {},
+        self.question_num = 0
+
     def add_answer(self, new_answer, question_num) -> dict:
         i = question_num
         self.interview_dict[i]["answer"] = new_answer
         return self.interview_dict
-        
+
     def add_question(self, new_question, question_num) -> dict:
         i = question_num
         self.interview_dict[i] = {"question": new_question}
         return self.interview_dict
-    
+
     def _repr_(self):
         return (f"Interview Class Instance:\n"
                 f"Personal Profile: {self.personal_profile}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
 
+### ___________________ RECORDING-TO-TRANSCRIPT ___________________ ###
 
-# Define variables for URLs
-GOOGLE_ORIGINS = 'https://firstapp-4e4b4qv3cq-uc.a.run.app'
-GOOGLE_CREDENTIALS = True
+@app.route('/user_recording', methods=['POST'])
+def get_recordings():
+    try:
+        app.logger.info("Received request at /user_recording endpoint")
 
-LOCAL_ORIGINS = 'http://localhost:3000'
-LOCAL_CREDENTIALS = True
+        # Get the uploaded webm file from the request
+        video_file = request.files.get('file')
 
-if os.getenv('GAE_ENV', '').startswith('standard'):
-    # Production environment
-    ORIGINS = GOOGLE_ORIGINS
-    CREDENTIALS = GOOGLE_CREDENTIALS
-else:
-    # Local development environment
-    ORIGINS = LOCAL_ORIGINS
-    CREDENTIALS = LOCAL_CREDENTIALS
+        # Check if the file was uploaded
+        if not video_file:
+            app.logger.error("No file uploaded")
+            return jsonify({'error': 'No file uploaded'}), 400
 
-print(f'ORIGINS: {ORIGINS}\n'
-      f'CREDENTIALS: {CREDENTIALS}')
+        app.logger.info("Saving video file to 'lia_videos' bucket")
+        # # Save the video file to the 'lia_videos' bucket
+        # video_url = bucket_save('lia_videos', 'webm', video_file)
+        storage_client = storage.Client()
+        # Define bucket name and object name (timestamps)
+        bucket_name = "lia_videos"
+        object_name = f"video_{datetime.datetime.now().isoformat()}.webm"
+        bucket = storage_client.bucket(bucket_name)
+        # Create and upload a blob object
+        blob = bucket.blob(object_name)
+        blob.upload_from_file(video_file)
+        # Generate the resume URL
+        video_url = blob.public_url
 
-app = Flask(__name__, static_folder='client/build', static_url_path='')
-CORS(app, resources={
-    r"/upload_resume": {
-        "origins": ORIGINS,
-        "supports_credentials": CREDENTIALS  # Set to True to allow credentials
-    },
-    r"/submit_about": {
-        "origins": ORIGINS,
-        "supports_credentials": CREDENTIALS  # Set to True to allow credentials
-    }
-})
 
+        # # Save the video file to a temporary location
+        # with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+        #     temp_file.write(video_file.read())
+        #     temp_file_path = temp_file.name
+        #
+        # # Extract the audio using ffmpeg
+        # command = ['ffmpeg', '-v', 'debug', '-i', temp_file_path, '-vn', '-acodec', 'libmp3lame', '-f', 'mp3', '-']
+        # try:
+        #     audio_data = subprocess.check_output(command, stderr=subprocess.PIPE)
+        # except subprocess.CalledProcessError as e:
+        #     app.logger.error(f"Error extracting audio: {e.stderr.decode()}")
+        #     return jsonify({'error': 'Error extracting audio'}), 500
+        #
+        # # Delete the temporary video file
+        # os.unlink(temp_file_path)
+        #
+        # audio_file = BytesIO(audio_data)
+        # audio_file.seek(0)
+        #
+        # # Delete the temporary video file
+        # os.unlink(temp_file_path)
+        #
+        # storage_client = storage.Client()
+        # bucket_name = "lia_audio"
+        # object_name = f"audio_{datetime.datetime.now().isoformat()}.mp3"
+        # bucket = storage_client.bucket(bucket_name)
+        # blob = bucket.blob(object_name)
+        # blob.upload_from_file(audio_file)
+        # audio_gcs_uri = f"gs://{bucket_name}/{object_name}"
+        #
+        # app.logger.info("Converting audio to text using Google Speech-to-Text API")
+        # # Convert the audio to text using Google Speech-to-Text API
+        # try:
+        #     client = speech.SpeechClient()
+        #
+        #     # Create a RecognitionAudio object and set the URI
+        #     audio = speech.RecognitionAudio(uri=audio_gcs_uri)
+        #
+        #     # Create a RecognitionConfig object
+        #     config = speech.RecognitionConfig(
+        #         encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+        #         sample_rate_hertz=44100,
+        #         language_code='en-US'
+        #     )
+        #
+        #     # Make the speech recognition request
+        #     response = client.recognize(config=config, audio=audio)
+        #
+        #     # Get the transcript from the response
+        #     transcript = response.results[0].alternatives[0].transcript
+        # except Exception as e:
+        #     app.logger.error(f"Error converting audio to text: {str(e)}")
+        #     return {'error': 'Could not convert audio to text: {0}'.format(e)}
+        #
+        # app.logger.info("Saving transcript to 'lia_transcript' bucket")
+        # # Save the transcript to the 'lia_transcript' bucket
+        # transcript_file = BytesIO(transcript.encode('utf-8'))
+        #
+        # storage_client = storage.Client()
+        # bucket_name = "lia_transcript"
+        # object_name = f"transcript_{datetime.datetime.now().isoformat()}.txt"
+        # bucket = storage_client.bucket(bucket_name)
+        # blob = bucket.blob(object_name)
+        # blob.upload_from_file(audio_file)
+        # audio_url = blob.public_url
+
+        print("Question Num")
+        # Get the current question_num from the interview instance
+        question_num = 0
+
+        transcript = [
+            'Hi everyone, I am Katy! My fascination with data began during my graduate studies in Master of Applied Data Science. Witnessing the power of data analysis to uncover hidden patterns and solve complex problems sparked a passion in me I could not ignore.This passion led me to pursue a Master degree in Data Science, where I honed my skills in Python, R, statistical modeling, and machine learning. During my internship at [Company Name], I had the opportunity to work on a project that [briefly describe the project and its impact]. This experience solidified my desire to leverage data science to drive meaningful insights and solutions.',
+            'In my previous role, I had to explain the concept of machine learning to our marketing team. I used the analogy of teaching a child to recognize different types of fruit. Just as you would show a child many examples to help them learn, a machine learning model is trained with data. This analogy helped make a complex concept more relatable and easier to understand.',
+            'In one project, I worked with a colleague who had a very different working style. To resolve our differences, I scheduled a meeting to understand his perspective. We found common ground in our project goals and agreed on a shared approach. This experience taught me the value of open communication and empathy in teamwork.',
+            'In my last role, I had to balance the need for data-driven decisions with ethical considerations. I ensured that all data usage complied with ethical standards and privacy laws, and I presented alternatives when necessary. This approach helped in making informed decisions while respecting ethical boundaries.',
+            'In a previous project, the requirements changed frequently. I adapted by maintaining open communication with stakeholders to understand their needs. I also used agile methodologies to be more flexible in my approach, which helped in accommodating changes effectively.',
+            'I stay updated by reading industry journals, attending webinars, and participating in online forums. I also set aside time each week to experiment with new tools and techniques. This not only helps me stay current but also continuously improves my skills.'
+            ]
+
+        app.logger.info(f"Processing user's answer for question_num: {question_num}")
+        # Process the user's answer and add it to the interview.interview_dict
+        interview_instance.add_answer(transcript[0], question_num)
+
+        app.logger.info(f"Generating next question for question_num: {question_num + 1}")
+        # Generate the next question based on the user's answer
+        generate_dynamic_questions(interview_instance, question_num + 1)
+
+        # Get the next question from the interview_dict
+        next_question = interview_instance.interview_dict[question_num + 1]["question"]
+
+        app.logger.info("Sending response with uploaded files and next question")
+        return jsonify({
+            'message': 'Files uploaded successfully',
+            'videoUrl': video_url,
+            # 'audioUrl': audio_gcs_uri,
+            # 'transcriptUrl': transcript_url,
+            'nextQuestion': next_question
+        })
+    except Exception as e:
+        app.logger.error(f"Error processing /user_recording: {str(e)}")
+        return jsonify({'error': 'Internal Server Error'}), 500
 
 ### ___________________ RESUME PARSING/STORAGE ___________________ ###
 
@@ -89,29 +217,6 @@ CORS(app, resources={
 # censor_text()  
 # remove_text_before_state()  
 # process_resume_text() 
-
-def store_resume(uploaded_file):
-    # Check if the file was uploaded
-    if not uploaded_file:
-        return jsonify({'error': 'No file uploaded'}), 400
-
-    # Create a Cloud Storage client
-    storage_client = storage.Client()
-
-    # Define bucket name and object name (timestamps)
-    bucket_name = "lia_resumes"
-    object_name = f"resume_{datetime.datetime.now().isoformat()}.pdf"
-    
-    bucket = storage_client.bucket(bucket_name)
-    
-    # Create a blob object
-    blob = bucket.blob(object_name)
-
-    # Upload the file to the bucket
-    blob.upload_from_file(uploaded_file)
-    
-    # Save the file and process it
-    return jsonify({'message': 'File uploaded successfully'})
 
 def clean_text(text):
     # input to function should be a string
@@ -138,10 +243,8 @@ def clean_resume_text(file):
     else:
         print("No text found on this page.")
 
-def process_resume_text(cleaned_text):
+def process_resume_text(cleaned_text, nlp):
     # lemmatization
-    nlp = sp.load("en_core_web_sm") # re-load every fxn call ???
-
     # Process the resume text
     doc = nlp(cleaned_text)
 
@@ -215,75 +318,91 @@ def remove_text_before_state(text):
         # If no match is found, return the original text
         return text
 
-
-def create_interview_class(lemmatized_words, experience, industry, role):
-    # Create a new instance of the Interview class
-    interview = interview_class(lemmatized_words, experience, industry, role)
-
-    print(interview)
-    
-    return interview
-    
 @app.route('/upload_resume', methods=['POST'])
-def upload_resume():
+def upload_resume(): #generate personal profile
     # Get the uploaded file
-    print("In Upload Resume")
     uploaded_file = request.files.get('file')
 
-    experience = request.form.get('experience')
-    print("Experience: ", experience)
-    industry = request.form.get('industry')
-    print("Industry: ", industry)
-    role = request.form.get('role')
-    print("Role: ", role)
-
-    clean_text = clean_resume_text(uploaded_file)
-
-    clean_text = remove_long_numbers(clean_text)
-
-    #clean_text = censor_text(clean_text)
-
-    clean_text = remove_text_before_state(clean_text)
-
-    #clean_text = process_resume_text(clean_text)
+    # Check if no file was uploaded
+    if uploaded_file is None:
+        return jsonify({'error': 'No file uploaded'}), 400
     
-    lemmatized_words = process_resume_text(clean_text)
+    experience = request.form.get('experience')
+    industry = request.form.get('industry')
+    role = request.form.get('role')
+    nlp = sp.load("en_core_web_sm")
 
-    print(lemmatized_words)
+    # problem area start
+    clean_text = clean_resume_text(uploaded_file)  
+    clean_text = remove_long_numbers(clean_text)
+    # clean_text = censor_text(clean_text)
+    clean_text = remove_text_before_state(clean_text)
+    lemmatized_words = process_resume_text(clean_text, nlp)
 
-    global interview_class
+    global interview_instance
+    interview_instance = interview_class(lemmatized_words, experience, industry, role)
 
-    interview_class = create_interview_class(lemmatized_words, experience, industry, role)
+    try: # put in full personal profile IMPORTANT!
+        storage_client = storage.Client()
+        # Define bucket name and object name (timestamps)
+        bucket_name = "lia_resumes"
+        object_name = f"resume_lemmatized_{datetime.datetime.now().isoformat()}.txt"
+        bucket = storage_client.bucket(bucket_name)
+        # Create a blob object
+        blob = bucket.blob(object_name)
+        # Convert lemmatized words to a string
+        lemmatized_text = " ".join(lemmatized_words)
+        # Upload the lemmatized text to the bucket
+        blob.upload_from_string(lemmatized_text, content_type='text/plain')
+        # Generate the resume URL
+        resume_url = blob.public_url
+        response_data = {
+            'message': 'Lemmatized words uploaded successfully',
+            'resumeUrl': resume_url
+        }
+        print("Generating Resume Questions")
+        generate_resume_questions()
+        print("New Questions: ", interview_instance.interview_dict)
+        logging.debug(f"Response data: {response_data}")
+        return jsonify(response_data)
+       
+    except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
+        return jsonify({'error': 'Failed to save lemmatized words to bucket'}), 500
 
-    #store_resume(uploaded_file)
-
-    return jsonify({'message': 'File Parsed successfully'})
 
 ### ___________________ INTERVIEW PROCESS ___________________ ###
 
-def initialize_rag(project_name, bucket_name, prefix):
-    loader = GCSDirectoryLoader(
+def initialize_rag(project_name, bucket_name, blob):
+    print("Loader")
+    loader = GCSFileLoader(
     project_name=project_name, 
     bucket=bucket_name,
-    prefix=prefix
+    blob=blob
     )
+    print("Loader: ", loader)
     documents = loader.load()
+    print("Documents Loaded")
 
     embeddings = VertexAIEmbeddings(model_name = "textembedding-gecko@003")
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     docs = text_splitter.split_documents(documents)
-
+    print("Vector DB")
     vector_db = Chroma.from_documents(docs, embeddings)
 
     return vector_db
 
 def retrievalQA(retr_docs_num):
-    vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", prefix = "data_science")
+    print("Initializing Rag")
+    vector_db = initialize_rag(project_name = "adsp-capstone-team-dawn", bucket_name = "lia_rag", blob = "data_science.txt")
+    print("Grabbing Retriever")
     retriever = vector_db.as_retriever(
     search_type="similarity", search_kwargs={"k": retr_docs_num} #k: Number of Documents to return, defaults to 4.
     )
-
+    print("Initialize retriever")
+    vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
+    print("Grab LLM")
     llm = VertexAI(
     model_name="text-bison-32k",
     max_output_tokens=256,
@@ -291,33 +410,35 @@ def retrievalQA(retr_docs_num):
     top_p=0.8,
     top_k=40,
     verbose=True,
-    )  
-
+    )
+    print("RETRIEVE")
     qa = RetrievalQA.from_chain_type(
         llm=llm, chain_type="stuff", retriever=retriever, return_source_documents=True
     )
     return qa
     
-def generate_resume_questions(interview_class, question_num):
+def generate_resume_questions():
     qa_prompt = f"""
                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
                     Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
-                    Personal Profile: '''{interview_class.personal_profile}'''
-                    Interview Conversations: '''{interview_class.interview_dict}'''
+                    Personal Profile: '''{interview_instance.personal_profile}'''
                      """
+
+    print("QA Retrieval")
     qa = retrievalQA(retr_docs_num=4)
+    print("QA Response")
     response = qa({"query": qa_prompt})
     
-    question_num = question_num
-    interview_class.add_question(response["result"], question_num = question_num)
+    interview_instance.question_num = interview_instance.question_num + 1
+    interview_instance.add_question(response["result"], question_num = interview_instance.question_num)
         
-def generate_dynamic_questions(interview_class, question_num):
+def generate_dynamic_questions(interview_instance, question_num):
     window_dict = {}
     if question_num > 1:
         for key in range(question_num-2, question_num):
-            window_dict[key] = interview_class.interview_dict[key]
+            window_dict[key] = interview_instance.interview_dict[key]
     else:
-        window_dict = interview_class.interview_dict
+        window_dict = interview_instance.interview_dict
     qa_prompt = f"""
                     Context: ```You are a nice recruiter interviewing a candidate for the data science role. Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations.```
                     Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate the question as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
@@ -327,10 +448,9 @@ def generate_dynamic_questions(interview_class, question_num):
     response = qa({"query": qa_prompt})
      
     question_num = question_num
-    interview_class.add_question(response["result"], question_num = question_num)
+    interview_instance.add_question(response["result"], question_num = question_num)
 
-
-def start_interview(interview):
+def start_interview(): # Generate the first question(s)
     for question_num in range(5):
         # give the question to the front end
         ####################
@@ -338,41 +458,12 @@ def start_interview(interview):
             generate_resume_questions(interview)
         elif question_num:
             generate_dynamic_questions(interview, question_num = question_num)
-        
-        interview.add_answer(answer_text)
-        
+        #get_recordings()
+        interview.add_answer(transcript)
 
-@app.route('/submit_about', methods=['POST'])
-def submit_about():
-    # Here you would handle the form data
-    data = request.json
-    # Save the data and/or perform actions
-    return jsonify({'message': 'Data received'})
-
-@app.route('/api/get_initial_assessment', methods=['GET'])
-def get_initial_assessment():
-    # Return initial assessment data
-    pass
-
-@app.route('/api/send_message', methods=['POST'])
-def send_message():
-    # Send message to chatbot and get response
-    pass
-
-@app.route('/get-signed-url', methods=['GET'])
-def get_signed_url():
-    storage_client = storage.Client()
-    bucket = storage_client.bucket('lia_videos')
-    blob = bucket.blob('videos/video.webm')
-
-    url = blob.generate_signed_url(version='v4', expiration=600, method='PUT')
-
-    return jsonify({'signedUrl': url})
-
-@app.route('/api/toggle_theme', methods=['POST'])
-def toggle_theme():
-    # Handle theme toggling
-    pass
+# @app.route('/status')
+# def status():
+#     return 'Ok'
 
 @app.route('/')
 def serve():
