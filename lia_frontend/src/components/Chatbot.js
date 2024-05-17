@@ -67,9 +67,47 @@ function Chatbot() {
   // }, [initialQuestion]);
 
   // Function to start recording
+  
+
+// Function to make the API request to display the next question
+const displayQuestionAPI = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1/display_question', null, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('Question received successfully:', response.data);
+
+    if (response.data.nextQuestion) {
+      setQuestion(response.data.nextQuestion);
+    } else {
+      console.log('No next question available');
+    }
+  } catch (error) {
+    console.error('Error receiving question:', error);
+    // Handle the error as needed
+  }
+};
+
+// Function to make the API request to generate the next question
+const generateQuestionAPI = async () => {
+  try {
+    await axios.post('http://127.0.0.1/generate_question', null, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('Question generation triggered successfully');
+  } catch (error) {
+    console.error('Error triggering question generation:', error);
+    // Handle the error as needed
+  }
+};
+  
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       videoRef.current.srcObject = stream;
       const videoRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       const recordedChunks = [];
@@ -85,6 +123,13 @@ function Chatbot() {
 
       setIsRecording(true);
       videoRecorder.start();
+
+      // Call the API request function to display the question
+      await displayQuestionAPI();
+
+      // Call the API request function to generate the next question
+      await generateQuestionAPI();
+
     } catch (err) {
       setError('Cannot access media devices. Make sure to give permission.');
       console.error('Error starting recording:', err);
@@ -106,17 +151,16 @@ function Chatbot() {
 
       console.log('Sending POST request to /user_recording endpoint...'); // Added logging statement
 
-      const response = await axios.post('http://127.0.0.1/user_recording', formData, {
+      const response = await axios.post('http://127.0.0.1/stop_recording', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       console.log('Response received from /user_recording endpoint:', response.data); // Added logging statement
 
-      if (response.data.nextQuestion) {
-        setQuestion(response.data.nextQuestion);
-        setIsRecording(false); // Reset recording state
-      }
+      // if (response.data.nextQuestion) {
+      //   setQuestion(response.data.nextQuestion); 
+      // }
 
       if (response.data.signedUrl) {
         console.log('Signed URL received:', response.data.signedUrl); // Added logging statement
@@ -139,7 +183,7 @@ function Chatbot() {
         {isRecording ? (
           <Button onClick={stopRecording}>Stop Recording</Button>
         ) : (
-          <Button onClick={startRecording}>Start Recording</Button>
+          <Button onClick={startRecording}>Start Interview</Button>
         )}
       </VideoContainer>
       <QuestionContainer>

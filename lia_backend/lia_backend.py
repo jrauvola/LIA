@@ -34,9 +34,13 @@ logging.basicConfig(level=logging.DEBUG)
 CORS(app, resources={
     r"/upload_resume": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True # Set to True to allow credentials
+        "supports_credentials": True  # Set to True to allow credentials
     },
-    r"/user_recording": {
+    r"/stop_recording": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True  # Set to True to allow credentials
+    },
+    r"/start_recording": {
         "origins": "http://localhost:3000",
         "supports_credentials": True  # Set to True to allow credentials
     }
