@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-// import { useLocation } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+import Recorder from 'recorder-js';
 
 const Container = styled.div`
   display: flex;
@@ -19,6 +19,10 @@ const Video = styled.video`
   width: 90%; // Or set to a fixed size
   border-radius: 20px;
   margin-bottom: 20px;
+`;
+
+const Audio = styled.audio`
+  margin-top: 20px;
 `;
 
 const Button = styled.button`
@@ -51,140 +55,183 @@ const QuestionText = styled.p`
 `;
 
 function Chatbot() {
-  // const [recordedChunks, setRecordedChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState('');
   const [videoUrl, setVideoUrl] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
   const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
   const videoRef = useRef();
-  // const location = useLocation();
-  // const initialQuestion = location.state?.initialQuestion;
-  
-  // useEffect(() => {
-  //   if (initialQuestion) {
-  //     setQuestion(initialQuestion);
-  //   }
-  // }, [initialQuestion]);
+  const audioRef = useRef();
+  const audioContext = useRef(null);
+  const recorder = useRef(null);
+  const audioBlob = useRef(null);
 
-  // Function to start recording
-  
+  const displayQuestionAPI = async () => {
+    try {
+      const response = await axios.post('http://127.0.0.1/display_question', null, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Question received successfully:', response.data);
 
-// Function to make the API request to display the next question
-const displayQuestionAPI = async () => {
-  try {
-    const response = await axios.post('http://127.0.0.1/display_question', null, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    console.log('Question received successfully:', response.data);
-
-    if (response.data.nextQuestion) {
-      setQuestion(response.data.nextQuestion);
-    } else {
-      console.log('No next question available');
+      if (response.data.nextQuestion) {
+        setQuestion(response.data.nextQuestion);
+      } else {
+        console.log('No next question available');
+      }
+    } catch (error) {
+      console.error('Error receiving question:', error);
+      // Handle the error as needed
     }
-  } catch (error) {
-    console.error('Error receiving question:', error);
-    // Handle the error as needed
-  }
-};
+  };
 
-// Function to make the API request to generate the next question
-const generateQuestionAPI = async () => {
-  try {
-    await axios.post('http://127.0.0.1/generate_question', null, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    console.log('Question generation triggered successfully');
-  } catch (error) {
-    console.error('Error triggering question generation:', error);
-    // Handle the error as needed
-  }
-};
-  
+  // Function to make the API request to generate the next question
+  const generateQuestionAPI = async () => {
+    try {
+      await axios.post('http://127.0.0.1/generate_question', null, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Question generation triggered successfully');
+    } catch (error) {
+      console.error('Error triggering question generation:', error);
+      // Handle the error as needed
+    }
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      videoRef.current.srcObject = stream;
-      const videoRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      const recordedChunks = [];
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } }); // Set channelCount to 1 for mono
 
-      videoRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+      videoRef.current.srcObject = videoStream;
+      videoRef.current.play();
+
+      const videoRecorder = new MediaRecorder(videoStream, { mimeType: 'video/webm' });
+
+      const videoChunks = [];
+
+      videoRecorder.ondataavailable = (e) => videoChunks.push(e.data);
 
       videoRecorder.onstop = () => {
-        const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
         const videoUrl = URL.createObjectURL(videoBlob);
         setVideoUrl(videoUrl);
-        uploadToGCP(videoBlob);
       };
 
-      setIsRecording(true);
+      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+      recorder.current = new Recorder(audioContext.current, {
+        onAnalysed: data => {},
+      });
+      // Set the number of channels to 1 for mono
+      recorder.current.numChannels = 1;
+
+      recorder.current.init(audioStream)
+        .then(() => {
+          recorder.current.start();
+          setIsRecording(true);
+        })
+        .catch(err => console.log('Uh oh... unable to get stream...', err));
+
       videoRecorder.start();
-
-      // Call the API request function to display the question
-      await displayQuestionAPI();
-
-      // Call the API request function to generate the next question
-      await generateQuestionAPI();
-
     } catch (err) {
       setError('Cannot access media devices. Make sure to give permission.');
       console.error('Error starting recording:', err);
     }
   };
 
-  const stopRecording = async () => {
-    videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+  const stopRecording = async (videoChunks) => {
+    console.log('Stopping media tracks and clearing video source');
+
+    videoRef.current.srcObject.getTracks().forEach((track) => {
+      track.stop();
+      console.log('Stopped media track:', track);
+    });
     videoRef.current.srcObject = null;
+
+    console.log('Stopping audio recorder');
+
+    recorder.current.stop()
+      .then(({ blob, buffer }) => {
+        audioBlob.current = blob;
+        const audioUrl = URL.createObjectURL(blob);
+        setAudioUrl(audioUrl);
+        console.log('Recording stopped successfully. Blob available:', !!blob);
+
+        // Convert videoChunks to an array
+        const videoChunksArray = Array.from(videoChunks);
+
+        // Convert videoChunksArray to an array of Blob objects
+        const blobChunks = videoChunksArray.map(chunk => new Blob([chunk], { type: 'video/webm' }));
+
+        // Create a new Blob from the blobChunks array
+        const videoBlob = new Blob(blobChunks, { type: 'video/webm' });
+        uploadToGCP(videoBlob, audioBlob.current);
+      })
+      .catch(error => {
+        console.error('Error stopping recording:', error);
+      });
+
     setIsRecording(false);
   };
 
-  const uploadToGCP = async (blob) => {
+  const uploadToGCP = async (videoBlob, audioBlob) => {
     try {
-      console.log('Starting file upload to GCP...'); // Added logging statement
+      console.log('Starting file upload to GCP...');
 
       const formData = new FormData();
-      formData.append('file', blob, 'recording.webm');
+      formData.append('video', videoBlob, 'video.webm');
+      formData.append('audio', audioBlob, 'audio.wav');
 
-      console.log('Sending POST request to /user_recording endpoint...'); // Added logging statement
+      console.log('Sending POST request to /stop_recording endpoint...');
 
       const response = await axios.post('http://127.0.0.1/stop_recording', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      console.log('Response received from /user_recording endpoint:', response.data); // Added logging statement
+      console.log('Response received from /stop_recording endpoint:', response.data);
 
-      // if (response.data.nextQuestion) {
-      //   setQuestion(response.data.nextQuestion); 
-      // }
-
-      if (response.data.signedUrl) {
-        console.log('Signed URL received:', response.data.signedUrl); // Added logging statement
-        setVideoUrl(response.data.signedUrl);
-      } else {
-        console.error('Error uploading media:', response.data.error);
+      // Handle the response and update the question if needed
+      if (response.data.nextQuestion) {
+        setQuestion(response.data.nextQuestion);
       }
 
-      console.log('File upload to GCP completed successfully.'); // Added logging statement
+      if (response.data.videoUrl) {
+        console.log('Video URL received:', response.data.videoUrl);
+        setVideoUrl(response.data.videoUrl);
+      }
+
+      if (response.data.audioUrl) {
+        console.log('Audio URL received:', response.data.audioUrl);
+        setAudioUrl(response.data.audioUrl);
+      }
+
+      console.log('File upload to GCP completed successfully.');
     } catch (error) {
       console.error('Error uploading media:', error.message);
     }
   };
 
+    const playback = () => {
+    videoRef.current.play();
+    audioRef.current.play();
+  };
+
   return (
     <Container>
       <VideoContainer>
-        <Video ref={videoRef} autoPlay playsInline src={videoUrl} />
+        <Video ref={videoRef} playsInline src={videoUrl} />
+        <Audio ref={audioRef} src={audioUrl} />
         {error && <p>Error: {error}</p>}
         {isRecording ? (
           <Button onClick={stopRecording}>Stop Recording</Button>
         ) : (
-          <Button onClick={startRecording}>Start Interview</Button>
+          <Button onClick={startRecording}>Start Recording</Button>
         )}
+        {videoUrl && audioUrl && <Button onClick={playback}>Playback</Button>}
       </VideoContainer>
       <QuestionContainer>
         <QuestionText>{question}</QuestionText>
