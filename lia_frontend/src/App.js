@@ -2,8 +2,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AboutYou from './components/AboutYou';
-// import Assessment from './components/Assessment';
-// import RoadMap from './components/RoadMap';
+import HomePage from './components/HomePage';
 import Chatbot from './components/Chatbot';
 import NavigationBar from './components/NavigationBar';
 import { ThemeProvider } from './context/ThemeContext';
@@ -17,13 +16,17 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <NavigationBar />
         <Routes>
-          <Route path="/about-you" element={<AboutYou />} />
-          {/* <Route path="/assessment" element={<Assessment />} />
-          <Route path="/road-map" element={<RoadMap />} /> */}
-          <Route path="/chatbot" element={<Chatbot />} />
-          {/* ...other routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about-you" element={<>
+            <NavigationBar />
+            <AboutYou />
+          </>} />
+          <Route path="/chatbot" element={<>
+            <NavigationBar />
+            <Chatbot />
+          </>} />
+          {/* Add other routes as needed */}
         </Routes>
       </Router>
     </ThemeProvider>

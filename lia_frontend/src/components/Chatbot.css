@@ -1,0 +1,69 @@
+/* Chatbot.css */
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  height: 100vh;
+  background-color: #f0f0f0;  /* Example background color */
+}
+
+.video-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+}
+
+.video {
+  width: 100%;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  transform: scaleX(-1);  /* Invert the camera view */
+}
+
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: default;
+}
+
+.question-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 45%;
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.question-text {
+  font-size: 18px;
+  margin-top: 20px;
+}
+
+.lia-image {
+  width: 150px; /* Adjust the width as needed */
+  height: auto;
+  margin-bottom: 20px;
+  border-radius: 50%; /* Optional: Make the image round */
+}
+

@@ -4,25 +4,33 @@ import { NavLink } from 'react-router-dom';
 
 function NavigationBar() {
   return (
-    <nav className="navigation-bar">
-      <ul>
+    <nav className="bg-gray-800 p-4">
+      <ul className="flex space-x-4">
         <li>
-          <NavLink to="/about-you" activeClassName="active">About You</NavLink>
-        </li>
-        {/* Uncomment when other components are created */}
-        {/* <li>
-          <NavLink to="/assessment" activeClassName="active">Assessment</NavLink>
+          <NavLink 
+            to="/about-you" 
+            className={({ isActive }) => 
+              isActive ? 'text-white' : 'text-gray-300 hover:text-white'
+            }
+          >
+            About You
+          </NavLink>
         </li>
         <li>
-          <NavLink to="/road-map" activeClassName="active">Road Map</NavLink>
+          <NavLink 
+            to="/chatbot" 
+            className={({ isActive }) => 
+              isActive ? 'text-white' : 'text-gray-300 hover:text-white'
+            }
+          >
+            Improvement Chatbot
+          </NavLink>
         </li>
-        */}
-        <li>
-          <NavLink to="/chatbot" activeClassName="active">Improvement Chatbot</NavLink>
-        </li> 
+        {/* Add more links as needed */}
       </ul>
     </nav>
   );
 }
 
 export default NavigationBar;
+

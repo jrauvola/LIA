@@ -1,0 +1,37 @@
+.about-you-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 0 2rem;
+  background-color: #f0f0f0; /* Background color or gradient */
+}
+
+.form-container {
+  background: rgba(255, 255, 255, 1); /* Opaque white background */
+  padding: 2rem;
+  border-radius: 20px;
+  width: 45%;  /* Adjust width to take up almost half the page */
+}
+
+.image-container {
+  width: 45%;  /* Adjust width to take up almost half the page */
+  display: flex;
+  justify-content: center;
+}
+
+.image-container img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 20px; /* Optional: Add some rounding to the image corners */
+}
+
+.form-container h1 {
+  margin-bottom: 1.5rem;
+}
+
+.form-container input,
+.form-container select,
+.form-container button {
+  margin-bottom: 1rem;
+}

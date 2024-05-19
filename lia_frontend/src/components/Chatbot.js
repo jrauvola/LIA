@@ -1,152 +1,152 @@
 import React, { useState, useRef, useEffect } from 'react';
-// import { useLocation } from 'react-router-dom';
-import axios from 'axios';
-import styled from 'styled-components';
-
-const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-`;
-
-const VideoContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const Video = styled.video`
-  width: 90%; // Or set to a fixed size
-  border-radius: 20px;
-  margin-bottom: 20px;
-`;
-
-const Button = styled.button`
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  margin: 5px;
-  &:hover {
-    background-color: #45a049;
-  }
-  &:disabled {
-    background-color: #ccc;
-    cursor: default;
-  }
-`;
-
-const QuestionContainer = styled.div`
-  margin-left: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-const QuestionText = styled.p`
-  font-size: 18px;
-`;
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile } from '@ffmpeg/util';
+import './Chatbot.css';
 
 function Chatbot() {
-  // const [recordedChunks, setRecordedChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState('');
-  const [videoUrl, setVideoUrl] = useState(null);
+  const [mediaUrl, setMediaUrl] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
   const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [processingDuration, setProcessingDuration] = useState(0);
+  const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const videoRef = useRef();
-  // const location = useLocation();
-  // const initialQuestion = location.state?.initialQuestion;
-  
-  // useEffect(() => {
-  //   if (initialQuestion) {
-  //     setQuestion(initialQuestion);
-  //   }
-  // }, [initialQuestion]);
+  const mediaRecorderRef = useRef();
+  const recordedChunksRef = useRef([]);
+  const ffmpegRef = useRef(new FFmpeg({ log: true }));
+  const recordingTimerRef = useRef(null);
 
-  // Function to start recording
+  const loadFFmpeg = async () => {
+    const ffmpeg = ffmpegRef.current;
+    if (!ffmpegLoaded) {
+      await ffmpeg.load();
+      setFfmpegLoaded(true);
+    }
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       videoRef.current.srcObject = stream;
-      const videoRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      const recordedChunks = [];
 
-      videoRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      recordedChunksRef.current = [];
 
-      videoRecorder.onstop = () => {
-        const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-        const videoUrl = URL.createObjectURL(videoBlob);
-        setVideoUrl(videoUrl);
-        uploadToGCP(videoBlob);
+      mediaRecorder.ondataavailable = (e) => recordedChunksRef.current.push(e.data);
+
+      mediaRecorder.onstop = async () => {
+        const mediaBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const mediaUrl = URL.createObjectURL(mediaBlob);
+        setMediaUrl(mediaUrl);
+        console.log('Recording stopped, media URL created:', mediaUrl);
+
+        // Start processing timer
+        const startTime = Date.now();
+        await loadFFmpeg();
+        await convertToWav(mediaBlob);
+        const endTime = Date.now();
+        setProcessingDuration(((endTime - startTime) / 1000).toFixed(2));
       };
 
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
       setIsRecording(true);
-      videoRecorder.start();
+      startRecordingTimer();
     } catch (err) {
-      setError('Cannot access media devices. Make sure to give permission.');
+      setError('Failed to start recording: ' + err.message);
       console.error('Error starting recording:', err);
     }
   };
 
-  const stopRecording = async () => {
-    videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-    videoRef.current.srcObject = null;
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
     setIsRecording(false);
+    stopRecordingTimer();
   };
 
-  const uploadToGCP = async (blob) => {
-    try {
-      console.log('Starting file upload to GCP...'); // Added logging statement
+  const startRecordingTimer = () => {
+    setRecordingDuration(0);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingDuration((prevDuration) => prevDuration + 1);
+    }, 1000);
+  };
 
-      const formData = new FormData();
-      formData.append('file', blob, 'recording.webm');
+  const stopRecordingTimer = () => {
+    clearInterval(recordingTimerRef.current);
+  };
 
-      console.log('Sending POST request to /user_recording endpoint...'); // Added logging statement
+  const convertToWav = async (mediaBlob) => {
+    const ffmpeg = ffmpegRef.current;
+    const webmFilename = 'recording.webm';
+    const wavFilename = 'recording.wav';
 
-      const response = await axios.post('http://127.0.0.1/user_recording', formData, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+    // Load the media file into ffmpeg
+    await ffmpeg.writeFile(webmFilename, await fetchFile(mediaBlob));
 
-      console.log('Response received from /user_recording endpoint:', response.data); // Added logging statement
+    // Run the conversion command
+    await ffmpeg.exec(['-i', webmFilename, wavFilename]);
 
-      if (response.data.nextQuestion) {
-        setQuestion(response.data.nextQuestion);
-        setIsRecording(false); // Reset recording state
-      }
+    // Read the result
+    const data = await ffmpeg.readFile(wavFilename);
+    const audioBlob = new Blob([data.buffer], { type: 'audio/wav' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    setAudioUrl(audioUrl);
+    console.log('WAV file created, audio URL:', audioUrl);
 
-      if (response.data.signedUrl) {
-        console.log('Signed URL received:', response.data.signedUrl); // Added logging statement
-        setVideoUrl(response.data.signedUrl);
-      } else {
-        console.error('Error uploading media:', response.data.error);
-      }
-
-      console.log('File upload to GCP completed successfully.'); // Added logging statement
-    } catch (error) {
-      console.error('Error uploading media:', error.message);
-    }
+    // Clean up - need to look into more
+    // await ffmpeg.unlink(webmFilename);
+    // await ffmpeg.unlink(wavFilename);
   };
 
   return (
-    <Container>
-      <VideoContainer>
-        <Video ref={videoRef} autoPlay playsInline src={videoUrl} />
+    <div className="container">
+      <div className="video-container">
+        <video className="video" ref={videoRef} autoPlay playsInline />
         {error && <p>Error: {error}</p>}
+        <div className="timer">
+          <p>Recording Duration: {recordingDuration}s</p>
+          {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
+        </div>
         {isRecording ? (
-          <Button onClick={stopRecording}>Stop Recording</Button>
+          <button className="button" onClick={stopRecording}>Stop Recording</button>
         ) : (
-          <Button onClick={startRecording}>Start Recording</Button>
+          <button className="button" onClick={startRecording}>Start Recording</button>
         )}
-      </VideoContainer>
-      <QuestionContainer>
-        <QuestionText>{question}</QuestionText>
-      </QuestionContainer>
-    </Container>
+        {mediaUrl && (
+          <div>
+            <video controls src={mediaUrl} className="recorded-video"></video>
+            <a href={mediaUrl} download="recorded-video.webm">Download Video</a>
+          </div>
+        )}
+        {audioUrl && (
+          <div>
+            <audio controls src={audioUrl} className="recorded-audio"></audio>
+            <a href={audioUrl} download="recorded-audio.wav">Download Audio</a>
+          </div>
+        )}
+      </div>
+      <div className="question-container">
+        <img className="lia-image" src="/LIA.webp" alt="LIA" />
+        <p className="question-text">{question}</p>
+      </div>
+    </div>
   );
 }
 
 export default Chatbot;
+
+
+
+
+
+
+
+

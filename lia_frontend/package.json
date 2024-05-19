@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -14,8 +17,11 @@
     "styled-components": "^6.1.8",
     "web-vitals": "^2.1.4"
   },
- "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.16.0"
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.16.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3"
   },
   "scripts": {
     "start": "react-scripts start",
