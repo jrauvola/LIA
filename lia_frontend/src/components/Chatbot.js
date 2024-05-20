@@ -59,7 +59,7 @@ function Chatbot() {
   const [error, setError] = useState('');
   const [videoUrl, setVideoUrl] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
-  const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
+  const [question, setQuestion] = useState("When you are ready, click start recording");
   const videoRef = useRef();
   const audioRef = useRef();
   const audioContext = useRef(null);
@@ -132,6 +132,7 @@ function Chatbot() {
         .then(() => {
           recorder.current.start();
           setIsRecording(true);
+          generateQuestionAPI(); // Add this line to generate a question while recording
         })
         .catch(err => console.log('Uh oh... unable to get stream...', err));
 
@@ -229,7 +230,14 @@ function Chatbot() {
         {isRecording ? (
           <Button onClick={stopRecording}>Stop Recording</Button>
         ) : (
-          <Button onClick={startRecording}>Start Recording</Button>
+          <Button
+            onClick={async () => {
+              await displayQuestionAPI();
+              startRecording();
+            }}
+          >
+            Start Interview
+          </Button>
         )}
         {videoUrl && audioUrl && <Button onClick={playback}>Playback</Button>}
       </VideoContainer>

@@ -52,7 +52,7 @@ def retrievalQA(retr_docs_num):
     )
     return qa
     
-def generate_resume_questions():
+def generate_resume_questions(interview_instance):
     qa_prompt = f"""
                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
                     Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
