@@ -56,11 +56,11 @@ class interview_class:
                                  "industry": industry, 
                                  "role": role}
         self.evaluator = {}
-        self.question_num = 1
+        self.question_num = 0
         self.answer_num = 0
 
     def add_answer(self, new_answer, answer_num) -> dict:
-        i = answer_num
+        i = answer_num - 1
         self.interview_dict[i]["answer"] = new_answer
         return self.interview_dict
 
@@ -123,13 +123,14 @@ def display_question():
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
-    i = interview_instance.question_num
+    print("triggered")
+    i = interview_instance.question_num + 1
     if i <5:
         app.logger.info("Generating")
         if i < 3:
-            interview_processor.generate_resume_question()
+            interview_processor.generate_resume_questions(interview_instance)
         else:
-            interview_processor.generate_dynamic_question()
+            interview_processor.generate_dynamic_questions(interview_instance, i)
         interview_instance.answer_num = interview_instance.answer_num + 1
         app.logger.info("Generated")
         return jsonify({'message': 'Question generated successfully'}), 200
@@ -143,13 +144,25 @@ def generate_question():
 def stop_question():
     try:
         # Get the uploaded video and audio files from the request
-        video_file = request.files.get('video')
-        audio_file = request.files.get('audio')
-        transcript = recording_processor.processor(video_file, audio_file)
+        # video_file = request.files.get('video')
+        # audio_file = request.files.get('audio')
+        transcript_all = [
+            'Hi everyone, I am Katy! My fascination with data began during my graduate studies in Master of Applied Data Science. Witnessing the power of data analysis to uncover hidden patterns and solve complex problems sparked a passion in me I could not ignore.This passion led me to pursue a Master degree in Data Science, where I honed my skills in Python, R, statistical modeling, and machine learning. During my internship at [Company Name], I had the opportunity to work on a project that [briefly describe the project and its impact]. This experience solidified my desire to leverage data science to drive meaningful insights and solutions.',
+            'In my previous role, I had to explain the concept of machine learning to our marketing team. I used the analogy of teaching a child to recognize different types of fruit. Just as you would show a child many examples to help them learn, a machine learning model is trained with data. This analogy helped make a complex concept more relatable and easier to understand.',
+            'In one project, I worked with a colleague who had a very different working style. To resolve our differences, I scheduled a meeting to understand his perspective. We found common ground in our project goals and agreed on a shared approach. This experience taught me the value of open communication and empathy in teamwork.',
+            'In my last role, I had to balance the need for data-driven decisions with ethical considerations. I ensured that all data usage complied with ethical standards and privacy laws, and I presented alternatives when necessary. This approach helped in making informed decisions while respecting ethical boundaries.',
+            'In a previous project, the requirements changed frequently. I adapted by maintaining open communication with stakeholders to understand their needs. I also used agile methodologies to be more flexible in my approach, which helped in accommodating changes effectively.',
+            'I stay updated by reading industry journals, attending webinars, and participating in online forums. I also set aside time each week to experiment with new tools and techniques. This not only helps me stay current but also continuously improves my skills.'
+            ]
+        j = interview_instance.answer_num
+        transcript = transcript_all[j]
+        # transcript = recording_processor.processor(video_file, audio_file)
         try:
-            j = interview_instance.answer_num
+            # j = interview_instance.answer_num
+            print(interview_instance.interview_dict)
             interview_instance.add_answer(transcript, j)
-            interview_instance.answer_num = interview_instance.answer_num + 1
+            print(interview_instance.interview_dict)
+            interview_instance.answer_num = j + 1
         except Exception as e:
             print(f"Error in add_answer: {str(e)}")
         return jsonify({'message': 'stop_question success'})

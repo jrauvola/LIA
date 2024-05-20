@@ -90,6 +90,7 @@ function Chatbot() {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
+      generateQuestionAPI(); // Add this line to generate a question while recording
       startRecordingTimer();
     } catch (err) {
       setError('Failed to start recording: ' + err.message);
@@ -114,6 +115,8 @@ function Chatbot() {
     const checkAudioBlobReady = () => {
       if (audioBlob) {
         uploadToGCP(videoBlob, audioBlob);
+        // Call the displayQuestionAPI function when recording stops
+        displayQuestionAPI();
       } else {
         setTimeout(checkAudioBlobReady, 100);
       }
@@ -215,7 +218,15 @@ function Chatbot() {
         {isRecording ? (
           <button className="button" onClick={stopRecording}>Stop Recording</button>
         ) : (
-          <button className="button" onClick={startRecording}>Start Recording</button>
+          <button
+            className="button"
+            onClick={async () => {
+              await displayQuestionAPI();
+              startRecording();
+            }}
+          >
+            Start Recording
+          </button>
         )}
         {mediaUrl && (
           <div>
