@@ -60,7 +60,7 @@ class interview_class:
         self.answer_num = 0
 
     def add_answer(self, new_answer, answer_num) -> dict:
-        i = answer_num - 1
+        i = answer_num
         self.interview_dict[i]["answer"] = new_answer
         return self.interview_dict
 
@@ -125,6 +125,7 @@ def display_question():
 def generate_question():
     print("triggered")
     i = interview_instance.question_num + 1
+    print('generate_question question num:', interview_instance.question_num)
     if i <5:
         app.logger.info("Generating")
         if i < 3:
