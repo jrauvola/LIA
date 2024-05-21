@@ -109,9 +109,10 @@ def build_pp():
 
 @app.route('/display_question', methods=['POST'])
 def display_question():
-    i = interview_instance.question_num
-    if i < 5:
-        next_question = interview_instance.interview_dict[i]["question"]
+    print('display_question question num:', interview_instance.question_num)
+    k = interview_instance.question_num
+    if k < 5:
+        next_question = interview_instance.interview_dict[k]["question"]
 
         return jsonify({
             'nextQuestion': next_question
@@ -131,10 +132,12 @@ def generate_question():
         if i < 3:
             interview_processor.generate_resume_questions(interview_instance)
         else:
-            interview_processor.generate_dynamic_questions(interview_instance, i)
-        interview_instance.answer_num = interview_instance.answer_num + 1
-        app.logger.info("Generated")
-        return jsonify({'message': 'Question generated successfully'}), 200
+            interview_processor.generate_dynamic_questions(interview_instance)
+
+        interview_instance.question_num = interview_instance.question_num + 1
+
+        return jsonify({'message': 'Question generation requested successfully'}), 200
+
     else:
         return jsonify({'message': 'No more questions to generate'}), 200
 
@@ -156,6 +159,7 @@ def stop_question():
             'I stay updated by reading industry journals, attending webinars, and participating in online forums. I also set aside time each week to experiment with new tools and techniques. This not only helps me stay current but also continuously improves my skills.'
             ]
         j = interview_instance.answer_num
+        print('stop_question answer num:', j)
         transcript = transcript_all[j]
         # transcript = recording_processor.processor(video_file, audio_file)
         try:

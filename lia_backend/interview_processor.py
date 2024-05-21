@@ -67,13 +67,12 @@ def generate_resume_questions(interview_instance):
     qa = retrievalQA(retr_docs_num=4)
     print("QA Response")
     response = qa({"query": qa_prompt})
+    interview_instance.add_question(response["result"], question_num=interview_instance.question_num +1)
+    print("Question Generated")
 
-    interview_instance.question_num = interview_instance.question_num + 1
-    interview_instance.add_question(response["result"], question_num=interview_instance.question_num)
-
-
-def generate_dynamic_questions(interview_instance, question_num):
+def generate_dynamic_questions(interview_instance):
     window_dict = {}
+    question_num = interview_instance.question_num
     if question_num > 1:
         for key in range(question_num - 2, question_num):
             window_dict[key] = interview_instance.interview_dict[key]
@@ -88,4 +87,5 @@ def generate_dynamic_questions(interview_instance, question_num):
     response = qa({"query": qa_prompt})
 
     question_num = question_num
-    interview_instance.add_question(response["result"], question_num=question_num)
+    interview_instance.add_question(response["result"], question_num=question_num+1)
+    print("Question Generated")
