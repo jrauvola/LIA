@@ -6,6 +6,7 @@ import resume
 import os
 import interview_processor
 import recording_processor
+import evaluator
 ## import all other files
 import pandas as pd
 from collections import Counter
@@ -113,14 +114,16 @@ def display_question():
     k = interview_instance.question_num
     if k < 5:
         next_question = interview_instance.interview_dict[k]["question"]
-
+        if k == 4:
+            interview_instance.question_num = interview_instance.question_num + 1
         return jsonify({
             'nextQuestion': next_question
             })
     else:
         return jsonify({
-            'nextQuestion': 'The interview is complete.'
+            'nextQuestion': evaluator.generate(interview_instance)
             })
+
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
@@ -139,6 +142,8 @@ def generate_question():
         return jsonify({'message': 'Question generation requested successfully'}), 200
 
     else:
+        # calling generate() will print the evaluation metrics
+
         return jsonify({'message': 'No more questions to generate'}), 200
 
 

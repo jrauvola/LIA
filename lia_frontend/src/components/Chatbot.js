@@ -181,13 +181,13 @@ function Chatbot() {
 
       console.log('Response received from /stop_recording endpoint:', response.data);
 
-      // Handle the response and update the question if needed
-      if (response.data.nextQuestion) {
-        console.log('Next question received:', response.data.nextQuestion);
-        setQuestion(response.data.nextQuestion);
-      } else {
-        console.log('No next question in response.');
-      }
+      // // Handle the response and update the question if needed
+      // if (response.data.nextQuestion) {
+      //   console.log('Next question received:', response.data.nextQuestion);
+      //   setQuestion(response.data.nextQuestion);
+      // } else {
+      //   console.log('No next question in response.');
+      // }
 
       if (response.data.mediaUrl) {
         console.log('Video URL received:', response.data.mediaUrl);
@@ -220,7 +220,7 @@ function Chatbot() {
           <button
             className="button"
             onClick={async () => {
-              // await displayQuestionAPI();
+              await displayQuestionAPI();
               startRecording();
             }}
           >
