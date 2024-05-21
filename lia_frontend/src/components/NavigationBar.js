@@ -26,6 +26,16 @@ function NavigationBar() {
             Improvement Chatbot
           </NavLink>
         </li>
+        <li>
+          <NavLink 
+            to="/evaluation" 
+            className={({ isActive }) => 
+              isActive ? 'text-white' : 'text-gray-300 hover:text-white'
+            }
+          >
+            Evaluation
+          </NavLink>
+        </li>
         {/* Add more links as needed */}
       </ul>
     </nav>

@@ -1,0 +1,17 @@
+.evaluation-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.evaluation-category {
+  margin-bottom: 20px;
+}
+
+.evaluation-category h2 {
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.evaluation-category p {
+  margin: 5px 0;
+}

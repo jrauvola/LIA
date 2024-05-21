@@ -39,6 +39,10 @@ CORS(app, resources={
         "origins": "http://localhost:3000",
         "supports_credentials": True  # Set to True to allow credentials
     },
+    r"/print_evaluate": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True  # Set to True to allow credentials
+    },
     r"/start_recording": {
         "origins": "http://localhost:3000",
         "supports_credentials": True  # Set to True to allow credentials
@@ -121,9 +125,14 @@ def display_question():
             })
     else:
         return jsonify({
-            'nextQuestion': evaluator.generate(interview_instance)
+            'nextQuestion': 'Interview Complete'
             })
 
+@app.route('/print_evaluate', methods=['POST'])
+def display_evaluate():
+    return jsonify({
+        'nextQuestion': evaluator.generate(interview_instance)
+    })
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():

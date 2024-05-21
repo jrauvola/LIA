@@ -1,3 +1,4 @@
+/* HomePage.css */
 .homepage-container {
   position: relative;
   width: 100%;
@@ -32,7 +33,7 @@
 }
 
 .highlight {
-  color: #FFB6C1;   /* Change the span letters to the specified shade of blue */
+  color: white;   /* Change the span letters to the specified shade of blue */
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 

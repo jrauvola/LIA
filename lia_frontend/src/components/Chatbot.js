@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
+import { useNavigate } from 'react-router-dom';
 import './Chatbot.css';
 import axios from "axios";
 
@@ -13,12 +14,13 @@ function Chatbot() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processingDuration, setProcessingDuration] = useState(0);
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
-  const [audioBlob, setAudioBlob] = useState(null);  // New state variable
+  const [audioBlob, setAudioBlob] = useState(null);
   const videoRef = useRef();
   const mediaRecorderRef = useRef();
   const recordedChunksRef = useRef([]);
   const ffmpegRef = useRef(new FFmpeg({ log: true }));
   const recordingTimerRef = useRef(null);
+  const navigate = useNavigate(); // Move useNavigate to top level
 
   const displayQuestionAPI = async () => {
     try {
@@ -36,11 +38,9 @@ function Chatbot() {
       }
     } catch (error) {
       console.error('Error receiving question:', error);
-      // Handle the error as needed
     }
   };
 
-  // Function to make the API request to generate the next question
   const generateQuestionAPI = async () => {
     try {
       await axios.post('http://127.0.0.1/generate_question', null, {
@@ -51,7 +51,6 @@ function Chatbot() {
       console.log('Question generation triggered successfully');
     } catch (error) {
       console.error('Error triggering question generation:', error);
-      // Handle the error as needed
     }
   };
 
@@ -79,7 +78,6 @@ function Chatbot() {
         setMediaUrl(mediaUrl);
         console.log('Recording stopped, media URL created:', mediaUrl);
 
-        // Start processing timer
         const startTime = Date.now();
         await loadFFmpeg();
         await convertToWav(mediaBlob);
@@ -90,7 +88,7 @@ function Chatbot() {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
-      generateQuestionAPI(); // Add this line to generate a question while recording
+      generateQuestionAPI();
       startRecordingTimer();
     } catch (err) {
       setError('Failed to start recording: ' + err.message);
@@ -108,20 +106,6 @@ function Chatbot() {
     }
     setIsRecording(false);
     stopRecordingTimer();
-
-    // Get the video and audio blobs
-    // const videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-    // Ensure audioBlob is available before uploading
-    // const checkAudioBlobReady = () => {
-    //   if (audioBlob) {
-    //     uploadToGCP(videoBlob, audioBlob);
-    //     // Call the displayQuestionAPI function when recording stops
-    //     displayQuestionAPI();
-    //   } else {
-    //     setTimeout(checkAudioBlobReady, 100);
-    //   }
-    // };
-    // checkAudioBlobReady();
   };
 
   const startRecordingTimer = () => {
@@ -140,28 +124,13 @@ function Chatbot() {
     const webmFilename = 'recording.webm';
     const wavFilename = 'recording.wav';
 
-    // Load the media file into ffmpeg
     await ffmpeg.writeFile(webmFilename, await fetchFile(mediaBlob));
-
-    // Run the conversion command
     await ffmpeg.exec(['-i', webmFilename, wavFilename]);
 
-    // Read the result
     const data = await ffmpeg.readFile(wavFilename);
     const audioBlob = new Blob([data.buffer], { type: 'audio/wav' });
-    setAudioBlob(audioBlob); // this is necessary to make sure the same audio file is downloading and going to bucket
-    const audioUrl = URL.createObjectURL(audioBlob);
-    setAudioUrl(audioUrl);
-    console.log('WAV file created, audio URL:', audioUrl);
     const videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
     await uploadToGCP(videoBlob, audioBlob);
-    // const audioUrl = URL.createObjectURL(audioBlob);
-    // setAudioUrl(audioUrl);
-    // console.log('WAV file created, audio URL:', audioUrl);
-    //
-    // // Clean up - need to look into more
-    // await ffmpeg.unlink(webmFilename);
-    // await ffmpeg.unlink(wavFilename);
   };
 
   const uploadToGCP = async (videoBlob, audioBlob) => {
@@ -181,14 +150,6 @@ function Chatbot() {
 
       console.log('Response received from /stop_recording endpoint:', response.data);
 
-      // // Handle the response and update the question if needed
-      // if (response.data.nextQuestion) {
-      //   console.log('Next question received:', response.data.nextQuestion);
-      //   setQuestion(response.data.nextQuestion);
-      // } else {
-      //   console.log('No next question in response.');
-      // }
-
       if (response.data.mediaUrl) {
         console.log('Video URL received:', response.data.mediaUrl);
         setMediaUrl(response.data.mediaUrl);
@@ -203,6 +164,26 @@ function Chatbot() {
     } catch (error) {
       console.error('Error uploading media:', error.message);
     }
+  };
+
+  const handleEvaluation = async () => {
+      try {
+      const response = await axios.post('http://127.0.0.1/print_evaluate', null, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Evaluator received successfully:', response.data);
+
+      if (response.data.nextQuestion) {
+        setQuestion(response.data.nextQuestion);
+      } else {
+        console.log('No evaluator available');
+      }
+    } catch (error) {
+      console.error('Error receiving evaluator:', error);
+    }
+    //navigate('/evaluation');
   };
 
   return (
@@ -227,18 +208,7 @@ function Chatbot() {
             Start Recording
           </button>
         )}
-        {mediaUrl && (
-          <div>
-            <video controls src={mediaUrl} className="recorded-video"></video>
-            <a href={mediaUrl} download="recorded-video.webm">Download Video</a>
-          </div>
-        )}
-        {audioUrl && (
-          <div>
-            <audio controls src={audioUrl} className="recorded-audio"></audio>
-            <a href={audioUrl} download="recorded-audio.wav">Download Audio</a>
-          </div>
-        )}
+        <button className="button" onClick={handleEvaluation}>Get Evaluation</button>
       </div>
       <div className="question-container">
         <img className="lia-image" src="/LIA.webp" alt="LIA" />
@@ -249,11 +219,3 @@ function Chatbot() {
 }
 
 export default Chatbot;
-
-
-
-
-
-
-
-

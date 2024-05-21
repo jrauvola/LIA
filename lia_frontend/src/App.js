@@ -1,12 +1,12 @@
-// App.js
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AboutYou from './components/AboutYou';
 import HomePage from './components/HomePage';
 import Chatbot from './components/Chatbot';
+import EvaluationPage from './components/EvaluationPage';
 import NavigationBar from './components/NavigationBar';
 import { ThemeProvider } from './context/ThemeContext';
-import './App.css'; // Import your CSS file for styling
+import './App.css';
 
 function App() {
   useEffect(() => {
@@ -18,14 +18,9 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/about-you" element={<>
-            <NavigationBar />
-            <AboutYou />
-          </>} />
-          <Route path="/chatbot" element={<>
-            <NavigationBar />
-            <Chatbot />
-          </>} />
+          <Route path="/about-you" element={<><NavigationBar /><AboutYou /></>} />
+          <Route path="/chatbot" element={<><NavigationBar /><Chatbot /></>} />
+          <Route path="/evaluation" element={<><NavigationBar /><EvaluationPage /></>} />
           {/* Add other routes as needed */}
         </Routes>
       </Router>
