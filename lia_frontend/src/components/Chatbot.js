@@ -110,19 +110,18 @@ function Chatbot() {
     stopRecordingTimer();
 
     // Get the video and audio blobs
-    const videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+    // const videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
     // Ensure audioBlob is available before uploading
-    const checkAudioBlobReady = () => {
-      if (audioBlob) {
-        uploadToGCP(videoBlob, audioBlob);
-        // Call the displayQuestionAPI function when recording stops
-        displayQuestionAPI();
-      } else {
-        setTimeout(checkAudioBlobReady, 100);
-      }
-    };
-
-    checkAudioBlobReady();
+    // const checkAudioBlobReady = () => {
+    //   if (audioBlob) {
+    //     uploadToGCP(videoBlob, audioBlob);
+    //     // Call the displayQuestionAPI function when recording stops
+    //     displayQuestionAPI();
+    //   } else {
+    //     setTimeout(checkAudioBlobReady, 100);
+    //   }
+    // };
+    // checkAudioBlobReady();
   };
 
   const startRecordingTimer = () => {
@@ -221,7 +220,7 @@ function Chatbot() {
           <button
             className="button"
             onClick={async () => {
-              await displayQuestionAPI();
+              // await displayQuestionAPI();
               startRecording();
             }}
           >

@@ -29,9 +29,6 @@ def eval_input():
 
     return transcript
 
-def eval_input_live():
-    incoming = ""
-
 def generate():
   vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
   transcript = eval_input()
