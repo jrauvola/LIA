@@ -7,6 +7,7 @@ import axios from "axios";
 
 function Chatbot() {
   const [isRecording, setIsRecording] = useState(false);
+  const [isSoundcheck, setIsSoundcheck] = useState(false);
   const [error, setError] = useState('');
   const [mediaUrl, setMediaUrl] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -15,6 +16,7 @@ function Chatbot() {
   const [processingDuration, setProcessingDuration] = useState(0);
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [questionCount, setQuestionCount] = useState(0); // New state for question count
   const videoRef = useRef();
   const mediaRecorderRef = useRef();
   const recordedChunksRef = useRef([]);
@@ -33,6 +35,7 @@ function Chatbot() {
 
       if (response.data.nextQuestion) {
         setQuestion(response.data.nextQuestion);
+        setQuestionCount((prevCount) => prevCount + 1); // Increment question count
       } else {
         console.log('No next question available');
       }
@@ -186,12 +189,42 @@ function Chatbot() {
     //navigate('/evaluation');
   };
 
+  const startSoundcheck = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => recordedChunksRef.current.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioUrl(audioUrl);
+        console.log('Soundcheck recording stopped, audio URL created:', audioUrl);
+        setIsSoundcheck(false);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsSoundcheck(true);
+      setTimeout(() => {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }, 3000); // Record for 3 seconds
+    } catch (err) {
+      setError('Failed to start soundcheck: ' + err.message);
+      console.error('Error starting soundcheck:', err);
+    }
+  };
+
   return (
     <div className="container">
       <div className="video-container">
         <video className="video" ref={videoRef} autoPlay playsInline />
         {error && <p>Error: {error}</p>}
         <div className="timer">
+          <p>Questions Generated: {questionCount}</p> {/* Display question count */}
           <p>Recording Duration: {recordingDuration}s</p>
           {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
         </div>
@@ -209,13 +242,23 @@ function Chatbot() {
           </button>
         )}
         <button className="button" onClick={handleEvaluation}>Get Evaluation</button>
+        <button className="button" onClick={startSoundcheck}>
+          {isSoundcheck ? 'Recording Soundcheck...' : 'Start Soundcheck'}
+        </button>
       </div>
       <div className="question-container">
         <img className="lia-image" src="/LIA.webp" alt="LIA" />
         <p className="question-text">{question}</p>
       </div>
+      {audioUrl && (
+        <div className="audio-container">
+          <audio controls src={audioUrl}></audio>
+          <p>Can you hear this audio? If not, please check your microphone settings.</p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default Chatbot;
+
