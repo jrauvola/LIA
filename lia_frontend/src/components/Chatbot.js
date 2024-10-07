@@ -21,18 +21,6 @@ function Chatbot() {
   const mediaRecorderRef = useRef(null);
   const navigate = useNavigate();
 
-  const startRecordingTimer = () => {
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingDuration(prev => prev + 1);
-    }, 1000);
-  };
-
-  const stopRecordingTimer = () => {
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-    }
-  };
-
   const generateQuestionAPI = async () => {
     try {
       const response = await axios.post('http://127.0.0.1/generate_question', null, {
@@ -66,20 +54,49 @@ function Chatbot() {
     }
   };
 
+  const startRecordingTimer = () => {
+    // Clear any existing interval before starting a new one
+    clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingDuration(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stopRecordingTimer = () => {
+    clearInterval(recordingTimerRef.current);
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 48000,
+          channelCount: 1
+        }
+      });
       videoRef.current.srcObject = stream;
+
+      // Mute the video track
+      videoRef.current.muted = true;
+      videoRef.current.volume = 0;
 
       recorderRef.current = new RecordRTC(stream, {
         type: 'video',
         mimeType: 'video/webm',
-        recorderType: RecordRTC.MediaStreamRecorder
+        recorderType: RecordRTC.MediaStreamRecorder,
+        videoBitsPerSecond: 128000,
+        audioBitsPerSecond: 128000,
+        audioChannels: 1,
+        sampleRate: 48000
       });
 
       recorderRef.current.startRecording();
       setIsRecording(true);
       await generateQuestionAPI();
+      setRecordingDuration(0); // Reset the timer to zero before starting
       startRecordingTimer();
     } catch (err) {
       setError('Failed to start recording: ' + err.message);
@@ -98,7 +115,8 @@ function Chatbot() {
     }
     if (videoRef.current && videoRef.current.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
+      videoRef.current.srcObject = null;  
+
     }
     setIsRecording(false);
     stopRecordingTimer();
@@ -193,11 +211,14 @@ function Chatbot() {
           <button className="button" onClick={stopRecording}>Stop Recording</button>
         ) : (
           <button
-            className="button"
-            onClick={async () => {
-              await displayQuestionAPI();
-              startRecording();
-            }}
+              className="button"
+              onClick={async () => {
+                setRecordingDuration(0); // Reset the timer to zero
+                await displayQuestionAPI();
+                setTimeout(() => {
+                  startRecording();
+                }, 1000); // 1-second delay
+              }}
           >
             Start Recording
           </button>
