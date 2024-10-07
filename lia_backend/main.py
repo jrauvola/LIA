@@ -159,14 +159,11 @@ def stop_question():
         j = interview_instance.answer_num
         print('stop_question answer num:', j)
 
-        # Save WebM file to GCP storage
-        webm_url = utility.gcp_storage_webm(webm_file)
-
         # Reset file pointer to the beginning of the file
         webm_file.seek(0)
 
         # Process the WebM file and get the transcript
-        transcript = recording_processor.processor(webm_file)
+        transcript, webm_url = recording_processor.processor(webm_file)
 
         if transcript is None:
             return jsonify({'error': 'Failed to process audio'}), 500
