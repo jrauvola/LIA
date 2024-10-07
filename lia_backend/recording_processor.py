@@ -53,7 +53,7 @@ def processor(webm_file):
             else:
                 print("No speech recognized in the audio")
 
-            return transcript
+            return transcript, webm_url
 
         except Exception as e:
             print(f"Error converting audio to text: {str(e)}")
