@@ -1,4 +1,5 @@
 from google.cloud import storage
+from google.auth.exceptions import DefaultCredentialsError
 import datetime
 
 ## store resume or personal profile?
@@ -51,3 +52,26 @@ def gcp_storage_transcript(transcript):
     transcript_blob.upload_from_string(transcript)
     transcript_url = transcript_blob.public_url
     return transcript_url
+
+
+def gcp_storage_webm(webm_file):
+    print("Saving WebM file to 'lia_recordings' bucket")
+    try:
+        storage_client = storage.Client()
+        webm_bucket_name = "lia_recordings"
+
+        # Use a filename format without colons
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H_%M_%S_%f")
+        webm_object_name = f"recording_{timestamp}.webm"
+
+        webm_bucket = storage_client.bucket(webm_bucket_name)
+        webm_blob = webm_bucket.blob(webm_object_name)
+        webm_blob.upload_from_file(webm_file)
+        webm_url = webm_blob.public_url
+        print(f"WebM file saved to bucket: {webm_url}")
+        return webm_url
+    except DefaultCredentialsError:
+        print("Failed to authenticate. Check your Google Cloud credentials.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    return None
