@@ -7,7 +7,6 @@ import os
 import interview_processor
 import recording_processor
 import evaluator
-## import all other files
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -17,35 +16,33 @@ from google.cloud import storage
 from google.cloud import speech
 import datetime
 
-# # Define variables for URLs
 app = Flask(__name__, static_folder='client/build', static_url_path='')
 app.config['DEBUG'] = True
-# CORS(app, resources={r"/*": {"origins": "http://localhost:3000/", "supports_credentials": True}})
 logging.basicConfig(level=logging.DEBUG)
 CORS(app, resources={
     r"/upload_resume": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     },
     r"/stop_recording": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     },
     r"/display_question": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     },
     r"/generate_question": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     },
     r"/print_evaluate": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     },
     r"/start_recording": {
         "origins": "http://localhost:3000",
-        "supports_credentials": True  # Set to True to allow credentials
+        "supports_credentials": True
     }
 })
 
@@ -57,8 +54,8 @@ class interview_class:
                  "response": "Okay. Let's jump into the interview."}
         }
         self.personal_profile = {"personal_profile": personal_profile,
-                                 "experience": experience, 
-                                 "industry": industry, 
+                                 "experience": experience,
+                                 "industry": industry,
                                  "role": role}
         self.evaluator = {}
         self.question_num = 0
@@ -79,7 +76,6 @@ class interview_class:
                 f"Personal Profile: {self.personal_profile}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
-
 
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
@@ -107,10 +103,6 @@ def build_pp():
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
         return jsonify({'error': 'Failed to save lemmatized words to bucket'}), 500
-
-
-## start question ##
-
 
 @app.route('/display_question', methods=['POST'])
 def display_question():
@@ -155,42 +147,44 @@ def generate_question():
 
         return jsonify({'message': 'No more questions to generate'}), 200
 
-
-## stop question ##
-# '/user_stop_recording' is a fake placeholder endpoint
 @app.route('/stop_recording', methods=['POST'])
 def stop_question():
     try:
-        # Get the uploaded video and audio files from the request
-        # video_file = request.files.get('video')
-        # audio_file = request.files.get('audio')
-        transcript_all = [
-            'Hi everyone, I am Katy! My fascination with data began during my graduate studies in Master of Applied Data Science. Witnessing the power of data analysis to uncover hidden patterns and solve complex problems sparked a passion in me I could not ignore.This passion led me to pursue a Master degree in Data Science, where I honed my skills in Python, R, statistical modeling, and machine learning. During my internship at [Company Name], I had the opportunity to work on a project that [briefly describe the project and its impact]. This experience solidified my desire to leverage data science to drive meaningful insights and solutions.',
-            'In my previous role, I had to explain the concept of machine learning to our marketing team. I used the analogy of teaching a child to recognize different types of fruit. Just as you would show a child many examples to help them learn, a machine learning model is trained with data. This analogy helped make a complex concept more relatable and easier to understand.',
-            'In one project, I worked with a colleague who had a very different working style. To resolve our differences, I scheduled a meeting to understand his perspective. We found common ground in our project goals and agreed on a shared approach. This experience taught me the value of open communication and empathy in teamwork.',
-            'In my last role, I had to balance the need for data-driven decisions with ethical considerations. I ensured that all data usage complied with ethical standards and privacy laws, and I presented alternatives when necessary. This approach helped in making informed decisions while respecting ethical boundaries.',
-            'In a previous project, the requirements changed frequently. I adapted by maintaining open communication with stakeholders to understand their needs. I also used agile methodologies to be more flexible in my approach, which helped in accommodating changes effectively.',
-            'I stay updated by reading industry journals, attending webinars, and participating in online forums. I also set aside time each week to experiment with new tools and techniques. This not only helps me stay current but also continuously improves my skills.'
-            ]
+        # Get the uploaded WebM file from the request
+        webm_file = request.files.get('video')
+
+        if not webm_file:
+            return jsonify({'error': 'No WebM file uploaded'}), 400
+
         j = interview_instance.answer_num
         print('stop_question answer num:', j)
-        transcript = transcript_all[j]
-        # transcript = recording_processor.processor(video_file, audio_file)
+
+        # Save WebM file to GCP storage
+        webm_url = utility.gcp_storage_webm(webm_file)
+
+        # Reset file pointer to the beginning of the file
+        webm_file.seek(0)
+
+        # Process the WebM file and get the transcript
+        transcript = recording_processor.processor(webm_file)
+
+        if transcript is None:
+            return jsonify({'error': 'Failed to process audio'}), 500
+
         try:
-            # j = interview_instance.answer_num
             print(interview_instance.interview_dict)
             interview_instance.add_answer(transcript, j)
             print(interview_instance.interview_dict)
             interview_instance.answer_num = j + 1
         except Exception as e:
             print(f"Error in add_answer: {str(e)}")
-        return jsonify({'message': 'stop_question success'})
+            return jsonify({'error': 'Failed to add answer'}), 500
+
+        return jsonify({'message': 'stop_question success', 'transcript': transcript, 'webm_url': webm_url})
     except Exception as e:
         print(f"Error in stop_question: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)
-
-
-
