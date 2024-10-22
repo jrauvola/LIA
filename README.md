@@ -3,17 +3,24 @@
 <p align="center"> LOGO HERE </p>
 
 
-LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepare for job interviews through interactive practice sessions and real-time feedback. It tailors questions to various fields, like data science, and provides personalized guidance, helping users improve their responses and gain confidence for real-world interviews.
+LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepare for job interviews through interactive practice sessions and real-time feedback. It tailors questions to various tech fields, like data science, and provides personalized guidance, helping users improve their responses and gain confidence for real-world interviews.
 
 # **📑 Table of Contents**
 1. [Project Motivation](#Project-Motivation)
 2. [Overview of LiA](#Overview-of-LiA)
 3. [Project](#Project)
-    * [LiA's Brain: Our LLM Agents](#LiA's-Brain: Our-LLM-Agents)
-5. [Interface](#Interface)
-6. [Future Works](#Future-Works)
-7. [Tools Utilized](#Tools-Utilized)
-8. [About Us](#About-Us)
+   * [LiA's Brain: Our LLM Agents](#LiA's-Brain: Our-LLM-Agents)
+     * [Question Generation Agent](#Question-Generation-Agent)
+     * [Expert Agent](#Expert-Agent)
+     * [Evaluation Agent](#Evaluation-Agent)
+   * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your Interview-Playground)
+5. [Interview Journey with LiA](#Interview-Journey-with-LiA)
+   * [Customized Experience](#Customized-Experience)
+   * [Interactive Session](#Interactive-Session]
+   * [Personal Feedback](#Personal-Feedback)
+7. [Future Works](#Future-Works)
+8. [Tools Utilized](#Tools-Utilized)
+9. [About Us](#About-Us)
 
 # 💡Project Motivation
 <p align="center"> Picture </p>
@@ -36,10 +43,17 @@ Key Features:
 
 
 # 🎢Project 
+## LiA's Brain: Our LLM Agents
+### Question Generation Agent
+### Expert Agent
+### Evaluation Agent
+## LiA's Interface: Your Interview Playground
 
 
-
-# 🗺️Interface
+# 🗺️ Interview Journey with LiA
+## Customized Experience
+## Interactive Session
+## Personal Feedback
 
 
 # 🚪Future Works
