@@ -73,7 +73,15 @@ Together, these agents form a comprehensive support system, empowering Eric to t
 ## **📨Personal Feedback**
 
 # **💸 LiA's Market Fit and Growth Potential**
+**Market Fit**
+LiA is strategically positioned in the rapidly growing job preparation market, particularly in the tech and data science sectors. As more individuals pivot to tech-related careers, the demand for effective interview preparation tools has surged. LiA addresses this need by providing personalized, AI-driven assistance tailored to the unique challenges faced by job seekers. With features like real-time feedback, interactive practice sessions, and emotional intelligence assessments, LiA stands out as a comprehensive solution for users seeking to enhance their interview skills.
 
+**Target Audience**
+LiA caters to a diverse audience, including:
+
+- **Career Changers**: Individuals like Ben, who are transitioning into data science or tech fields, often face unique challenges in interviews. LiA provides the support they need to bridge knowledge gaps and build confidence.
+- **Recent Graduates**: New entrants to the job market require guidance to navigate interview processes. LiA’s tailored question generation helps them prepare effectively for their first interviews.
+- **Professionals Seeking Advancement**U: Established professionals aiming for promotions or transitions within their current industry can leverage LiA to refine their interview techniques and demonstrate their growth.
 
 # **🚪Future Works**
 
@@ -81,9 +89,17 @@ Together, these agents form a comprehensive support system, empowering Eric to t
 # **🛠️Tools Utilized**
 | Category | Tool(s) |
 |----------|----------|
-| Design | |
-| Language| |
-| Frameworks| |
-| LLM | |
+| Design | Figma |
+| Language| Python |
+| Frameworks| Flask |
+| LLM | Gemini |
+| Cloud | GCP |
 
 # 👋 About the Team
+👩 Yucheng
+👩🏼 Khushi
+👨🏼 Josh
+👨🏻 Ben
+
+
+
