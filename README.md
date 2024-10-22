@@ -8,13 +8,13 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
 # **📑 Table of Contents**
 1. [Project Motivation](#Project-Motivation)
 2. [Overview of LiA](#Overview-of-LiA)
-3. [Project](#Project)
-   * [LiA's Brain: Our LLM Agents](#LiA's-Brain:-Our-LLM-Agents)
-     * [Question Generation Agent](#Question-Generation-Agent)
-     * [Expert Agent](#Expert-Agent)
-     * [Evaluation Agent](#Evaluation-Agent)
-   * [LiA's Emotional Intelligence: Tracking Your Confidence in Real-Time](#LiA's-Emotional-Intelligence:-Tracking-Your Confidence-in-Real-Time)
-   * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your-Interview-Playground)
+3. [Project](#project)
+   * [LiA's Brain: Our LLM Agents](#lias-brain-our-llm-agents)
+     * [Question Generation Agent](#question-generation-agent)
+     * [Expert Agent](#expert-agent)
+     * [Evaluation Agent](#evaluation-agent)
+   * [LiA's Emotional Intelligence: Tracking Your Confidence in Real-Time](#lias-emotional-intelligence-tracking-your-confidence-in-real-time)
+   * [LiA's Interface: Your Interview Playground](#lias-interface-your-interview-playground)
 5. [Interview Journey with LiA](#Interview-Journey-with-LiA)
    * [Customized Experience](#Customized-Experience)
    * [Interactive Session](#Interactive-Session)
@@ -45,7 +45,6 @@ Key Features:
 
 # **🎢Project** 
 ## **🧠LiA's Brain: Our LLM Agents**
-
 ### **💬Question Generation Agent**
 ### **👩‍🔬Expert Agent**
 ### **💯Evaluation Agent**
