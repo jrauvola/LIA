@@ -1,11 +1,16 @@
 # **LIA: AI-Powered Interview Preparation Tool**
 LOGO HERE
-general introduction 
+
+LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepare for job interviews through interactive practice sessions and real-time feedback. It tailors questions to various fields, like data science, and provides personalized guidance, helping users improve their responses and gain confidence for real-world interviews.
 
 # **📑 Table of Contents**
-1. [Project Motivation](ProjectMotivation)
-2. [Overview of LiA](Overview of LiA)
-3. [Project](Project)
+1. [Project Motivation](#Project-Motivation)
+2. [Overview of LiA](#Overview-of-LiA)
+3. [Project](#Project)
+4. [Interface](#Interface)
+5. [Future Works](#Future-Works)
+6. [Tools Utilized](#Tools-Utilized)
+7. [About Us](#About-Us)
 
 # 💡Project Motivation
 Meet Eric, a dedicated professional navigating a career change into the world of data science. Like many, Eric faces a common challenge: when it comes to interviews, anxiety takes over. The moment he's in front of an interviewer, his mind goes blank. He struggles to find the right words, especially when technical questions come up.
@@ -24,9 +29,11 @@ Key Features:
 
 # 📣Overview of LiA
 
-# Project 
 
-# Interface
+# 🎢Project 
+- 
+
+# 🗺️Interface
 
 # 🚪Future Works
 
