@@ -45,6 +45,16 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 
 # **🎢Project** 
 ## **🧠LiA's Brain: Our LLM Agents**
+At the core of LiA lies a sophisticated network of Language Model (LLM) agents, each designed to enhance your interview preparation experience. These agents leverage advanced AI technologies to provide personalized support, guidance, and feedback tailored to your unique needs.
+
+In this section, we will explore three key agents that make up LiA's brain:
+
+- **Question Generation Agent**: This agent curates a diverse set of interview questions based on Eric's target role and experience level, ensuring Eric's practice relevant scenarios.
+- **Expert Agent**: Equipped with domain-specific knowledge, this agent offers insights and advice on best practices, helping you understand industry expectations and prepare effectively.
+- **Evaluation Agent**: This agent assesses  Eric's responses in real-time, providing constructive feedback and performance metrics to help Eric refine your answers and boost Eric's confidence.
+
+Together, these agents form a comprehensive support system, empowering Eric to tackle interviews with confidence and skill.
+
 ### **💬Question Generation Agent**
 ### **👩‍🔬Expert Agent**
 ### **💯Evaluation Agent**
@@ -57,17 +67,23 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 ## **👥LiA's Interface: Your Interview Playground**
 
 
-# 🗺️ Interview Journey with LiA
-## 📷Customized Experience
-## 🎹Interactive Session
-## 📨Personal Feedback
+# **🗺️Interview Journey with LiA**
+## **📷Customized Experience**
+## **🎹Interactive Session**
+## **📨Personal Feedback**
 
-# 💸 LiA's Market Fit and Growth Potential
-
-
-# 🚪Future Works
+# **💸 LiA's Market Fit and Growth Potential**
 
 
-# 🛠️Tools Utilized
+# **🚪Future Works**
+
+
+# **🛠️Tools Utilized**
+| Category | Tool(s) |
+|----------|----------|
+| Design | |
+| Language| |
+| Frameworks| |
+| LLM | |
 
 # 👋 About the Team
