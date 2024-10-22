@@ -9,14 +9,14 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
 1. [Project Motivation](#Project-Motivation)
 2. [Overview of LiA](#Overview-of-LiA)
 3. [Project](#Project)
-   * [LiA's Brain: Our LLM Agents](#LiA's-Brain: Our-LLM-Agents)
+   * [LiA's Brain: Our LLM Agents](#LiA's-Brain:-Our-LLM-Agents)
      * [Question Generation Agent](#Question-Generation-Agent)
      * [Expert Agent](#Expert-Agent)
      * [Evaluation Agent](#Evaluation-Agent)
-   * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your Interview-Playground)
+   * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your-Interview-Playground)
 5. [Interview Journey with LiA](#Interview-Journey-with-LiA)
    * [Customized Experience](#Customized-Experience)
-   * [Interactive Session](#Interactive-Session]
+   * [Interactive Session](#Interactive-Session)
    * [Personal Feedback](#Personal-Feedback)
 7. [Future Works](#Future-Works)
 8. [Tools Utilized](#Tools-Utilized)
@@ -40,20 +40,24 @@ Key Features:
 - **Progress Tracking**: Track your performance over time and focus on areas that need improvement.
 
 # 📣Overview of LiA
-
+<p align="center"> A diagram of workflow </p>
 
 # 🎢Project 
-## LiA's Brain: Our LLM Agents
-### Question Generation Agent
-### Expert Agent
-### Evaluation Agent
-## LiA's Interface: Your Interview Playground
+## 🧠LiA's Brain: Our LLM Agents
+
+### 💬Question Generation Agent
+### 👩‍🔬Expert Agent
+### 💯Evaluation Agent
+
+## 👥LiA's Interface: Your Interview Playground
 
 
 # 🗺️ Interview Journey with LiA
-## Customized Experience
-## Interactive Session
-## Personal Feedback
+## 📷Customized Experience
+## 🎹Interactive Session
+## 📨Personal Feedback
+
+# 💸 LiA's Market Fit and Growth Potential
 
 
 # 🚪Future Works
