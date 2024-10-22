@@ -34,7 +34,7 @@ Eric's journey into data science is still in its early stages—he doesn’t hav
 
 LiA leverages the power of AI to provide an interactive interview practice environment. Whether you're preparing for behavioral interviews, technical questions, or data science case studies, LiA is here to simulate real interview scenarios, giving you the confidence to succeed.
 
-Key Features:
+**Key Features:**
 - **Interactive Q&A Sessions**: Practice answering behavioral, technical, and domain-specific questions.
 - **Real-Time Feedback**: Receive instant feedback on the quality of your answers, including tips for improvement.
 - **Tailored Practice**: Customize your sessions based on the type of job you're applying for—whether it's data science, engineering, or product management.
