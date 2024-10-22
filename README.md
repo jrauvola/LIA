@@ -52,7 +52,7 @@ Key Features:
 
 ## **🤠LiA's Emotional Intelligence: Tracking Your Confidence in Real-Time**
 ### **🗣️Voice Sensor**
-### **Facial Expression Sensor**
+### **🎦Facial Expression Sensor**
 
 
 ## **👥LiA's Interface: Your Interview Playground**
