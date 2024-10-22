@@ -97,8 +97,11 @@ LiA caters to a diverse audience, including:
 
 # 👋 About the Team
 👩 Yucheng
+
 👩🏼 Khushi
+
 👨🏼 Josh
+
 👨🏻 Ben
 
 
