@@ -13,6 +13,7 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
      * [Question Generation Agent](#Question-Generation-Agent)
      * [Expert Agent](#Expert-Agent)
      * [Evaluation Agent](#Evaluation-Agent)
+   * [LiA's Interface: Your Interview Playground](LiA's-Interface:-Your-Interview-Playground)
    * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your-Interview-Playground)
 5. [Interview Journey with LiA](#Interview-Journey-with-LiA)
    * [Customized Experience](#Customized-Experience)
@@ -22,7 +23,7 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
 8. [Tools Utilized](#Tools-Utilized)
 9. [About Us](#About-Us)
 
-# 💡Project Motivation
+# **💡Project Motivation**
 <p align="center"> Picture </p>
 
 Meet Eric, a dedicated professional navigating a career change into the world of data science. Like many, Eric faces a common challenge: when it comes to interviews, anxiety takes over. The moment he's in front of an interviewer, his mind goes blank. He struggles to find the right words, especially when technical questions come up.
@@ -39,17 +40,22 @@ Key Features:
 - **Tailored Practice**: Customize your sessions based on the type of job you're applying for—whether it's data science, engineering, or product management.
 - **Progress Tracking**: Track your performance over time and focus on areas that need improvement.
 
-# 📣Overview of LiA
+# **📣Overview of LiA**
 <p align="center"> A diagram of workflow </p>
 
-# 🎢Project 
-## 🧠LiA's Brain: Our LLM Agents
+# **🎢Project** 
+## **🧠LiA's Brain: Our LLM Agents**
 
-### 💬Question Generation Agent
-### 👩‍🔬Expert Agent
-### 💯Evaluation Agent
+### **💬Question Generation Agent**
+### **👩‍🔬Expert Agent**
+### **💯Evaluation Agent**
 
-## 👥LiA's Interface: Your Interview Playground
+## **🤠LiA's Emotional Intelligence: Tracking Your Confidence in Real-Time**
+### **🗣️Voice Sensor**
+### **Facial Expression Sensor**
+
+
+## **👥LiA's Interface: Your Interview Playground**
 
 
 # 🗺️ Interview Journey with LiA
