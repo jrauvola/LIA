@@ -13,7 +13,7 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
      * [Question Generation Agent](#Question-Generation-Agent)
      * [Expert Agent](#Expert-Agent)
      * [Evaluation Agent](#Evaluation-Agent)
-   * [LiA's Interface: Your Interview Playground](LiA's-Interface:-Your-Interview-Playground)
+   * [LiA's Emotional Intelligence: Tracking Your Confidence in Real-Time](#LiA's-Emotional-Intelligence:-Tracking-Your Confidence-in-Real-Time)
    * [LiA's Interface: Your Interview Playground](#LiA's-Interface:-Your-Interview-Playground)
 5. [Interview Journey with LiA](#Interview-Journey-with-LiA)
    * [Customized Experience](#Customized-Experience)
