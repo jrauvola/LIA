@@ -3,7 +3,7 @@ LOGO HERE
 general introduction 
 
 # **📑 Table of Contents**
-1. [Project Motivation](#Project Motivation)
+1. [Project Motivation](Project Motivation)
 2. [Overview of LiA](Overview of LiA)
 3. [Project](Project)
 
