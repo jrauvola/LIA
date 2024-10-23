@@ -26,7 +26,7 @@ LiA (Learning Interview Assistant) is an AI-powered tool that helps users prepar
 # **💡Project Motivation**
 <p align="center"> Picture </p>
 
-Meet Eric, a dedicated professional navigating a career change into the world of data science. Like many, Eric faces a common challenge: when it comes to interviews, anxiety takes over. The moment he's in front of an interviewer, his mind goes blank. He struggles to find the right words, especially when technical questions come up.
+Meet **Eric**, a dedicated professional navigating a career change into the world of data science. Like many, Eric faces a common challenge: when it comes to interviews, anxiety takes over. The moment he's in front of an interviewer, his mind goes blank. He struggles to find the right words, especially when technical questions come up.
 
 Eric's journey into data science is still in its early stages—he doesn’t have much experience yet, and he's not sure how to prepare for interviews in this competitive field. What makes it tougher is that Eric feels he's behind his peers. Many of them are smarter, with more advanced technical skills, and he feels like he's constantly playing catch-up.
 
