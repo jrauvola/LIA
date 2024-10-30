@@ -1,71 +1,87 @@
-from google.cloud import vision
+# Libraries required to run the script
 import cv2
-import io
 import os
-import logging
-from google.auth.exceptions import DefaultCredentialsError
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Directory containing the video files
+video_directory = r"C:\Users\benth\Desktop\capstone\smile_test"
 
-def detect_smile(image_path):
-    # Load the image
-    with open(image_path, 'rb') as image_file:
-        content = image_file.read()
+# Get a list of all .avi files in the directory
+video_files = [f for f in os.listdir(video_directory) if f.endswith('.avi')]
 
-    # Create a Vision API client
-    client = vision.ImageAnnotatorClient()
+# Load the trained classifiers for face and smile detection
+trained_smile_data = cv2.CascadeClassifier(r"C:\Users\benth\Desktop\capstone\smile_test\cascade_files\Smile.xml")
+trained_face_data = cv2.CascadeClassifier(
+    r"C:\Users\benth\Desktop\capstone\smile_test\cascade_files\haarcascade_frontalface_default.xml")
 
-    # Create the image object
-    image = vision.Image(content=content)
+for video_file in video_files:
+    print(f"Processing {video_file}...")
 
-    # Define the features to be extracted (face detection)
-    features = [vision.Feature(type=vision.Feature.Type.FACE_DETECTION)]
+    # Change the path to the video file
+    smilevideo = cv2.VideoCapture(os.path.join(video_directory, video_file))
+    # Set the resolution to 640 x 480
+    smilevideo.set(3, 640)
+    smilevideo.set(4, 480)
 
-    # Make the API request
-    response = client.face_detection(image=image)  # Correct method call
+    total_frames = 0
+    smiling_frames = 0
 
-    # Process face detection results
-    for face in response.face_annotations:
-        if face.joy_likelihood >= 0.7:
-            return True
+    while True:
+        read_successful, frame = smilevideo.read()
 
-    return False
+        if read_successful:
+            total_frames += 1  # Increment total frame count
 
-def analyze_images(directory):
-    smiling_images = 0
-    total_images = 0
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    for i in range(1, 11):  # From P14_frame1.jpg to P14_frame10.jpg
-        image_path = os.path.join(directory, f"P14_frame{i}.jpg")
-        if os.path.isfile(image_path):
-            total_images += 1
-            if detect_smile(image_path):
-                smiling_images += 1
-                logger.info(f"{image_path}: Smile detected.")
-            else:
-                logger.info(f"{image_path}: No smile detected.")
+            # Detect faces in the frame
+            face_coords = trained_face_data.detectMultiScale(gray_frame)
+
+            any_smiling = False  # Flag to check if at least one face is smiling
+
+            for cell in face_coords:
+                x, y, width, height = cell
+                cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                FaceText = cv2.putText(frame, 'Face', (x, y - 10), font, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+
+                # Crop the detected face region
+                cropped_face = frame[y:y + height, x:x + width]
+                grayscaled_face = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2GRAY)
+
+                # Detect smiles within the detected face
+                smile_coords = trained_smile_data.detectMultiScale(grayscaled_face, scaleFactor=1.65, minNeighbors=17)
+
+                if len(smile_coords) > 0:  # If any smiles are detected
+                    any_smiling = True  # Set flag to True
+
+                # Draw smile rectangles for visual feedback
+                for cell in smile_coords:
+                    a, b, c, d = cell
+                    cv2.rectangle(cropped_face, (a, b), (a + c, b + d), (0, 255, 0), 2)
+                    SmileText = cv2.putText(cropped_face, 'Smile', (a, b - 10), font, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+
+            # Increment smiling frame count if at least one face is smiling
+            if any_smiling:
+                smiling_frames += 1
+
+            # Optionally display the frame with detections
+            new_frame = cv2.resize(frame, (720, 480))
+            cv2.imshow("Video Smile Detection", new_frame)
+
+            # Break the loop on 'q' or 'Q' key press
+            key = cv2.waitKey(1)
+            if key == 81 or key == 113:
+                break
         else:
-            logger.warning(f"{image_path} does not exist.")
+            break
 
-    return smiling_images, total_images
+    smilevideo.release()
+    cv2.destroyAllWindows()
 
-try:
-    # Directory containing the still images
-    stills_directory = r"C:\Users\benth\Desktop\capstone\smile_test\stills"
-
-    smiling_images, total_images = analyze_images(stills_directory)
-
-    if total_images > 0:
-        smile_rate = smiling_images / total_images
-        logger.info(f"Smile rate: {smile_rate:.2%}")
+    # Calculate and print the smile percentage
+    if total_frames > 0:
+        smile_percentage = (smiling_frames / total_frames) * 100
+        print(f"File: {video_file}, Total Frames: {total_frames}, Smiling Frames: {smiling_frames}, Smile Percentage: {smile_percentage:.2f}%")
     else:
-        logger.info("No images to analyze.")
-
-except DefaultCredentialsError:
-    logger.error("Failed to authenticate. Check your Google Cloud credentials.")
-    logger.error("Ensure GOOGLE_APPLICATION_CREDENTIALS environment variable is set correctly.")
-except Exception as e:
-    logger.error(f"An unexpected error occurred: {str(e)}")
+        print(f"File: {video_file}, No frames processed.")
 
