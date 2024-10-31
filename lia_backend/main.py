@@ -130,13 +130,15 @@ def display_evaluate():
 def generate_question():
     print("triggered")
     i = interview_instance.question_num + 1
+    print("initialize retrievalQA")
+    qa = interview_processor.retrievalQA()
     print('generate_question question num:', interview_instance.question_num)
     if i <5:
         app.logger.info("Generating")
         if i < 3:
-            interview_processor.generate_resume_questions(interview_instance)
+            interview_processor.generate_resume_questions(qa, interview_instance)
         else:
-            interview_processor.generate_dynamic_questions(interview_instance)
+            interview_processor.generate_dynamic_questions(qa, interview_instance)
 
         interview_instance.question_num = interview_instance.question_num + 1
 
