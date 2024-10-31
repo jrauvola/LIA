@@ -87,3 +87,4 @@ def generate_dynamic_questions(qa, interview_instance):
     question_num = question_num
     interview_instance.add_question(response["result"], question_num=question_num+1)
     print("Question Generated")
+
