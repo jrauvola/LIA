@@ -7,6 +7,7 @@ import os
 import interview_processor
 import recording_processor
 import evaluator
+from audio_feature_extraction import update_audio_features
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -152,6 +153,7 @@ def generate_question():
 
         return jsonify({'message': 'No more questions to generate'}), 200
 
+
 @app.route('/stop_recording', methods=['POST'])
 def stop_question():
     try:
@@ -176,13 +178,26 @@ def stop_question():
         try:
             print(interview_instance.interview_dict)
             interview_instance.add_answer(transcript, j)
+
+            # Convert HTTPS URL to GCS URI
+            gcs_uri = convert_https_to_gcs_uri(webm_url)
+
+            # Update audio features
+            update_audio_features(interview_instance, gcs_uri, j)
+
             print(interview_instance.interview_dict)
             interview_instance.answer_num = j + 1
+
         except Exception as e:
             print(f"Error in add_answer: {str(e)}")
             return jsonify({'error': 'Failed to add answer'}), 500
 
-        return jsonify({'message': 'stop_question success', 'transcript': transcript, 'webm_url': webm_url})
+        return jsonify({
+            'message': 'stop_question success',
+            'transcript': transcript,
+            'webm_url': webm_url
+        })
+
     except Exception as e:
         print(f"Error in stop_question: {str(e)}")
         return jsonify({'error': str(e)}), 500
