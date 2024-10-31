@@ -8,6 +8,7 @@ import interview_processor
 import recording_processor
 import evaluator
 from audio_feature_extraction import update_audio_features
+from text_feature_extraction import update_text_features
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -184,6 +185,9 @@ def stop_question():
 
             # Update audio features
             update_audio_features(interview_instance, gcs_uri, j)
+
+            # Update text features
+            update_text_features(interview_instance, transcript, j)
 
             print(interview_instance.interview_dict)
             interview_instance.answer_num = j + 1
