@@ -51,7 +51,7 @@ class interview_class:
         self.interview_dict = {
             0:  {"question": "Hi I'm Lia! Let's get started. Tell me a little about yourself!",
                  "answer": "",
-                 "response": "Okay. Let's jump into the interview."}
+                 "expert_answer": ""}
         }
         self.personal_profile = {"personal_profile": personal_profile,
                                  "experience": experience,
@@ -60,6 +60,9 @@ class interview_class:
         self.evaluator = {}
         self.question_num = 0
         self.answer_num = 0
+        self.audio_features = [] ## {feature_1:0.34, feature_2:0.98, audio_len: 13}
+        self.video_features = [] ## {feature_1:0.34, feature_2:0.98}
+        self.text_features = [] ## {feature_1:0.34, feature_2:0.98, word_count: 13}
 
     def add_answer(self, new_answer, answer_num) -> dict:
         i = answer_num
