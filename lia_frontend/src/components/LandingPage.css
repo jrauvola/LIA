@@ -1,0 +1,29 @@
+/* LandingPage.css */
+
+.landing-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.landing-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* Semi-transparent overlay */
+  transition: opacity 1s ease-in-out;
+  opacity: 1;
+}
+
+.overlay.fade-out {
+  opacity: 0;
+}

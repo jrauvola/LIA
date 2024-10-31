@@ -17,12 +17,18 @@ function Chatbot() {
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [questionCount, setQuestionCount] = useState(0); // New state for question count
+  const [attemptCount, setAttemptCount] = useState(1);
   const videoRef = useRef();
   const mediaRecorderRef = useRef();
   const recordedChunksRef = useRef([]);
   const ffmpegRef = useRef(new FFmpeg({ log: true }));
   const recordingTimerRef = useRef(null);
   const navigate = useNavigate(); // Move useNavigate to top level
+  const [audioContext, setAudioContext] = useState(null);
+  const [audioAnalyser, setAudioAnalyser] = useState(null);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const audioDataRef = useRef(new Uint8Array(128));
+  const animationFrameRef = useRef();
 
   const displayQuestionAPI = async () => {
     try {
@@ -65,10 +71,68 @@ function Chatbot() {
     }
   };
 
+  const initializeAudioContext = async () => {
+    try {
+      // Check if AudioContext is supported
+      if (!window.AudioContext && !window.webkitAudioContext) {
+        throw new Error('Web Audio API is not supported in this browser');
+      }
+
+      // Create audio context with error handling
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('Audio Context initialized:', context.state);
+      
+      // Resume context if it's in suspended state
+      if (context.state === 'suspended') {
+        await context.resume();
+        console.log('Audio Context resumed');
+      }
+      
+      return context;
+    } catch (error) {
+      console.error('Failed to initialize audio context:', error);
+      throw error;
+    }
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      console.log('Starting recording and audio setup...');
+      
+      // Request permissions explicitly
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      console.log('Media permissions granted:', stream);
+      
       videoRef.current.srcObject = stream;
+
+      // Initialize audio context
+      const context = await initializeAudioContext();
+      console.log('Audio context created:', context);
+      
+      const source = context.createMediaStreamSource(stream);
+      console.log('Media stream source created:', source);
+      
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.minDecibels = -90;
+      analyser.maxDecibels = -10;
+      analyser.smoothingTimeConstant = 0.85;
+      
+      source.connect(analyser);
+      console.log('Audio analysis chain connected');
+      
+      setAudioContext(context);
+      setAudioAnalyser(analyser);
+      
+      // Start the analysis loop
+      requestAnimationFrame(analyzeAudio);
 
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       recordedChunksRef.current = [];
@@ -94,12 +158,30 @@ function Chatbot() {
       generateQuestionAPI();
       startRecordingTimer();
     } catch (err) {
-      setError('Failed to start recording: ' + err.message);
-      console.error('Error starting recording:', err);
+      console.error('Recording setup failed:', err);
+      if (err.name === 'NotAllowedError') {
+        setError('Please grant microphone and camera permissions');
+      } else {
+        setError(`Failed to start recording: ${err.message}`);
+      }
     }
   };
 
   const stopRecording = async () => {
+    console.log('Stopping recording and cleaning up audio...');
+    
+    if (animationFrameRef.current) {
+      console.log('Canceling animation frame');
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    if (audioContext) {
+      console.log('Closing audio context');
+      await audioContext.close();
+      setAudioContext(null);
+      setAudioAnalyser(null);
+    }
+    
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
@@ -109,6 +191,13 @@ function Chatbot() {
     }
     setIsRecording(false);
     stopRecordingTimer();
+    
+    // Increment attempt count and check if we should navigate
+    const newCount = attemptCount + 1;
+    setAttemptCount(newCount);
+    if (newCount > 5) {
+      navigate('/evaluation');
+    }
   };
 
   const startRecordingTimer = () => {
@@ -189,34 +278,51 @@ function Chatbot() {
     //navigate('/evaluation');
   };
 
-  const startSoundcheck = async () => {
+  const analyzeAudio = () => {
+    if (!isRecording || !audioAnalyser) {
+      console.log('Audio analyser not available or recording stopped, stopping audio analysis');
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      recordedChunksRef.current = [];
+      const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+      audioAnalyser.getByteFrequencyData(dataArray);
 
-      mediaRecorder.ondataavailable = (e) => recordedChunksRef.current.push(e.data);
+      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      const scaledLevel = Math.min(Math.max((average / 255) * 100, 0), 100);
 
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setAudioUrl(audioUrl);
-        console.log('Soundcheck recording stopped, audio URL created:', audioUrl);
-        setIsSoundcheck(false);
-      };
+      console.log(`Average Frequency: ${average}, Scaled Level: ${scaledLevel}`);
 
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsSoundcheck(true);
-      setTimeout(() => {
-        mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
-      }, 3000); // Record for 3 seconds
-    } catch (err) {
-      setError('Failed to start soundcheck: ' + err.message);
-      console.error('Error starting soundcheck:', err);
+      setAudioLevel(scaledLevel);
+
+      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+    } catch (error) {
+      console.error('Error in analyzeAudio:', error);
     }
   };
+
+  useEffect(() => {
+    console.log('Audio context state changed:', audioContext);
+  }, [audioContext]);
+
+  useEffect(() => {
+    console.log('Audio analyser state changed:', audioAnalyser);
+  }, [audioAnalyser]);
+
+  useEffect(() => {
+    console.log('Audio level updated:', audioLevel);
+  }, [audioLevel]);
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+    };
+  }, []);
 
   return (
     <div className="container">
@@ -229,22 +335,35 @@ function Chatbot() {
           {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
         </div>
         {isRecording ? (
-          <button className="button" onClick={stopRecording}>Stop Recording</button>
+          <div className="recording-bar">
+            <div className="recording-indicator"></div>
+            <span className="recording-time">{recordingDuration}s</span>
+            <button className="button" onClick={stopRecording}>Stop</button>
+          </div>
         ) : (
-          <button
-            className="button"
-            onClick={async () => {
-              await displayQuestionAPI();
-              startRecording();
-            }}
-          >
-            Start Recording
-          </button>
+          <div className="recording-bar">
+            <span className="recording-time">0s</span>
+            <button 
+              className="button" 
+              onClick={async () => {
+                await displayQuestionAPI();
+                startRecording();
+              }}
+            >
+              Start
+            </button>
+            <span className="attempt-counter">{attemptCount}/5</span>
+          </div>
         )}
         <button className="button" onClick={handleEvaluation}>Get Evaluation</button>
-        <button className="button" onClick={startSoundcheck}>
-          {isSoundcheck ? 'Recording Soundcheck...' : 'Start Soundcheck'}
-        </button>
+        <div className="audio-meter-container">
+          <div 
+            className="audio-meter"
+            style={{ 
+              height: `${Math.min(audioLevel, 100)}%`
+            }}
+          />
+        </div>
       </div>
       <div className="question-container">
         <img className="lia-image" src="/LIA.webp" alt="LIA" />

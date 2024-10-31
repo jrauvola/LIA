@@ -36,3 +36,16 @@
 .form-container button {
   margin-bottom: 1rem;
 }
+
+input::placeholder {
+  color: #4a4a4a;
+}
+
+input:focus {
+  border-bottom-color: white;
+}
+
+.upload-section:hover {
+  cursor: pointer;
+  opacity: 0.9;
+}

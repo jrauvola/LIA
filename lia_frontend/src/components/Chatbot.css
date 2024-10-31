@@ -5,7 +5,7 @@
   justify-content: space-between;
   padding: 20px;
   height: 100vh;
-  background-color: #f0f0f0;  /* Example background color */
+  background-color: #000000;  /* Changed to black background */
 }
 
 .video-container {
@@ -65,4 +65,73 @@
   height: auto;
   margin-bottom: 20px;
   border-radius: 50%; /* Optional: Make the image round */
+}
+
+/* New styles for recording bar */
+.recording-bar {
+  display: flex;
+  align-items: center;
+  background-color: #333333;
+  border-radius: 30px;
+  padding: 10px 20px;
+  margin: 20px 0;
+  width: 300px;
+}
+
+.recording-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 15px;
+  background-color: #ff0000;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.recording-time {
+  color: white;
+  font-size: 16px;
+  margin-right: 15px;
+}
+
+.recording-controls {
+  display: flex;
+  gap: 10px;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.attempt-counter {
+  color: white;
+  margin-left: 15px;
+  font-size: 16px;
+}
+
+.audio-meter-container {
+  width: 30px;
+  height: 150px;
+  background-color: #333;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
+  margin: 10px;
+  border: 2px solid #444;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.audio-meter {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, 
+    #4caf50 0%, 
+    #ffeb3b 50%, 
+    #f44336 100%
+  );
+  transition: height 0.05s ease-out;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
 }

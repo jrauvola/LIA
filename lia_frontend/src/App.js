@@ -5,6 +5,7 @@ import HomePage from './components/HomePage';
 import Chatbot from './components/Chatbot';
 import EvaluationPage from './components/EvaluationPage';
 import NavigationBar from './components/NavigationBar';
+import LandingPage from './components/LandingPage';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -17,7 +18,8 @@ function App() {
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<><NavigationBar /><HomePage /></>} />
           <Route path="/about-you" element={<><NavigationBar /><AboutYou /></>} />
           <Route path="/chatbot" element={<><NavigationBar /><Chatbot /></>} />
           <Route path="/evaluation" element={<><NavigationBar /><EvaluationPage /></>} />
