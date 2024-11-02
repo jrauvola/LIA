@@ -42,7 +42,7 @@ def retrievalQA():
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
     print("Grab LLM")
     llm = VertexAI(
-        model_name="text-bison-32k",
+        model_name="gemini-pro",
         max_output_tokens=256,
         temperature=0.1,
         top_p=0.8,
@@ -87,3 +87,4 @@ def generate_dynamic_questions(qa, interview_instance):
     question_num = question_num
     interview_instance.add_question(response["result"], question_num=question_num+1)
     print("Question Generated")
+

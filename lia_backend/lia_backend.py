@@ -404,7 +404,7 @@ def retrievalQA():
     # vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
     print("Grab LLM")
     llm = VertexAI(
-    model_name="text-bison-32k",
+    model_name="gemini-pro",
     max_output_tokens=256,
     temperature=0.1,
     top_p=0.8,
