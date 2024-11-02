@@ -6,6 +6,7 @@ import resume
 import os
 import interview_processor
 import recording_processor
+from recording_processor import convert_https_to_gcs_uri
 import evaluator
 from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
@@ -185,9 +186,11 @@ def stop_question():
 
             # Update audio features
             update_audio_features(interview_instance, gcs_uri, j)
+            print("Audio features extracted:", interview_instance.audio_features)
 
             # Update text features
             update_text_features(interview_instance, transcript, j)
+            print("Text features extracted:", interview_instance.text_features)
 
             print(interview_instance.interview_dict)
             interview_instance.answer_num = j + 1
