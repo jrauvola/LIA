@@ -31,12 +31,12 @@ def initialize_rag(project_name, bucket_name, blob):
     return vector_db
 
 
-def retrievalQA(retr_docs_num):
+def retrievalQA():
     print("Initializing Rag")
     vector_db = initialize_rag(project_name="adsp-capstone-team-dawn", bucket_name="lia_rag", blob="data_science.txt")
     print("Grabbing Retriever")
     retriever = vector_db.as_retriever(
-        search_type="similarity", search_kwargs={"k": retr_docs_num}  # k: Number of Documents to return, defaults to 4.
+        search_type="similarity", search_kwargs={"k": 4}  # k: Number of Documents to return, defaults to 4.
     )
     print("Initialize retriever")
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
@@ -56,21 +56,19 @@ def retrievalQA(retr_docs_num):
     return qa
 
 
-def generate_resume_questions(interview_instance):
+def generate_resume_questions(qa, interview_instance):
     qa_prompt = f"""
                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
                     Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
                     Personal Profile: '''{interview_instance.personal_profile}'''
                      """
 
-    print("QA Retrieval")
-    qa = retrievalQA(retr_docs_num=4)
-    print("QA Response")
+    print("retrievalQA")
     response = qa({"query": qa_prompt})
     interview_instance.add_question(response["result"], question_num=interview_instance.question_num +1)
     print("Question Generated")
 
-def generate_dynamic_questions(interview_instance):
+def generate_dynamic_questions(qa, interview_instance):
     window_dict = {}
     question_num = interview_instance.question_num
     if question_num > 1:
@@ -83,7 +81,7 @@ def generate_dynamic_questions(interview_instance):
                     Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate the question as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
                     Interview Conversations: '''{window_dict}'''
                     Answer: """
-    qa = retrievalQA(retr_docs_num=3)
+
     response = qa({"query": qa_prompt})
 
     question_num = question_num

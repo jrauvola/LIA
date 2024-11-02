@@ -1,65 +1,80 @@
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
+from google.cloud import speech_v1p1beta1 as speech
+from flask import jsonify
 import utility
-from google.cloud import storage
-from google.cloud import speech
-import subprocess
-import tempfile
-import os
-from google.cloud import storage
-from io import BytesIO
+import urllib.parse
 
-def processor(video_file, audio_file):
+def processor(webm_file):
     try:
-        print("Received request at /stop_recording endpoint")
+        print("Processing WebM file in recording_processor")
 
-        # Check if the files were uploaded
-        if not video_file or not audio_file:
-            print("Video or audio file not uploaded")
-            return jsonify({'error': 'Video or audio file not uploaded'}), 400
+        # Check if the file was uploaded
+        if not webm_file:
+            print("WebM file not uploaded")
+            return jsonify({'error': 'WebM file not uploaded'}), 400
 
-        print("Saving video file to 'lia_videos' bucket")
-        video_url = utility.gcp_storage_video(video_file)
+        # Save WebM file to GCP storage
+        print("Saving WebM file to 'lia_recordings' bucket")
+        webm_url = utility.gcp_storage_webm(webm_file)
 
-        print("Saving audio file to 'lia_audio' bucket")
-        audio_url = utility.gcp_storage_audio(audio_file)
+        # Convert HTTPS URL to GCS URI
+        gcs_uri = convert_https_to_gcs_uri(webm_url)
+        print(f"GCS URI: {gcs_uri}")  # Add this line for debugging
 
         print("Converting audio to text using Google Speech-to-Text API")
         try:
             client = speech.SpeechClient()
 
-            # Open the audio file and read its content
-            audio_content = audio_file.getvalue()
-
-            # Create the RecognitionAudio object with the audio content
-            audio = speech.RecognitionAudio(content=audio_content)
+            # Use the GCS URI for the audio file
+            audio = speech.RecognitionAudio(uri=gcs_uri)
 
             config = speech.RecognitionConfig(
-                encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-                sample_rate_hertz=48000,  # Assuming a sample rate of 44.1 kHz
-                language_code='en-US'
+                encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+                sample_rate_hertz=48000,
+                language_code='en-US',
+                enable_automatic_punctuation=True,
+                audio_channel_count=1,
+                enable_word_time_offsets=True
             )
-            response = client.recognize(config=config, audio=audio)
 
-            # Check if the response contains any results
-            if not response.results:
-                print("No speech recognized in the audio")
-                transcript = ""
-            else:
-                # Access the transcript from the response
-                transcript = response.results[0].alternatives[0].transcript
+            # Use long_running_recognize for files longer than 1 minute
+            operation = client.long_running_recognize(config=config, audio=audio)
+
+            print("Waiting for operation to complete...")
+            response = operation.result(timeout=90)  # Adjust timeout as needed
+
+            # Process the response
+            transcript = ""
+            for result in response.results:
+                transcript += result.alternatives[0].transcript + " "
+
+            if transcript:
                 utility.gcp_storage_transcript(transcript)
                 print("Transcript:", transcript)
+            else:
+                print("No speech recognized in the audio")
+
+            return transcript, webm_url
 
         except Exception as e:
             print(f"Error converting audio to text: {str(e)}")
-            return jsonify({'error': 'Could not convert audio to text: {0}'.format(str(e))}), 500
+            return None
 
-        print("Returning Transcript")
-        return jsonify({
-            'message': 'Files uploaded successfully',
-            'transcript': transcript
-        })
     except Exception as e:
-        print(f"Error processing /stop_recording: {str(e)}")
-        return jsonify({'error': 'Internal Server Error'}), 500
+        print(f"Error processing WebM file: {str(e)}")
+        return None
+
+
+def convert_https_to_gcs_uri(https_url):
+    # Parse the URL
+    parsed_url = urllib.parse.urlparse(https_url)
+
+    # Extract bucket name and object name
+    path_parts = parsed_url.path.lstrip('/').split('/', 1)
+
+    if len(path_parts) == 2:
+        bucket_name, object_name = path_parts
+        # Decode URL-encoded characters in the object name
+        object_name = urllib.parse.unquote(object_name)
+        return f"gs://{bucket_name}/{object_name}"
+    else:
+        raise ValueError(f"Invalid HTTPS URL format: {https_url}")

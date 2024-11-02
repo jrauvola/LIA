@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
 import { useNavigate } from 'react-router-dom';
+import RecordRTC from 'recordrtc';
 import './Chatbot.css';
 import axios from "axios";
 
@@ -14,21 +13,27 @@ function Chatbot() {
   const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processingDuration, setProcessingDuration] = useState(0);
-  const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
-  const [audioBlob, setAudioBlob] = useState(null);
-  const [questionCount, setQuestionCount] = useState(0); // New state for question count
-  const [attemptCount, setAttemptCount] = useState(1);
+  const [questionCount, setQuestionCount] = useState(0);
   const videoRef = useRef();
-  const mediaRecorderRef = useRef();
-  const recordedChunksRef = useRef([]);
-  const ffmpegRef = useRef(new FFmpeg({ log: true }));
+  const recorderRef = useRef(null);
   const recordingTimerRef = useRef(null);
-  const navigate = useNavigate(); // Move useNavigate to top level
-  const [audioContext, setAudioContext] = useState(null);
-  const [audioAnalyser, setAudioAnalyser] = useState(null);
-  const [audioLevel, setAudioLevel] = useState(0);
-  const audioDataRef = useRef(new Uint8Array(128));
-  const animationFrameRef = useRef();
+  const recordedChunksRef = useRef([]);
+  const mediaRecorderRef = useRef(null);
+  const navigate = useNavigate();
+
+  const generateQuestionAPI = async () => {
+    try {
+      const response = await axios.post('http://127.0.0.1/generate_question', null, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Question generation triggered successfully');
+      setQuestionCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error triggering question generation:', error);
+    }
+  };
 
   const displayQuestionAPI = async () => {
     try {
@@ -41,7 +46,6 @@ function Chatbot() {
 
       if (response.data.nextQuestion) {
         setQuestion(response.data.nextQuestion);
-        setQuestionCount((prevCount) => prevCount + 1); // Increment question count
       } else {
         console.log('No next question available');
       }
@@ -50,25 +54,16 @@ function Chatbot() {
     }
   };
 
-  const generateQuestionAPI = async () => {
-    try {
-      await axios.post('http://127.0.0.1/generate_question', null, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      console.log('Question generation triggered successfully');
-    } catch (error) {
-      console.error('Error triggering question generation:', error);
-    }
+  const startRecordingTimer = () => {
+    // Clear any existing interval before starting a new one
+    clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingDuration(prev => prev + 1);
+    }, 1000);
   };
 
-  const loadFFmpeg = async () => {
-    const ffmpeg = ffmpegRef.current;
-    if (!ffmpegLoaded) {
-      await ffmpeg.load();
-      setFfmpegLoaded(true);
-    }
+  const stopRecordingTimer = () => {
+    clearInterval(recordingTimerRef.current);
   };
 
   const initializeAudioContext = async () => {
@@ -97,19 +92,15 @@ function Chatbot() {
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording and audio setup...');
-      
-      // Request permissions explicitly
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        } 
+          sampleRate: 48000,
+          channelCount: 1
+        }
       });
-      console.log('Media permissions granted:', stream);
-      
       videoRef.current.srcObject = stream;
 
       // Initialize audio context
@@ -134,28 +125,24 @@ function Chatbot() {
       // Start the analysis loop
       requestAnimationFrame(analyzeAudio);
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      recordedChunksRef.current = [];
+      // Mute the video track
+      videoRef.current.muted = true;
+      videoRef.current.volume = 0;
 
-      mediaRecorder.ondataavailable = (e) => recordedChunksRef.current.push(e.data);
+      recorderRef.current = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/webm',
+        recorderType: RecordRTC.MediaStreamRecorder,
+        videoBitsPerSecond: 128000,
+        audioBitsPerSecond: 128000,
+        audioChannels: 1,
+        sampleRate: 48000
+      });
 
-      mediaRecorder.onstop = async () => {
-        const mediaBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const mediaUrl = URL.createObjectURL(mediaBlob);
-        setMediaUrl(mediaUrl);
-        console.log('Recording stopped, media URL created:', mediaUrl);
-
-        const startTime = Date.now();
-        await loadFFmpeg();
-        await convertToWav(mediaBlob);
-        const endTime = Date.now();
-        setProcessingDuration(((endTime - startTime) / 1000).toFixed(2));
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      recorderRef.current.startRecording();
       setIsRecording(true);
-      generateQuestionAPI();
+      await generateQuestionAPI();
+      setRecordingDuration(0); // Reset the timer to zero before starting
       startRecordingTimer();
     } catch (err) {
       console.error('Recording setup failed:', err);
@@ -168,26 +155,18 @@ function Chatbot() {
   };
 
   const stopRecording = async () => {
-    console.log('Stopping recording and cleaning up audio...');
-    
-    if (animationFrameRef.current) {
-      console.log('Canceling animation frame');
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    if (audioContext) {
-      console.log('Closing audio context');
-      await audioContext.close();
-      setAudioContext(null);
-      setAudioAnalyser(null);
-    }
-    
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
+    if (recorderRef.current) {
+      recorderRef.current.stopRecording(() => {
+        const blob = recorderRef.current.getBlob();
+        const mediaUrl = URL.createObjectURL(blob);
+        setMediaUrl(mediaUrl);
+        uploadToGCP(blob);
+      });
     }
     if (videoRef.current && videoRef.current.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
+      videoRef.current.srcObject = null;  
+
     }
     setIsRecording(false);
     stopRecordingTimer();
@@ -200,38 +179,12 @@ function Chatbot() {
     }
   };
 
-  const startRecordingTimer = () => {
-    setRecordingDuration(0);
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingDuration((prevDuration) => prevDuration + 1);
-    }, 1000);
-  };
-
-  const stopRecordingTimer = () => {
-    clearInterval(recordingTimerRef.current);
-  };
-
-  const convertToWav = async (mediaBlob) => {
-    const ffmpeg = ffmpegRef.current;
-    const webmFilename = 'recording.webm';
-    const wavFilename = 'recording.wav';
-
-    await ffmpeg.writeFile(webmFilename, await fetchFile(mediaBlob));
-    await ffmpeg.exec(['-i', webmFilename, wavFilename]);
-
-    const data = await ffmpeg.readFile(wavFilename);
-    const audioBlob = new Blob([data.buffer], { type: 'audio/wav' });
-    const videoBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-    await uploadToGCP(videoBlob, audioBlob);
-  };
-
-  const uploadToGCP = async (videoBlob, audioBlob) => {
+  const uploadToGCP = async (blob) => {
     try {
       console.log('Starting file upload to GCP...');
 
       const formData = new FormData();
-      formData.append('video', videoBlob, 'video.webm');
-      formData.append('audio', audioBlob, 'audio.wav');
+      formData.append('video', blob, 'video.webm');
 
       console.log('Sending POST request to /stop_recording endpoint...');
 
@@ -247,11 +200,6 @@ function Chatbot() {
         setMediaUrl(response.data.mediaUrl);
       }
 
-      if (response.data.audioUrl) {
-        console.log('Audio URL received:', response.data.audioUrl);
-        setAudioUrl(response.data.audioUrl);
-      }
-
       console.log('File upload to GCP completed successfully.');
     } catch (error) {
       console.error('Error uploading media:', error.message);
@@ -259,7 +207,7 @@ function Chatbot() {
   };
 
   const handleEvaluation = async () => {
-      try {
+    try {
       const response = await axios.post('http://127.0.0.1/print_evaluate', null, {
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +223,6 @@ function Chatbot() {
     } catch (error) {
       console.error('Error receiving evaluator:', error);
     }
-    //navigate('/evaluation');
   };
 
   const analyzeAudio = () => {
@@ -330,7 +277,7 @@ function Chatbot() {
         <video className="video" ref={videoRef} autoPlay playsInline />
         {error && <p>Error: {error}</p>}
         <div className="timer">
-          <p>Questions Generated: {questionCount}</p> {/* Display question count */}
+          <p>Questions Generated: {questionCount}</p>
           <p>Recording Duration: {recordingDuration}s</p>
           {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
         </div>
@@ -341,19 +288,18 @@ function Chatbot() {
             <button className="button" onClick={stopRecording}>Stop</button>
           </div>
         ) : (
-          <div className="recording-bar">
-            <span className="recording-time">0s</span>
-            <button 
-              className="button" 
+          <button
+              className="button"
               onClick={async () => {
+                setRecordingDuration(0); // Reset the timer to zero
                 await displayQuestionAPI();
-                startRecording();
+                setTimeout(() => {
+                  startRecording();
+                }, 1000); // 1-second delay
               }}
-            >
-              Start
-            </button>
-            <span className="attempt-counter">{attemptCount}/5</span>
-          </div>
+          >
+            Start Recording
+          </button>
         )}
         <button className="button" onClick={handleEvaluation}>Get Evaluation</button>
         <div className="audio-meter-container">
@@ -380,4 +326,3 @@ function Chatbot() {
 }
 
 export default Chatbot;
-
