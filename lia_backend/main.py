@@ -129,7 +129,7 @@ def display_question():
 @app.route('/print_evaluate', methods=['POST'])
 def display_evaluate():
     return jsonify({
-        'nextQuestion': evaluator.generate(interview_instance)
+        'nextQuestion': evaluator.eval_input(interview_instance)
     })
 
 @app.route('/generate_question', methods=['POST'])
