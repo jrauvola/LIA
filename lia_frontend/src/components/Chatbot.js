@@ -68,13 +68,20 @@ function Chatbot() {
 
   const startRecording = async () => {
     try {
+      // Modified audio constraints to disable automatic processing
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
           sampleRate: 48000,
-          channelCount: 1
+          // Some browsers support these additional constraints
+          googEchoCancellation: false,
+          googAutoGainControl: false,
+          googNoiseSuppression: false,
+          googHighpassFilter: false
         }
       });
       videoRef.current.srcObject = stream;
@@ -88,15 +95,21 @@ function Chatbot() {
         mimeType: 'video/webm',
         recorderType: RecordRTC.MediaStreamRecorder,
         videoBitsPerSecond: 128000,
-        audioBitsPerSecond: 128000,
+        // Increased audio quality settings
+        audioBitsPerSecond: 256000, // Increased for better quality
         audioChannels: 1,
-        sampleRate: 48000
+        sampleRate: 48000,
+        // Additional settings to maintain audio quality
+        disableLogs: false,
+        timeSlice: 1000,
+        // Ensure raw audio processing
+        bufferSize: 16384
       });
 
       recorderRef.current.startRecording();
       setIsRecording(true);
       await generateQuestionAPI();
-      setRecordingDuration(0); // Reset the timer to zero before starting
+      setRecordingDuration(0);
       startRecordingTimer();
     } catch (err) {
       setError('Failed to start recording: ' + err.message);

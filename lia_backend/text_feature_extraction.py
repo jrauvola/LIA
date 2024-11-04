@@ -37,7 +37,7 @@ class TextFeatureExtractor:
         self.filler_pattern = r'\b(' + '|'.join(map(re.escape, self.filler_words)) + r')\b'
         self.quantifier_pattern = r'\b(' + '|'.join(map(re.escape, self.quantifiers)) + r')\b'
 
-    def extract_features(self, text):
+    def extract_features(self, text, audio_length):
         """Extract text features from the given text"""
         try:
             # Convert text to lowercase for consistent matching
@@ -45,6 +45,9 @@ class TextFeatureExtractor:
 
             # Count total words (splitting on whitespace)
             total_words = len(text.split())
+
+            # Count unique words
+            unique_words = len(set(text.split()))
 
             # Count filler words
             filler_count = len(re.findall(self.filler_pattern, text))
@@ -56,10 +59,16 @@ class TextFeatureExtractor:
             filler_pct = (filler_count / total_words * 100) if total_words > 0 else 0
             quantifier_pct = (quantifier_count / total_words * 100) if total_words > 0 else 0
 
+            # Calculate words per second and unique words per second
+            wpsec = (total_words / audio_length) if audio_length > 0 else 0
+            upsec = (unique_words / audio_length) if audio_length > 0 else 0
+
             return {
                 'quantifier_words_pct': float(quantifier_pct),
                 'filler_nonfluency_pct': float(filler_pct),
-                'word_count': total_words
+                'word_count': total_words,
+                'wpsec': float(wpsec),
+                'upsec': float(upsec)
             }
 
         except Exception as e:
@@ -67,7 +76,9 @@ class TextFeatureExtractor:
             return {
                 'quantifier_words_pct': 0.0,
                 'filler_nonfluency_pct': 0.0,
-                'word_count': 0
+                'word_count': 0,
+                'wpsec': 0.0,
+                'upsec': 0.0
             }
 
 
@@ -76,17 +87,19 @@ def initialize_text_features():
     return [{
         'quantifier_words_pct': 0.0,
         'filler_nonfluency_pct': 0.0,
-        'word_count': 0
+        'word_count': 0,
+        'wpsec': 0.0,
+        'upsec': 0.0
     } for _ in range(5)]
 
 
-def update_text_features(interview_instance, text, answer_index):
+def update_text_features(interview_instance, text, audio_length, answer_index):
     """Update the text_features list in the interview instance"""
     if not hasattr(interview_instance, 'text_features') or not interview_instance.text_features:
         interview_instance.text_features = initialize_text_features()
 
     extractor = TextFeatureExtractor()
-    features = extractor.extract_features(text)
+    features = extractor.extract_features(text, audio_length)
     if features:
         interview_instance.text_features[answer_index] = features
         return True

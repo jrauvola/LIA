@@ -184,12 +184,14 @@ def stop_question():
             # Convert HTTPS URL to GCS URI
             gcs_uri = convert_https_to_gcs_uri(webm_url)
 
-            # Update audio features
-            update_audio_features(interview_instance, gcs_uri, j)
+            # Update audio features and capture audio length
+            audio_features = update_audio_features(interview_instance, gcs_uri, j)
+            audio_length = interview_instance.audio_features[j]['audio_length'] if audio_features else 0
+
             print("Audio features extracted:", interview_instance.audio_features)
 
-            # Update text features
-            update_text_features(interview_instance, transcript, j)
+            # Update text features with audio length
+            update_text_features(interview_instance, transcript, audio_length, j)
             print("Text features extracted:", interview_instance.text_features)
 
             print(interview_instance.interview_dict)
