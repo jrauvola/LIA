@@ -102,6 +102,10 @@ def build_pp():
     global interview_instance
     interview_instance = interview_class(clean_resume, experience, industry, role)
 
+    print("initialize retrievalQA")
+    global qa
+    qa = interview_processor.retrievalQA()
+
     try: ## replace with storage function
         utility.gcp_storage_resume(clean_resume)
         return jsonify({'success': True}), 200
@@ -135,9 +139,8 @@ def display_evaluate():
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
     print("triggered")
+    global qa
     i = interview_instance.question_num + 1
-    print("initialize retrievalQA")
-    qa = interview_processor.retrievalQA()
     print('generate_question question num:', interview_instance.question_num)
     if i <5:
         app.logger.info("Generating")
