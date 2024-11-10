@@ -1,0 +1,26 @@
+.expert-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 800px;  /* Limits width for better readability */
+  margin: 0 auto;    /* Centers the container */
+}
+
+.expert-textbox {
+  background-color: #f8f8f8;  /* Light gray background */
+  border: 1px solid #ddd;     /* Subtle border */
+  border-radius: 4px;         /* Rounded corners */
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.expert-textbox h2 {
+  margin: 0 0 15px 0;
+  font-size: 1.5em;
+  color: #333;
+}
+
+.expert-textbox p {
+  margin: 10px 0;
+  line-height: 1.6;          /* Better line spacing for readability */
+  color: #444;
+}
