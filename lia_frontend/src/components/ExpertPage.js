@@ -6,20 +6,22 @@ function ExpertPage() {
   const [expertAnswer, setExpertAnswer] = useState('');
 
   useEffect(() => {
-    // Function to fetch data from Gemini API
     const fetchExpertAnswer = async () => {
       try {
-        // Replace with your actual API endpoint and configuration
-        const response = await fetch('YOUR_GEMINI_API_ENDPOINT', {
+        const response = await fetch('http://localhost:80/expert_answer', {
           method: 'GET',
+          credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
-            // Add any necessary API keys or authentication headers
+            'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        setExpertAnswer(data.answer); // Adjust based on actual API response structure
+        if (data.expert_answer) {
+          setExpertAnswer(data.expert_answer);
+        } else {
+          setExpertAnswer('No expert answer available at this time.');
+        }
       } catch (error) {
         console.error('Error fetching expert answer:', error);
         setExpertAnswer('Failed to load expert answer. Please try again later.');
@@ -27,7 +29,7 @@ function ExpertPage() {
     };
 
     fetchExpertAnswer();
-  }, []); // Empty dependency array means this runs once when component mounts
+  }, []);
 
   return (
     <div className="expert-container">

@@ -188,8 +188,8 @@ function Chatbot() {
       setAudioContext(context);
       setAudioAnalyser(analyser);
       
-      // Start the analysis loop
-      requestAnimationFrame(analyzeAudio);
+      // Start analysis with proper reference
+      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
 
       // Mute the video track
       videoRef.current.muted = true;
@@ -339,12 +339,14 @@ function Chatbot() {
 
       setAudioLevel(scaledLevel);
 
+      // Update this line to use .current
       animationFrameRef.current = requestAnimationFrame(analyzeAudio);
     } catch (error) {
       console.error('Error in analyzeAudio:', error);
     }
   };
 
+  // Your useEffect hooks for logging
   useEffect(() => {
     console.log('Audio context state changed:', audioContext);
   }, [audioContext]);
@@ -357,17 +359,30 @@ function Chatbot() {
     console.log('Audio level updated:', audioLevel);
   }, [audioLevel]);
 
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      // Only close the context if it's not already closed
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close();
-      }
-    };
-  }, []);
+    // Modified cleanup useEffect
+    useEffect(() => {
+      return () => {
+        // Cleanup animation frame
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
+
+        // Cleanup audio context
+        if (audioContext) {
+          audioContext.close().catch(err => {
+            console.error('Error closing audio context:', err);
+          });
+        }
+
+        // Clean up media stream
+        if (videoRef.current && videoRef.current.srcObject) {
+          const tracks = videoRef.current.srcObject.getTracks();
+          tracks.forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+        }
+      };
+    }, []);
 
   useEffect(() => {
     const liaVideo = liaVideoRef.current;

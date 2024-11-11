@@ -10,6 +10,7 @@ from recording_processor import convert_https_to_gcs_uri
 import evaluator
 from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
+from expert_agent import generate_exp_ans_cot
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -55,6 +56,10 @@ CORS(app, resources={
     r"/get_interview_data": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
+    },
+    r"/expert_answer": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
     }
 })
 
@@ -92,9 +97,9 @@ class interview_class:
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
     
-@app.route('/')
-def test():
-    return jsonify({"status": "Server is running"})
+# @app.route('/')
+# def test():
+#     return jsonify({"status": "Server is running"})
 
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
@@ -146,7 +151,7 @@ def display_question():
 @app.route('/print_evaluate', methods=['POST'])
 def display_evaluate():
     return jsonify({
-        'nextQuestion': evaluator.eval_input(interview_instance)
+        'nextQuestion': evaluator.eval_input(interview_instance, interview_instance.question_num)
     })
 
 @app.route('/generate_question', methods=['POST'])
@@ -305,5 +310,27 @@ def get_interview_data():
         print(f"Error getting interview data: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/expert_answer', methods=['GET'])
+def get_expert_answer():
+    try:
+        # Get the current question number
+        current_q_num = interview_instance.answer_num - 1
+
+        # Get the current question
+        current_question = interview_instance.interview_dict[current_q_num]["question"]
+
+        # Get expert answer using the expert_agent function
+        expert_response = generate_exp_ans_cot(current_question, qa)
+
+        # Store the expert answer in the interview instance
+        interview_instance.interview_dict[current_q_num]["expert_answer"] = expert_response
+
+        return jsonify({
+            'expert_answer': expert_response
+        })
+    except Exception as e:
+        print(f"Error getting expert answer: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(use_reloader=True, debug=True, host='0.0.0.0')
+    app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)
