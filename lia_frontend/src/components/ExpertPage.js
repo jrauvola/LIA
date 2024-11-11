@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { marked } from 'marked';
 import './ExpertPage.css';
 
 function ExpertPage() {
@@ -49,6 +50,10 @@ function ExpertPage() {
     }
   };
 
+  const renderExpertAnswer = (answer) => {
+    return { __html: marked(answer) };
+  };
+
   return (
     <div className="expert-container">
       <div className="expert-textbox">
@@ -63,12 +68,16 @@ function ExpertPage() {
             </div>
             <div className="answer-section">
               <h3>Expert Answer:</h3>
-              <p>{expertData.expert_answer}</p>
+              <div
+                  className="expert-answer"
+                  dangerouslySetInnerHTML={renderExpertAnswer(expertData.expert_answer)}
+              />
+
             </div>
             <div className="navigation-buttons">
               <button
-                onClick={handlePrevious}
-                disabled={expertData.current_question === 0}
+                  onClick={handlePrevious}
+                  disabled={expertData.current_question === 0}
                 className="nav-button"
               >
                 Previous

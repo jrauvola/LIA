@@ -6,6 +6,8 @@ import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import TypewriterMessage from './TypewriterMessage';
 import { FaPlay, FaPause, FaVolumeMute } from 'react-icons/fa';
+import { marked } from 'marked';
+
 
 const ChatMessage = memo(({ role, message, isInterim = false }) => {
   const formatMessage = (msg) => {
@@ -86,10 +88,14 @@ function Chatbot() {
       });
       console.log('Question received successfully:', response.data);
 
+      // if (response.data.nextQuestion) {
+      //   const cleanedQuestion = response.data.nextQuestion
+      //     .replace(/\*\*/g, '')
+      //     .trim();
+      // convert
       if (response.data.nextQuestion) {
-        const cleanedQuestion = response.data.nextQuestion
-          .replace(/\*\*/g, '')
-          .trim();
+        // Convert the markdown in nextQuestion to HTML
+        const htmlQuestion = marked(response.data.nextQuestion.trim());
         
         setConversation(prev => [
           ...prev, 
