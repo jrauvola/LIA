@@ -53,7 +53,6 @@ def gcp_storage_transcript(transcript):
     transcript_url = transcript_blob.public_url
     return transcript_url
 
-
 def gcp_storage_webm(webm_file):
     print("Saving WebM file to 'lia_recordings' bucket")
     try:

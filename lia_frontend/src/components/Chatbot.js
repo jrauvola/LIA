@@ -1,8 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecordRTC from 'recordrtc';
 import './Chatbot.css';
 import axios from "axios";
+import { v4 as uuidv4 } from 'uuid';
+import TypewriterMessage from './TypewriterMessage';
+import { FaPlay, FaPause, FaVolumeMute } from 'react-icons/fa';
+
+const ChatMessage = memo(({ role, message, isInterim = false }) => {
+  const formatMessage = (msg) => {
+    return msg.replace(/^##\s*Technical Interview Question based on Personal Profile:\s*/i, '');
+  };
+
+  return (
+    <div className={`chat-message ${role} ${isInterim ? 'interim' : ''}`}>
+      <div className="message-header">
+        {role === 'lia' ? '💃 LIA:' : '👤 User:'}
+      </div>
+      <div className="message-content">
+        {formatMessage(message)}
+      </div>
+    </div>
+  );
+});
 
 function Chatbot() {
   const [isRecording, setIsRecording] = useState(false);
@@ -10,16 +30,38 @@ function Chatbot() {
   const [error, setError] = useState('');
   const [mediaUrl, setMediaUrl] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
-  const [question, setQuestion] = useState("Hi I'm Lia! Let's get started. Tell me a little about yourself!");
+  const [conversation, setConversation] = useState([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processingDuration, setProcessingDuration] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
+  const [audioContext, setAudioContext] = useState(null);
+  const [audioAnalyser, setAudioAnalyser] = useState(null);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [attemptCount, setAttemptCount] = useState(0);
   const videoRef = useRef();
   const recorderRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const mediaRecorderRef = useRef(null);
   const navigate = useNavigate();
+  const animationFrameRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [typingMessage, setTypingMessage] = useState(null);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [showStartPrompt, setShowStartPrompt] = useState(true);
+  const [currentVideo, setCurrentVideo] = useState('appearing');
+  const liaVideoRef = useRef(null);
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation]);
 
   const generateQuestionAPI = async () => {
     try {
@@ -45,7 +87,18 @@ function Chatbot() {
       console.log('Question received successfully:', response.data);
 
       if (response.data.nextQuestion) {
-        setQuestion(response.data.nextQuestion);
+        const cleanedQuestion = response.data.nextQuestion
+          .replace(/\*\*/g, '')
+          .trim();
+        
+        setConversation(prev => [
+          ...prev, 
+          { 
+            id: uuidv4(),
+            role: 'lia', 
+            message: cleanedQuestion 
+          }
+        ]);
       } else {
         console.log('No next question available');
       }
@@ -92,23 +145,29 @@ function Chatbot() {
 
   const startRecording = async () => {
     try {
-      // Modified audio constraints to disable automatic processing
+      setShowStartPrompt(false);
+      console.log('🎥 startRecording: Requesting media permissions');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
           channelCount: 1,
-          sampleRate: 48000,
-          // Some browsers support these additional constraints
-          googEchoCancellation: false,
-          googAutoGainControl: false,
-          googNoiseSuppression: false,
-          googHighpassFilter: false
+          sampleRate: 16000,
+          sampleSize: 16
         }
       });
+      
+      console.log('Stream tracks:', stream.getTracks().map(track => ({
+        kind: track.kind,
+        enabled: track.enabled,
+        muted: track.muted,
+        readyState: track.readyState
+      })));
+
       videoRef.current.srcObject = stream;
+      console.log('Video source object set:', videoRef.current.srcObject !== null);
 
       // Initialize audio context
       const context = await initializeAudioContext();
@@ -135,30 +194,32 @@ function Chatbot() {
       // Mute the video track
       videoRef.current.muted = true;
       videoRef.current.volume = 0;
+      console.log('🎬 startRecording: Initializing RecordRTC');
+      console.log('🎬 startRecording: RecordRTC configuration:', {
+        type: 'video',
+        mimeType: 'video/webm',
+        numberOfAudioChannels: 1,
+        desiredSampRate: 16000,
+        bufferSize: 4096
+      });
 
       recorderRef.current = new RecordRTC(stream, {
         type: 'video',
         mimeType: 'video/webm',
         recorderType: RecordRTC.MediaStreamRecorder,
-        videoBitsPerSecond: 128000,
-        // Increased audio quality settings
-        audioBitsPerSecond: 256000, // Increased for better quality
-        audioChannels: 1,
-        sampleRate: 48000,
-        // Additional settings to maintain audio quality
-        disableLogs: false,
-        timeSlice: 1000,
-        // Ensure raw audio processing
-        bufferSize: 16384
+        numberOfAudioChannels: 1,
+        desiredSampRate: 16000,
+        bufferSize: 4096
       });
 
+      console.log('Recorder state before starting:', recorderRef.current.getState());
       recorderRef.current.startRecording();
+      console.log('Recorder state after starting:', recorderRef.current.getState());
       setIsRecording(true);
-      await generateQuestionAPI();
       setRecordingDuration(0);
       startRecordingTimer();
     } catch (err) {
-      console.error('Recording setup failed:', err);
+      console.error('❌ startRecording: Error:', err);
       if (err.name === 'NotAllowedError') {
         setError('Please grant microphone and camera permissions');
       } else {
@@ -168,14 +229,34 @@ function Chatbot() {
   };
 
   const stopRecording = async () => {
+    console.log('Stopping recording...');
     if (recorderRef.current) {
+      console.log('Recorder state before stopping:', recorderRef.current.getState());
+      
       recorderRef.current.stopRecording(() => {
         const blob = recorderRef.current.getBlob();
+        console.log('Recording stopped, blob size:', blob.size);
+        console.log('Blob type:', blob.type);
+        
         const mediaUrl = URL.createObjectURL(blob);
         setMediaUrl(mediaUrl);
+        
+        // Log the tracks before stopping them
+        if (videoRef.current && videoRef.current.srcObject) {
+          const tracks = videoRef.current.srcObject.getTracks();
+          console.log('Tracks before stopping:', tracks.map(track => ({
+            kind: track.kind,
+            enabled: track.enabled,
+            readyState: track.readyState
+          })));
+        }
+        
         uploadToGCP(blob);
       });
+    } else {
+      console.warn('No recorder reference found when stopping recording');
     }
+    
     if (videoRef.current && videoRef.current.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;  
@@ -187,7 +268,7 @@ function Chatbot() {
     // Increment attempt count and check if we should navigate
     const newCount = attemptCount + 1;
     setAttemptCount(newCount);
-    if (newCount > 5) {
+    if (newCount > 2) {
       navigate('/evaluation');
     }
   };
@@ -195,46 +276,49 @@ function Chatbot() {
   const uploadToGCP = async (blob) => {
     try {
       console.log('Starting file upload to GCP...');
+      console.log('Blob details:', {
+        size: blob.size,
+        type: blob.type
+      });
 
       const formData = new FormData();
       formData.append('video', blob, 'video.webm');
-
-      console.log('Sending POST request to /stop_recording endpoint...');
+      
+      console.log('FormData created with video blob');
 
       const response = await axios.post('http://127.0.0.1/stop_recording', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      console.log('Response received from /stop_recording endpoint:', response.data);
+      console.log('Upload response:', response.data);
+
+      if (response.data.transcript) {
+        const userMessage = {
+          id: uuidv4(),
+          role: 'user',
+          message: response.data.transcript
+        };
+        setConversation(prev => [...prev, userMessage]);
+        
+        setLiveTranscript('');
+      }
 
       if (response.data.mediaUrl) {
         console.log('Video URL received:', response.data.mediaUrl);
         setMediaUrl(response.data.mediaUrl);
       }
 
+      await generateQuestionAPI();
+
       console.log('File upload to GCP completed successfully.');
     } catch (error) {
-      console.error('Error uploading media:', error.message);
-    }
-  };
-
-  const handleEvaluation = async () => {
-    try {
-      const response = await axios.post('http://127.0.0.1/print_evaluate', null, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      console.error('Upload error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data
       });
-      console.log('Evaluator received successfully:', response.data);
-
-      if (response.data.nextQuestion) {
-        setQuestion(response.data.nextQuestion);
-      } else {
-        console.log('No evaluator available');
-      }
-    } catch (error) {
-      console.error('Error receiving evaluator:', error);
+      setError('Failed to upload recording');
     }
   };
 
@@ -278,62 +362,147 @@ function Chatbot() {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (audioContext) {
+      // Only close the context if it's not already closed
+      if (audioContext && audioContext.state !== 'closed') {
         audioContext.close();
       }
     };
   }, []);
 
+  useEffect(() => {
+    const liaVideo = liaVideoRef.current;
+    
+    const handleVideoEnd = () => {
+      if (currentVideo === 'appearing') {
+        setCurrentVideo('waving');
+      } else if (currentVideo === 'waving') {
+        setCurrentVideo('staying');
+      }
+    };
+
+    if (liaVideo) {
+      liaVideo.addEventListener('ended', handleVideoEnd);
+    }
+
+    return () => {
+      if (liaVideo) {
+        liaVideo.removeEventListener('ended', handleVideoEnd);
+      }
+    };
+  }, [currentVideo]);
+
+  const getCurrentVideoSrc = () => {
+    switch(currentVideo) {
+      case 'appearing':
+        return '/videos/lia_appearing.mp4';
+      case 'waving':
+        return '/videos/lia_waving.mp4';
+      case 'staying':
+        return '/videos/lia_staying.mp4';
+      default:
+        return '/videos/lia_staying.mp4';
+    }
+  };
+
+  const addMessage = (role, message) => {
+    setConversation(prev => [
+      ...prev, 
+      { id: uuidv4(), role, message }
+    ]);
+  };
+
   return (
     <div className="container">
       <div className="video-container">
-        <video className="video" ref={videoRef} autoPlay playsInline />
+        <video 
+          ref={liaVideoRef}
+          className="lia-video"
+          src={getCurrentVideoSrc()}
+          autoPlay
+          muted
+          loop={currentVideo === 'staying'}
+        />
+        <video 
+          className={`user-video-minimized ${isRecording ? 'recording' : ''}`}
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+        />
         {error && <p>Error: {error}</p>}
         <div className="timer">
           <p>Questions Generated: {questionCount}</p>
           <p>Recording Duration: {recordingDuration}s</p>
           {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
         </div>
-        {isRecording ? (
-          <div className="recording-bar">
-            <div className="recording-indicator"></div>
-            <span className="recording-time">{recordingDuration}s</span>
-            <button className="button" onClick={stopRecording}>Stop</button>
+        <div className="video-controls">
+          <div className="recording-controls-bar">
+            {isRecording ? (
+              <>
+                <button className="control-button" onClick={stopRecording}>
+                  <FaPause />
+                </button>
+                <button 
+                  className="record-button"
+                  onClick={stopRecording}
+                />
+              </>
+            ) : (
+              <>
+                <button 
+                  className="control-button"
+                  onClick={async () => {
+                    setRecordingDuration(0);
+                    await displayQuestionAPI();
+                    startRecording();
+                  }}
+                >
+                  <FaPlay />
+                </button>
+                <button className="record-button" />
+              </>
+            )}
+            <button className="control-button">
+              <FaVolumeMute />
+            </button>
+            <span className="timer-display">
+              {String(Math.floor(recordingDuration / 60)).padStart(2, '0')}:
+              {String(recordingDuration % 60).padStart(2, '0')}:
+              {String(Math.floor((recordingDuration * 100) % 100)).padStart(2, '0')}
+            </span>
           </div>
-        ) : (
-          <button
-              className="button"
-              onClick={async () => {
-                setRecordingDuration(0); // Reset the timer to zero
-                await displayQuestionAPI();
-                setTimeout(() => {
-                  startRecording();
-                }, 1000); // 1-second delay
-              }}
-          >
-            Start Recording
-          </button>
-        )}
-        <button className="button" onClick={handleEvaluation}>Get Evaluation</button>
-        <div className="audio-meter-container">
-          <div 
-            className="audio-meter"
-            style={{ 
-              height: `${Math.min(audioLevel, 100)}%`
-            }}
-          />
         </div>
       </div>
-      <div className="question-container">
+      <div className="chat-container" ref={chatContainerRef}>
         <img className="lia-image" src="/LIA.webp" alt="LIA" />
-        <p className="question-text">{question}</p>
-      </div>
-      {audioUrl && (
-        <div className="audio-container">
-          <audio controls src={audioUrl}></audio>
-          <p>Can you hear this audio? If not, please check your microphone settings.</p>
+        <div className="messages">
+          {showStartPrompt ? (
+            <div className="start-prompt">
+              To Start your interview press the start button in the middle of the chatbot area
+            </div>
+          ) : (
+            <>
+              {conversation.map((msg) => (
+                <ChatMessage 
+                  key={msg.id}
+                  role={msg.role}
+                  message={msg.message}
+                />
+              ))}
+              {liveTranscript && isRecording && (
+                <ChatMessage
+                  key="live-transcript"
+                  role="user"
+                  message={liveTranscript}
+                  isInterim={true}
+                />
+              )}
+            </>
+          )}
         </div>
-      )}
+        <div className="chat-controls">
+          {/* Any additional chat controls can go here */}
+        </div>
+      </div>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import logging
 from google.cloud import storage
 from google.cloud import speech
 import datetime
+from video_feature_extraction import update_video_features
 
 app = Flask(__name__, static_folder='client/build', static_url_path='')
 app.config['DEBUG'] = True
@@ -44,6 +45,14 @@ CORS(app, resources={
         "supports_credentials": True
     },
     r"/start_recording": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
+    },
+    r"/process_chunk": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
+    },
+    r"/get_interview_data": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
     }
@@ -82,6 +91,10 @@ class interview_class:
                 f"Personal Profile: {self.personal_profile}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
+    
+@app.route('/')
+def test():
+    return jsonify({"status": "Server is running"})
 
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
@@ -158,6 +171,7 @@ def generate_question():
 
 @app.route('/stop_recording', methods=['POST'])
 def stop_question():
+    print("stop_question triggered")
     try:
         # Get the uploaded WebM file from the request
         webm_file = request.files.get('video')
@@ -192,14 +206,21 @@ def stop_question():
 
             # Update text features with audio length
             update_text_features(interview_instance, transcript, audio_length, j)
-            print("Text features extracted:", interview_instance.text_features)
 
-            print(interview_instance.interview_dict)
+            # Update video features
+            webm_file.seek(0)  # Reset file pointer
+            video_features = update_video_features(interview_instance, webm_file, j)
+
+            print("Features extracted:")
+            print("Audio:", interview_instance.audio_features)
+            print("Text:", interview_instance.text_features)
+            print("Video:", interview_instance.video_features)
+
             interview_instance.answer_num = j + 1
 
         except Exception as e:
-            print(f"Error in add_answer: {str(e)}")
-            return jsonify({'error': 'Failed to add answer'}), 500
+            print(f"Error in processing: {str(e)}")
+            return jsonify({'error': 'Failed to process response'}), 500
 
         return jsonify({
             'message': 'stop_question success',
@@ -211,6 +232,75 @@ def stop_question():
         print(f"Error in stop_question: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/process_chunk', methods=['POST']) #may remove
+def process_chunk():
+    print("🎤 process_chunk: Received new audio chunk")
+    audio_chunk = request.files.get('audio')
+    
+    if not audio_chunk:
+        print("❌ process_chunk: No audio chunk received")
+        return jsonify({'error': 'No audio chunk uploaded'}), 400
+
+    content = audio_chunk.read()
+    print(f"📊 process_chunk: Audio content size: {len(content)} bytes")
+    
+    # Create speech client
+    client = speech.SpeechClient()
+    
+    # Update recognition config with explicit sample rate
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+        language_code="en-US",
+        enable_automatic_punctuation=True,
+        model="default",
+        sample_rate_hertz=16000  # Add explicit sample rate
+    )
+
+    try:
+        # Create audio object
+        audio = speech.RecognitionAudio(content=content)
+
+        print("🚀 process_chunk: Sending request to Speech-to-Text API")
+        response = client.recognize(config=config, audio=audio)
+        
+        interim_transcript = ""
+        is_final = False
+        
+        print("📝 process_chunk: Processing recognition results")
+        for result in response.results:
+            if result.alternatives:
+                transcript_piece = result.alternatives[0].transcript
+                confidence = result.alternatives[0].confidence
+                is_final = result.is_final
+                print(f"✨ process_chunk: Found transcript piece: {transcript_piece} (confidence: {confidence})")
+                interim_transcript += transcript_piece + " "
+        
+        print(f"✅ process_chunk: Final transcript: {interim_transcript.strip()}")
+        
+        return jsonify({
+            'interimTranscript': interim_transcript.strip(),
+            'isFinal': is_final
+        })
+
+    except Exception as e:
+        print(f"❌ process_chunk: Error processing audio: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/get_interview_data', methods=['GET'])
+def get_interview_data():
+    try:
+        if interview_instance:
+            return jsonify({
+                'interview_dict': interview_instance.interview_dict,
+                'audio_features': interview_instance.audio_features,
+                'video_features': interview_instance.video_features,
+                'text_features': interview_instance.text_features
+            })
+        else:
+            return jsonify({'error': 'No interview data available'}), 404
+    except Exception as e:
+        print(f"Error getting interview data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)
+    app.run(use_reloader=True, debug=True, host='0.0.0.0')
