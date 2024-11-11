@@ -219,6 +219,12 @@ def stop_question():
             webm_file.seek(0)  # Reset file pointer
             video_features = update_video_features(interview_instance, webm_file, j)
 
+            # Generate and store expert answer
+            current_question = interview_instance.interview_dict[j]["question"]
+            expert_response = generate_exp_ans_cot(current_question, qa)
+            interview_instance.interview_dict[j]["expert_answer"] = expert_response
+            print("Expert answer generated and stored:", expert_response)
+
             print("Features extracted:")
             print("Audio:", interview_instance.audio_features)
             print("Text:", interview_instance.text_features)
@@ -233,7 +239,8 @@ def stop_question():
         return jsonify({
             'message': 'stop_question success',
             'transcript': transcript,
-            'webm_url': webm_url
+            'webm_url': webm_url,
+            'expert_answer': expert_response  # Including expert answer in response
         })
 
     except Exception as e:
@@ -310,23 +317,29 @@ def get_interview_data():
         print(f"Error getting interview data: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/expert_answer', methods=['GET'])
 def get_expert_answer():
     try:
-        # Get the current question number
-        current_q_num = interview_instance.answer_num - 1
+        # Get question number from query parameter, default to 0
+        question_num = request.args.get('question_num', 0, type=int)
 
-        # Get the current question
-        current_question = interview_instance.interview_dict[current_q_num]["question"]
+        # Validate question exists
+        if question_num not in interview_instance.interview_dict:
+            return jsonify({'error': f'Question {question_num} not found'}), 404
 
-        # Get expert answer using the expert_agent function
-        expert_response = generate_exp_ans_cot(current_question, qa)
+        # Get question and expert answer
+        question = interview_instance.interview_dict[question_num]["question"]
+        expert_answer = interview_instance.interview_dict[question_num]["expert_answer"]
 
-        # Store the expert answer in the interview instance
-        interview_instance.interview_dict[current_q_num]["expert_answer"] = expert_response
+        # Get total number of questions for frontend navigation
+        total_questions = len(interview_instance.interview_dict)
 
         return jsonify({
-            'expert_answer': expert_response
+            'question': question,
+            'expert_answer': expert_answer,
+            'current_question': question_num,
+            'total_questions': total_questions
         })
     except Exception as e:
         print(f"Error getting expert answer: {str(e)}")

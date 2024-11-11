@@ -1,4 +1,3 @@
-//EvaluationPage.js
 import React, { useEffect, useState } from 'react';
 import './EvaluationPage.css';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -17,7 +16,7 @@ function EvaluationPage() {
   //     .then(data => {
   //       if (data.error) {
   //         console.error('Error fetching interview data:', data.error);
-          
+
   //       } else {
   //         setInterviewData(data);
   //       }
@@ -30,6 +29,10 @@ function EvaluationPage() {
   useEffect(() => {
     setIsVisible(true);
   }, [currentQuestion]);
+
+  const handleExpertPageNavigation = () => {
+    navigate('/expertpage');
+  };
 
   // Placeholder metrics instead of real data
   const metrics = {
@@ -82,14 +85,14 @@ function EvaluationPage() {
       <div className="skill-name">{name}</div>
       <div className="skill-bar-container">
         <div className="skill-bar">
-          <div 
-            className={`skill-per ${isVisible ? 'animate' : ''}`} 
+          <div
+            className={`skill-per ${isVisible ? 'animate' : ''}`}
             style={{ '--width': `${value}%` }}
             data-per={`${Math.round(value)}%`}
           />
         </div>
         <div className="skill-bar expert">
-          <div 
+          <div
             className="skill-per"
             style={{ width: `${expertValue}%` }}
             data-per="Expert"
@@ -107,21 +110,35 @@ function EvaluationPage() {
     ) : (
       <div className="evaluation-container">
         <h1>Social Skills Assessment</h1>
-        
+
         <div className="question-navigation">
           <span>Question {currentQuestion + 1} of {1}</span>
           <div className="navigation-buttons">
-            <button 
+            <button
               onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
               disabled={currentQuestion === 0}
             >
               Previous
             </button>
-            <button 
+            <button
               onClick={() => setCurrentQuestion(prev => Math.min(totalQuestions - 1, prev + 1))}
               disabled={currentQuestion === totalQuestions - 1}
             >
               Next
+            </button>
+            <button
+              onClick={handleExpertPageNavigation}
+              style={{
+                marginLeft: '1rem',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                padding: '0.5rem 1rem',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              View Expert Answers
             </button>
           </div>
         </div>
