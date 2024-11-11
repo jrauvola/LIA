@@ -4,6 +4,7 @@ import logging
 import utility
 import resume
 import os
+import re
 import interview_processor
 import recording_processor
 from recording_processor import convert_https_to_gcs_uri
@@ -96,6 +97,41 @@ class interview_class:
                 f"Personal Profile: {self.personal_profile}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
+
+class evaluation_class:
+    def __init__(self):
+        self.evaluation_dict = {
+            0: {
+                "Relevance to the Question": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Technical Correctness": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Completeness of the Answer": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Anecdotal Element": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Communication Clarity": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Problem Solving Approach": {
+                    "Score": 0,
+                    "Justification": ""
+                },
+                "Handling Ambiguity": {
+                    "Score": 0,
+                    "Justification": ""
+                }
+            }
+        }
     
 # @app.route('/')
 # def test():
@@ -119,6 +155,9 @@ def build_pp():
 
     global interview_instance
     interview_instance = interview_class(clean_resume, experience, industry, role)
+
+    global evaluation_instance
+    evaluation_instance = evaluation_class()
 
     print("initialize retrievalQA")
     global qa
@@ -225,6 +264,46 @@ def stop_question():
             interview_instance.interview_dict[j]["expert_answer"] = expert_response
             print("Expert answer generated and stored:", expert_response)
 
+            # Get evaluation from evaluator.py
+            eval_response = evaluator.eval_input(interview_instance, j)
+
+            # Process each rubric category
+            import re
+
+            # Define the categories we're looking for
+            categories = [
+                "Relevance to the Question",
+                "Technical Correctness",
+                "Completeness of the Answer",
+                "Anecdotal Element",
+                "Communication Clarity",
+                "Problem Solving Approach",
+                "Handling Ambiguity"
+            ]
+
+            # Initialize evaluation for this question if it doesn't exist
+            if j not in evaluation_instance.evaluation_dict:
+                evaluation_instance.evaluation_dict[j] = {
+                    category: {"Score": 0, "Justification": ""} for category in categories
+                }
+
+            # Process each category
+            for category in categories:
+                # Find the section for this category
+                pattern = f"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
+                match = re.search(pattern, eval_response, re.DOTALL)
+
+                if match:
+                    score = int(match.group(1))
+                    justification = match.group(2).strip()
+
+                    # Store in evaluation dictionary
+                    evaluation_instance.evaluation_dict[j][category] = {
+                        "Score": score,
+                        "Justification": justification
+                    }
+
+            print("Complete evaluation dictionary:", evaluation_instance.evaluation_dict)
             print("Features extracted:")
             print("Audio:", interview_instance.audio_features)
             print("Text:", interview_instance.text_features)
@@ -240,13 +319,13 @@ def stop_question():
             'message': 'stop_question success',
             'transcript': transcript,
             'webm_url': webm_url,
-            'expert_answer': expert_response  # Including expert answer in response
+            'expert_answer': expert_response,
+            'evaluation': evaluation_instance.evaluation_dict[j]  # Include evaluation in response
         })
 
     except Exception as e:
         print(f"Error in stop_question: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
 @app.route('/process_chunk', methods=['POST']) #may remove
 def process_chunk():
     print("🎤 process_chunk: Received new audio chunk")
