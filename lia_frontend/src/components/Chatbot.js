@@ -268,7 +268,7 @@ function Chatbot() {
     // Increment attempt count and check if we should navigate
     const newCount = attemptCount + 1;
     setAttemptCount(newCount);
-    if (newCount > 2) {
+    if (newCount > 4) {
       navigate('/evaluation');
     }
   };
