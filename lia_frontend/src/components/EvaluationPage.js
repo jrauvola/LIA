@@ -34,6 +34,10 @@ function EvaluationPage() {
     navigate('/expertpage');
   };
 
+  const handleRubricPageNavigation = () => {
+    navigate('/rubricpage');
+  };
+
   // Placeholder metrics instead of real data
   const metrics = {
     smilePercentage: 12,
@@ -128,17 +132,15 @@ function EvaluationPage() {
             </button>
             <button
               onClick={handleExpertPageNavigation}
-              style={{
-                marginLeft: '1rem',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                padding: '0.5rem 1rem',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+              className="view-button expert-button"
             >
               View Expert Answers
+            </button>
+            <button
+              onClick={handleRubricPageNavigation}
+              className="view-button rubric-button"
+            >
+              View Rubric
             </button>
           </div>
         </div>

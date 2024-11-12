@@ -61,7 +61,12 @@ CORS(app, resources={
     r"/expert_answer": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
+    },
+    r"/rubric_score": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
     }
+
 })
 
 class interview_class:
@@ -423,6 +428,33 @@ def get_expert_answer():
     except Exception as e:
         print(f"Error getting expert answer: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/rubric_score', methods=['GET'])
+def get_rubric_score():
+    try:
+        # Get question number from query parameter, default to 0
+        question_num = request.args.get('question_num', 0, type=int)
+
+        # Validate question exists in evaluation
+        if question_num not in evaluation_instance.evaluation_dict:
+            return jsonify({'error': f'Evaluation for question {question_num} not found'}), 404
+
+        # Get all rubric scores and justifications for this question
+        question_evaluation = evaluation_instance.evaluation_dict[question_num]
+
+        # Structure response
+        response_data = {
+            'question_num': question_num,
+            'total_questions': len(evaluation_instance.evaluation_dict),  # Should be 5 (0-4)
+            'rubric_categories': question_evaluation  # Contains all 7 categories with scores and justifications
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Error getting rubric scores for question {question_num}: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)

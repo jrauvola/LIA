@@ -5,6 +5,7 @@ import HomePage from './components/HomePage';
 import Chatbot from './components/Chatbot';
 import EvaluationPage from './components/EvaluationPage';
 import ExpertPage from './components/ExpertPage';  // Add this import
+import RubricPage from './components/RubricPage';  // Add this import
 import NavigationBar from './components/NavigationBar';
 import LandingPage from './components/LandingPage';
 import { ThemeProvider } from './context/ThemeContext';
@@ -25,6 +26,7 @@ function App() {
           <Route path="/chatbot" element={<><NavigationBar /><Chatbot /></>} />
           <Route path="/evaluation" element={<><NavigationBar /><EvaluationPage /></>} />
           <Route path="/expertpage" element={<><NavigationBar /><ExpertPage /></>} />  {/* Add this route */}
+          <Route path="/rubricpage" element={<><NavigationBar /><RubricPage /></>} />
           {/* Add other routes as needed */}
         </Routes>
       </Router>
