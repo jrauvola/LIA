@@ -295,7 +295,7 @@ def stop_question():
             # Process each category
             for category in categories:
                 # Find the section for this category
-                pattern = f"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
+                pattern = rf"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
                 match = re.search(pattern, eval_response, re.DOTALL)
 
                 if match:
