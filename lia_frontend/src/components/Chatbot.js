@@ -19,9 +19,10 @@ const ChatMessage = memo(({ role, message, isInterim = false }) => {
       <div className="message-header">
         {role === 'lia' ? '💃 LIA:' : '👤 User:'}
       </div>
-      <div className="message-content">
-        {formatMessage(message)}
-      </div>
+      <div
+        className="message-content"
+        dangerouslySetInnerHTML={{ __html: formatMessage(message) }}
+      />
     </div>
   );
 });
@@ -80,37 +81,36 @@ function Chatbot() {
   };
 
   const displayQuestionAPI = async () => {
-    try {
-      const response = await axios.post('http://127.0.0.1/display_question', null, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      console.log('Question received successfully:', response.data);
+   try {
+     const response = await axios.post('http://127.0.0.1/display_question', null, {
+       headers: {
+         'Content-Type': 'application/json',
+       },
+     });
+     console.log('Question received successfully:', response.data);
 
-      // if (response.data.nextQuestion) {
-      //   const cleanedQuestion = response.data.nextQuestion
-      //     .replace(/\*\*/g, '')
-      //     .trim();
-      // convert
-      if (response.data.nextQuestion) {
-        // Convert the markdown in nextQuestion to HTML
-        const htmlQuestion = marked(response.data.nextQuestion.trim());
-        
-        setConversation(prev => [
-          ...prev, 
-          { 
-            id: uuidv4(),
-            role: 'lia', 
-            message: cleanedQuestion 
-          }
-        ]);
-      } else {
-        console.log('No next question available');
-      }
-    } catch (error) {
-      console.error('Error receiving question:', error);
-    }
+     if (response.data.nextQuestion) {
+       // Convert the markdown in nextQuestion to HTML with decoded entities
+       const htmlQuestion = marked(response.data.nextQuestion.trim(), {
+         decodeEntities: true,
+         gfm: true,  // Enable GitHub Flavored Markdown
+         breaks: true // Enable line breaks
+       });
+
+       setConversation(prev => [
+         ...prev,
+         {
+           id: uuidv4(),
+           role: 'lia',
+           message: htmlQuestion
+         }
+       ]);
+     } else {
+       console.log('No next question available');
+     }
+   } catch (error) {
+     console.error('Error receiving question:', error);
+   }
   };
 
   const startRecordingTimer = () => {
