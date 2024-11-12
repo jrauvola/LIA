@@ -20,6 +20,15 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
+.metrics-section {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
 .skill {
   margin-bottom: 30px;
 }
@@ -29,13 +38,48 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  justify-content: space-between;
+}
+
+.skill-range {
+  font-size: 0.8em;
+  color: #4A90E2;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.skill-min, .skill-max {
+  font-size: 0.7em;
+  color: #666;
+  font-weight: normal;
+  position: absolute;
+}
+
+.skill-min {
+  left: 0;
+  bottom: -20px;
+}
+
+.skill-max {
+  right: 0;
+  bottom: -20px;
+}
+
+.skill-bar-container {
+  position: relative;
+  height: 12px;
+  margin-top: 25px;
 }
 
 .skill-bar {
-  height: 12px;
+  height: 100%;
   background: #f5f5f5;
   border-radius: 6px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
+  position: relative;
 }
 
 .skill-per {
@@ -45,10 +89,15 @@
   position: relative;
   width: 0;
   transition: width 1.5s ease-in-out;
+  z-index: 1; /* Changed from 2 to 1 */
 }
 
 .skill-per.animate {
   width: var(--width);
+}
+
+.skill-per.in-zone {
+  background: #4A90E2;
 }
 
 .skill-per::before {
@@ -59,22 +108,29 @@
   font-size: 12px;
   color: #333;
   padding: 2px 5px;
+  z-index: 3; /* Added to keep the percentage on top */
 }
 
-@keyframes fillBar {
-  from { width: 0; }
-  to { width: var(--width); }
+.advanced-zone-overlay {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(74, 144, 226, 0.3); /* Made slightly more visible */
+  top: 0;
+  z-index: 2; /* Changed from 1 to 2 */
+  pointer-events: none;
+  border-radius: 6px;
+  border: 2px solid rgba(74, 144, 226, 0.5); /* Added border for better visibility */
 }
 
-.skill-bar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.skill-bar.expert .skill-per {
-  background: linear-gradient(90deg, #90caf9, #2196f3);
-  opacity: 0.5;
+.zone-label {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7em;
+  color: #4A90E2;
+  white-space: nowrap;
+  z-index: 3; /* Added to keep the label on top */
 }
 
 .question-navigation {
@@ -92,7 +148,8 @@
 .navigation-buttons {
   display: flex;
   gap: 10px;
-  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .navigation-buttons button:not(.view-button) {
@@ -162,8 +219,21 @@ h2 {
   color: #333;
 }
 
-/* Responsive styling for navigation buttons */
+@keyframes fillBar {
+  from { width: 0; }
+  to { width: var(--width); }
+}
+
+/* Responsive styling */
 @media (max-width: 768px) {
+  .evaluation-container {
+    padding: 20px;
+  }
+
+  .metrics-section {
+    padding: 20px;
+  }
+
   .navigation-buttons {
     flex-wrap: wrap;
     justify-content: center;
