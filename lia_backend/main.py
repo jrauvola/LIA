@@ -55,8 +55,10 @@ CORS(app, resources={
         "supports_credentials": True
     },
     r"/get_interview_data": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET"],
+        "supports_credentials": True,
+        "allow_headers": ["Content-Type", "Authorization"]
     },
     r"/expert_answer": {
         "origins": "http://localhost:3000",
