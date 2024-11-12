@@ -1,0 +1,127 @@
+.rubric-container {
+  display: flex;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 2rem;
+}
+
+.rubric-categories {
+  flex: 1;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+.justification-panel {
+  flex: 1;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+.category-item {
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.category-item.active {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.category-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.category-score {
+  background-color: #007bff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.justification-content {
+  height: 100%;
+  min-height: 400px;
+}
+
+.justification-title {
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #007bff;
+}
+
+.justification-text {
+  line-height: 1.6;
+  color: #444;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .rubric-container {
+    flex-direction: column;
+  }
+  
+  .rubric-categories,
+  .justification-panel {
+    max-width: 100%;
+  }
+}
+
+/* Animation for justification panel */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.justification-text {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar styling */
+.rubric-categories::-webkit-scrollbar,
+.justification-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rubric-categories::-webkit-scrollbar-track,
+.justification-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.rubric-categories::-webkit-scrollbar-thumb,
+.justification-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.rubric-categories::-webkit-scrollbar-thumb:hover,
+.justification-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
