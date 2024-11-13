@@ -4,6 +4,7 @@ venv/
 ENV/
 env/
 virtualenv/
+lia_env/
 
 # Python
 __pycache__/

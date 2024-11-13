@@ -5,7 +5,7 @@
 }
 
 .expert-textbox {
-  background-color: white;
+  background-color: rgb(37,37,37);
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -13,10 +13,11 @@
 
 .question-section, .answer-section {
   margin-bottom: 2rem;
+  color: #ffffff;
 }
 
 .question-section h3, .answer-section h3 {
-  color: #333;
+  color: #ffffff;
   margin-bottom: 0.5rem;
 }
 

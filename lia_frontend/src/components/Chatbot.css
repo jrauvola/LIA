@@ -107,12 +107,12 @@
 }
 
 .chat-message.lia {
-  background-color: #ffebee;
+  background-color: #000000;
   margin-right: auto;
 }
 
 .chat-message.user {
-  background-color: #e8eaed;
+  background-color: #000000;
   margin-left: auto;
 }
 
@@ -192,7 +192,7 @@
   flex-direction: column;
   width: 45%;
   max-width: 800px;
-  background: white;
+  background: rgb(37,37,37);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -215,7 +215,7 @@
   width: auto;
   animation: fadeIn 0.3s ease-in;
 }
-
+/* 
 .chat-message.lia {
   background-color: #ffebee;
   align-self: flex-start;
@@ -224,19 +224,19 @@
 .chat-message.user {
   background-color: #e8eaed;
   align-self: flex-end;
-}
+} */
 
 .message-header {
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 4px;
-  color: #444;
+  color: #ffffff;
 }
 
 .message-content {
   font-size: 1rem;
   line-height: 1.4;
-  color: #1a1a1a;
+  color: #ffffff;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -299,7 +299,7 @@
 }
 
 /* Update message content to prevent wrapping */
-.message-content {
+/* .message-content {
   font-size: 1rem;
   line-height: 1.4;
   color: #1a1a1a;
@@ -309,7 +309,7 @@
   display: block;
   position: relative;
   max-width: 100%;
-}
+} */
 
 .video-controls {
   position: absolute;
@@ -323,9 +323,9 @@
 .chat-controls {
   position: sticky;
   bottom: 0;
-  background: white;
+  background: rgb(37, 37, 37);
   padding: 10px 0;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgb(37, 37, 37);
 }
 
 /* Add these new styles */
@@ -400,8 +400,8 @@
   text-align: center;
   padding: 20px;
   font-size: 1.2rem;
-  color: #666;
-  background-color: #f5f5f5;
+  color: #ffffff;
+  background-color: #333;
   border-radius: 10px;
   margin: 20px auto;
   max-width: 80%;
