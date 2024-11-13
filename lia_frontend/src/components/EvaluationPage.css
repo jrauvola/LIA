@@ -2,7 +2,7 @@
   padding: 40px;
   background: #000000;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  font-family: 'Georgia';
 }
 
 .evaluation-container h1 {
@@ -16,7 +16,7 @@
   background-clip: text;
   text-fill-color: transparent;
   padding: 20px 0;
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Georgia';
   letter-spacing: 1px;
   text-transform: none;
   position: relative;

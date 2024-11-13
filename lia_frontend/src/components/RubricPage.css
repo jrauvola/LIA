@@ -3,7 +3,7 @@ body {
   background-color: #f5f5f5;
   min-height: 100vh;
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Georgia';
  }
  
  /* Root container styles */
@@ -27,7 +27,7 @@ body {
   gap: 1rem;
   margin-bottom: 2rem;
   padding: 1rem;
-  background-color: rgb(37, 37, 37);
+  background-color: rgb(0, 0, 0);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
  }

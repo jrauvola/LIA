@@ -269,7 +269,7 @@ function EvaluationPage() {
             <h2>The Good:</h2>
             {assessmentText.good.map((item, index) => (
               <div key={index} className="feedback-item">
-                <strong>{item.title}</strong> - {item.text}
+                <strong>{item.title}</strong> <br></br> {item.text}
               </div>
             ))}
           </div>
@@ -278,7 +278,7 @@ function EvaluationPage() {
             <h2>The Bad:</h2>
             {assessmentText.bad.map((item, index) => (
               <div key={index} className="feedback-item">
-                <strong>{item.title}</strong> - {item.text}
+                <strong>{item.title}</strong> <br></br> {item.text}
               </div>
             ))}
           </div>
