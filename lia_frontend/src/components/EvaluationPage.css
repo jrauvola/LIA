@@ -55,6 +55,8 @@
   color: #ffffff;
   margin-bottom: 5px;
   text-transform: capitalize;
+  /* margin-top: 15px; */
+  padding-top: 15px;
 }
 
 .skill-bar {
@@ -66,6 +68,7 @@
   margin: 20px 0;
 }
 
+
 .skill-per {
   height: 100%;
   background: linear-gradient(90deg, #ff78a5, #ff0055);
@@ -74,7 +77,9 @@
   width: 0;
   transition: width 3s ease-in-out;
   z-index: 1;
+  animation: fillBars 6s 1;
 }
+
 
 .skill-per.animate {
   width: var(--width);
@@ -84,18 +89,32 @@
   content: attr(data-per);
   position: absolute;
   right: 0;
-  top: -45px;
+  top: 25px;
   font-size: 11px;
   color: #666;
-  padding: 2px 5px;
+  padding: 4px 6px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 3px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transform: translateX(50%);
+}
+
+.skill-per::after{
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #f1f1f1;
+  top: 20px;
+  right: 0;
+  transform: translateX(50%) rotate(45deg);
+  border-radius: 2px;
 }
 
 @keyframes fillBar {
   from { width: 0; }
-  to { width: var(--width); }
+  /* to { width: var(--width); } */
+  to { width: 100%; }
 }
 
 .skill-bar-container {
@@ -224,7 +243,7 @@ h2 {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #fce4ec;
+  /* background: #fce4ec; */
 }
 
 .loading-spinner {
