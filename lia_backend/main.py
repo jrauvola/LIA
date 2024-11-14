@@ -245,82 +245,82 @@ def stop_question():
         if transcript is None:
             return jsonify({'error': 'Failed to process audio'}), 500
 
-        try:
-            print(interview_instance.interview_dict)
-            interview_instance.add_answer(transcript, j)
+        # try:
+        print(interview_instance.interview_dict)
+        interview_instance.add_answer(transcript, j)
 
-            # Convert HTTPS URL to GCS URI
-            gcs_uri = convert_https_to_gcs_uri(webm_url)
+        # Convert HTTPS URL to GCS URI
+        gcs_uri = convert_https_to_gcs_uri(webm_url)
 
-            # Update audio features and capture audio length
-            audio_features = update_audio_features(interview_instance, gcs_uri, j)
-            audio_length = interview_instance.audio_features[j]['audio_length'] if audio_features else 0
+        # Update audio features and capture audio length
+        audio_features = update_audio_features(interview_instance, gcs_uri, j)
+        audio_length = interview_instance.audio_features[j]['audio_length'] if audio_features else 0
 
-            print("Audio features extracted:", interview_instance.audio_features)
+        print("Audio features extracted:", interview_instance.audio_features)
 
-            # Update text features with audio length
-            update_text_features(interview_instance, transcript, audio_length, j)
+        # Update text features with audio length
+        update_text_features(interview_instance, transcript, audio_length, j)
 
-            # Update video features
-            webm_file.seek(0)  # Reset file pointer
-            video_features = update_video_features(interview_instance, webm_file, j)
+        # Update video features
+        webm_file.seek(0)  # Reset file pointer
+        video_features = update_video_features(interview_instance, webm_file, j)
 
-            # Generate and store expert answer
-            current_question = interview_instance.interview_dict[j]["question"]
-            expert_response = generate_exp_ans_cot(current_question, qa)
-            interview_instance.interview_dict[j]["expert_answer"] = expert_response
-            print("Expert answer generated and stored:", expert_response)
+        # Generate and store expert answer
+        current_question = interview_instance.interview_dict[j]["question"]
+        expert_response = generate_exp_ans_cot(current_question, qa)
+        interview_instance.interview_dict[j]["expert_answer"] = expert_response
+        print("Expert answer generated and stored:", expert_response)
 
-            # Get evaluation from evaluator.py
-            eval_response = evaluator.eval_input(interview_instance, j)
+        # Get evaluation from evaluator.py
+        eval_response = evaluator.eval_input(interview_instance, j)
 
-            # Process each rubric category
-            import re
+        # Process each rubric category
+        import re
 
-            # Define the categories we're looking for
-            categories = [
-                "Relevance to the Question",
-                "Technical Correctness",
-                "Completeness of the Answer",
-                "Anecdotal Element",
-                "Communication Clarity",
-                "Problem Solving Approach",
-                "Handling Ambiguity"
-            ]
+        # Define the categories we're looking for
+        categories = [
+            "Relevance to the Question",
+            "Technical Correctness",
+            "Completeness of the Answer",
+            "Anecdotal Element",
+            "Communication Clarity",
+            "Problem Solving Approach",
+            "Handling Ambiguity"
+        ]
 
-            # Initialize evaluation for this question if it doesn't exist
-            if j not in evaluation_instance.evaluation_dict:
-                evaluation_instance.evaluation_dict[j] = {
-                    category: {"Score": 0, "Justification": ""} for category in categories
+        # Initialize evaluation for this question if it doesn't exist
+        if j not in evaluation_instance.evaluation_dict:
+            evaluation_instance.evaluation_dict[j] = {
+                category: {"Score": 0, "Justification": ""} for category in categories
+            }
+
+        # Process each category
+        for category in categories:
+            # Find the section for this category
+            pattern = rf"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
+            match = re.search(pattern, eval_response, re.DOTALL)
+
+            if match:
+                score = int(match.group(1))
+                justification = match.group(2).strip()
+
+                # Store in evaluation dictionary
+                evaluation_instance.evaluation_dict[j][category] = {
+                    "Score": score,
+                    "Justification": justification
                 }
 
-            # Process each category
-            for category in categories:
-                # Find the section for this category
-                pattern = rf"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
-                match = re.search(pattern, eval_response, re.DOTALL)
+        print("Complete evaluation dictionary:", evaluation_instance.evaluation_dict)
+        print("Features extracted:")
+        print("Audio:", interview_instance.audio_features)
+        print("Text:", interview_instance.text_features)
+        print("Video:", interview_instance.video_features)
 
-                if match:
-                    score = int(match.group(1))
-                    justification = match.group(2).strip()
+        interview_instance.answer_num = j + 1
 
-                    # Store in evaluation dictionary
-                    evaluation_instance.evaluation_dict[j][category] = {
-                        "Score": score,
-                        "Justification": justification
-                    }
-
-            print("Complete evaluation dictionary:", evaluation_instance.evaluation_dict)
-            print("Features extracted:")
-            print("Audio:", interview_instance.audio_features)
-            print("Text:", interview_instance.text_features)
-            print("Video:", interview_instance.video_features)
-
-            interview_instance.answer_num = j + 1
-
-        except Exception as e:
-            print(f"Error in processing: {str(e)}")
-            return jsonify({'error': 'Failed to process response'}), 500
+        # except Exception as e:
+            # print(f"Error in processing: {str(e)}")
+            # return jsonify({'error': 'Failed to process response'}), 500
 
         return jsonify({
             'message': 'stop_question success',
@@ -333,6 +333,7 @@ def stop_question():
     except Exception as e:
         print(f"Error in stop_question: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 @app.route('/process_chunk', methods=['POST']) #may remove
 def process_chunk():
     print("🎤 process_chunk: Received new audio chunk")

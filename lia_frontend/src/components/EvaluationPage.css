@@ -85,6 +85,7 @@
   width: var(--width);
 }
 
+
 .skill-per::before {
   content: attr(data-per);
   position: absolute;

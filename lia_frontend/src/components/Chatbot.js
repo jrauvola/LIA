@@ -320,10 +320,10 @@ function Chatbot() {
       console.log('File upload to GCP completed successfully.');
     } catch (error) {
       console.error('Upload error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data
-      });
+      // console.error('Error details:', {
+      //   message: error.message,
+      //   response: error.response?.data
+      // });
       setError('Failed to upload recording');
     }
   };
@@ -393,11 +393,17 @@ function Chatbot() {
   useEffect(() => {
     const liaVideo = liaVideoRef.current;
     
+    // const handleVideoEnd = () => {
+    //   if (currentVideo === 'appearing') {
+    //     setCurrentVideo('waving');
+    //   } else if (currentVideo === 'waving') {
+    //     setCurrentVideo('staying');
+    //   }
+    // };
+
     const handleVideoEnd = () => {
-      if (currentVideo === 'appearing') {
+      if (currentVideo === 'waving') {
         setCurrentVideo('waving');
-      } else if (currentVideo === 'waving') {
-        setCurrentVideo('staying');
       }
     };
 
@@ -415,15 +421,16 @@ function Chatbot() {
   const getCurrentVideoSrc = () => {
     switch(currentVideo) {
       case 'appearing':
-        return '/videos/lia_appearing.mp4';
+        return '/videos/lia_bot.mov';
       case 'waving':
-        return '/videos/lia_waving.mp4';
+        return '/videos/lia_not.mov';
       case 'staying':
-        return '/videos/lia_staying.mp4';
+        return '/videos/lia_bot.mov';
       default:
-        return '/videos/lia_staying.mp4';
+        return '/videos/lia_bot.mov';
     }
   };
+
 
   const addMessage = (role, message) => {
     setConversation(prev => [
