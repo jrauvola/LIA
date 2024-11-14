@@ -448,7 +448,8 @@ function Chatbot() {
           src={getCurrentVideoSrc()}
           autoPlay
           muted
-          loop={currentVideo === 'staying'}
+          // loop={currentVideo === 'staying'}
+          loop
         />
         <video 
           className={`user-video-minimized ${isRecording ? 'recording' : ''}`}
