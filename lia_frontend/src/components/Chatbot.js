@@ -502,7 +502,7 @@ function Chatbot() {
         </div>
       </div>
       <div className="chat-container" ref={chatContainerRef}>
-        <img className="lia-image" src="/LIA.webp" alt="LIA" />
+        {/*<img className="lia-image" src="/LIA.webp" alt="LIA" />*/}
         <div className="messages">
           {showStartPrompt ? (
             <div className="start-prompt">

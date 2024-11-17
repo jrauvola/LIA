@@ -136,12 +136,12 @@
   margin: 0;
 }
 
-.lia-image {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
-  border-radius: 50%;
-}
+/*.lia-image {*/
+/*  width: 80px;*/
+/*  height: 80px;*/
+/*  margin: 0 auto 20px;*/
+/*  border-radius: 50%;*/
+/*}*/
 
 /* New styles for recording bar */
 .recording-bar {

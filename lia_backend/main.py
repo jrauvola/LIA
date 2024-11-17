@@ -12,6 +12,7 @@ import evaluator
 from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
 from expert_agent import generate_exp_ans_cot
+from scoreboard_breakdown import analyze_interview_performance
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -61,6 +62,10 @@ CORS(app, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     },
     r"/expert_answer": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
+    },
+    r"/scoreboard_breakdown": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
     },
@@ -458,6 +463,84 @@ def get_rubric_score():
         print(f"Error getting rubric scores for question {question_num}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/scoreboard_breakdown', methods=['GET'])
+def get_scoreboard_breakdown():
+    try:
+        # Check if interview has data
+        if not interview_instance.text_features or not interview_instance.audio_features or not interview_instance.video_features:
+            return jsonify({'error': 'No interview data available'}), 404
+
+        # Calculate averages for all features
+        def calculate_averages():
+            # Text features averages
+            text_metrics = {
+                'quantifier_words_pct': 0,
+                'filler_nonfluency_pct': 0,
+                'wpsec': 0,
+                'upsec': 0
+            }
+
+            for features in interview_instance.text_features:
+                for metric in text_metrics:
+                    text_metrics[metric] += features.get(metric, 0)
+
+            text_count = len(interview_instance.text_features)
+            for metric in text_metrics:
+                text_metrics[metric] = text_metrics[metric] / text_count if text_count > 0 else 0
+
+            # Audio features averages
+            audio_metrics = {
+                'avgBand1': 0,
+                'unvoiced_percent': 0,
+                'f1STD': 0,
+                'f3meanf1': 0,
+                'intensityMean': 0,
+                'avgDurPause': 0
+            }
+
+            for features in interview_instance.audio_features:
+                for metric in audio_metrics:
+                    audio_metrics[metric] += features.get(metric, 0)
+
+            audio_count = len(interview_instance.audio_features)
+            for metric in audio_metrics:
+                audio_metrics[metric] = audio_metrics[metric] / audio_count if audio_count > 0 else 0
+
+            # Video features averages
+            video_metrics = {
+                'blink_rate': 0,
+                'average_smile_intensity': 0,
+                'average_engagement': 0,
+                'average_stress': 0
+            }
+
+            for features in interview_instance.video_features:
+                for metric in video_metrics:
+                    video_metrics[metric] += features.get(metric, 0)
+
+            video_count = len(interview_instance.video_features)
+            for metric in video_metrics:
+                video_metrics[metric] = video_metrics[metric] / video_count if video_count > 0 else 0
+
+            return {**text_metrics, **audio_metrics, **video_metrics}
+
+        try:
+            # Get averaged metrics and analysis
+            user_metrics = calculate_averages()
+            analysis_result = analyze_interview_performance(user_metrics, qa)
+
+            # Return just the analysis text
+            return jsonify({
+                'analysis': analysis_result
+            })
+
+        except Exception as e:
+            print(f"Error in analysis: {str(e)}")
+            return jsonify({'error': 'Failed to generate analysis'}), 500
+
+    except Exception as e:
+        print(f"Error getting scoreboard breakdown: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)

@@ -47,6 +47,7 @@
 
 .skill {
   margin-bottom: 30px;
+  position: relative;
 }
 
 .skill-name {
@@ -55,8 +56,17 @@
   color: #ffffff;
   margin-bottom: 5px;
   text-transform: capitalize;
-  /* margin-top: 15px; */
   padding-top: 15px;
+  cursor: pointer;
+}
+
+.skill-name:hover {
+  color: #ff78a5;
+}
+
+.skill-bar-container {
+  position: relative;
+  margin: 15px 0;
 }
 
 .skill-bar {
@@ -66,8 +76,8 @@
   overflow: visible;
   position: relative;
   margin: 20px 0;
+  cursor: pointer;
 }
-
 
 .skill-per {
   height: 100%;
@@ -80,11 +90,9 @@
   animation: fillBars 6s 1;
 }
 
-
 .skill-per.animate {
   width: var(--width);
 }
-
 
 .skill-per::before {
   content: attr(data-per);
@@ -98,9 +106,10 @@
   border-radius: 3px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transform: translateX(50%);
+  z-index: 3;
 }
 
-.skill-per::after{
+.skill-per::after {
   content: "";
   position: absolute;
   width: 10px;
@@ -110,55 +119,46 @@
   right: 0;
   transform: translateX(50%) rotate(45deg);
   border-radius: 2px;
+  z-index: 3;
 }
 
-@keyframes fillBar {
-  from { width: 0; }
-  /* to { width: var(--width); } */
-  to { width: 100%; }
+.advanced-zone {
+  position: absolute;
+  height: 100%;
+  background: rgba(33, 150, 243, 0.5);
+  border: 1px solid rgba(33, 150, 243, 0.7);
+  border-radius: 6px;
+  top: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.skill-bar-container {
-  position: relative;
-  margin: 15px 0;
-}
-
-.skill-bar.expert .skill-per {
-  background: linear-gradient(90deg, #90caf9, #2196f3);
-  opacity: 0.5;
+.advanced-zone::before {
+  content: attr(data-range);
+  position: absolute;
+  right: 0;
+  top: -25px;
+  font-size: 11px;
+  color: #2196F3;
+  white-space: nowrap;
+  font-weight: 600;
+  z-index: 3;
 }
 
 .question-navigation {
   max-width: 800px;
   margin: 0 auto 20px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  background: white;
   padding: 15px 30px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .navigation-buttons {
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.navigation-buttons button:not(.view-button) {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(90deg, #ff80ab, #ff4081);
-  color: white;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.navigation-buttons button:not(.view-button):disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .view-button {
@@ -183,68 +183,12 @@
   opacity: 0.9;
 }
 
-.assessment-section {
-  margin-top: 2rem;
-  /* padding: 1rem; */
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.good-feedback, .bad-feedback {
-  background: rgb(37,37,37);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.feedback-item {
-  margin-bottom: 1rem;
-  line-height: 1.6;
-  color: white;
-}
-
-.feedback-item:last-child {
-  margin-bottom: 0;
-}
-
-h2 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-/* Responsive styling for navigation buttons */
-@media (max-width: 768px) {
-  .navigation-buttons {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .view-button {
-    margin: 0.5rem;
-    flex: 1 1 calc(50% - 1rem);
-  }
-}
-
-@media (max-width: 480px) {
-  .navigation-buttons {
-    flex-direction: column;
-  }
-
-  .view-button {
-    margin: 0.5rem 0;
-    width: 100%;
-  }
-}
-
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  /* background: #fce4ec; */
 }
 
 .loading-spinner {
@@ -257,41 +201,129 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* Tooltip Styles */
+.tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  max-width: 300px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.2s ease-in-out;
+  transform: translateY(-100%);  /* Added this line */
+  margin-top: -10px;  /* Added this line */
+}
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(0, 0, 0, 0.9);  /* Changed from border-bottom to border-top */
+  bottom: -8px;  /* Changed from top: -8px to bottom: -8px */
+  left: 15px;
+}
+
+.tooltip.closing {
+  opacity: 0;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.skills h2 {
-  margin-top: 40px;
-  margin-bottom: 30px;
+@keyframes fillBar {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+h2 {
+  margin-bottom: 1rem;
   color: #ffffff;
   font-size: 1.4em;
-  /* border-bottom: 2px solid #ff4081; */
   padding-bottom: 10px;
 }
 
-.skills h2:first-child {
-  margin-top: 0;
+@media (max-width: 768px) {
+  .navigation-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .view-button {
+    margin: 0.5rem;
+    flex: 1 1 calc(50% - 1rem);
+  }
+
+  .tooltip {
+    max-width: 250px;
+  }
 }
 
-.expert-zone {
-  position: absolute;
-  height: 100%;
-  background: rgba(33, 150, 243, 0.3);
-  border: 1px solid rgba(33, 150, 243, 0.5);
+@media (max-width: 480px) {
+  .navigation-buttons {
+    flex-direction: column;
+  }
+
+  .view-button {
+    margin: 0.5rem 0;
+    width: 100%;
+  }
+
+  .tooltip {
+    max-width: 200px;
+  }
+}
+
+.analysis-section {
+  max-width: 800px;
+  margin: 30px auto 0;
+  background: rgb(37,37,37);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  /* Remove any height limitations */
+  max-height: none;
+  /* Add margin-bottom for spacing */
+  margin-bottom: 30px;
+}
+
+.analysis-section h2 {
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ff78a5;
+}
+
+.analysis-content {
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
-  top: 0;
-  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Remove any height limitations */
+  max-height: none;
+  /* Enable scrolling if content is very long */
+  overflow-y: auto;
+  /* Add some bottom margin */
+  margin-bottom: 20px;
 }
 
-.expert-zone::before {
-  content: "Advanced Zone";
-  position: absolute;
-  right: 0;
-  top: -25px;
-  font-size: 11px;
-  color: #2196F3;
-  padding: 2px 5px;
-  white-space: nowrap;
+@media (max-width: 768px) {
+  .analysis-section {
+    margin: 20px 15px;
+    padding: 20px;
+  }
 }
