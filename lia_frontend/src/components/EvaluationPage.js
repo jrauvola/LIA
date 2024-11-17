@@ -311,7 +311,7 @@ function EvaluationPage() {
               onClick={handleRubricPageNavigation}
               className="view-button rubric-button"
             >
-              View Rubric
+              View Rubric Assessment
             </button>
           </div>
         </div>
