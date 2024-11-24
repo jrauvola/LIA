@@ -2,6 +2,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
+
+
+
 function NavigationBar() {
   return (
     <nav className="bg-pink-200 p-4">
@@ -30,7 +33,7 @@ function NavigationBar() {
                 isActive ? 'text-gray-800 font-semibold' : 'text-gray-600 hover:text-gray-800'
               }
             >
-              Improvement Chatbot
+              Interview Chatbot
             </NavLink>
           </li>
           <li>

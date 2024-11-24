@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './EvaluationPage.css';
+import { marked } from 'marked';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const metricDisplayNames = {
@@ -74,6 +75,7 @@ function EvaluationPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
+
   useEffect(() => {
     const handleClickOutside = () => {
       setActiveTooltip(null);
@@ -115,6 +117,10 @@ function EvaluationPage() {
         console.error('Error:', error);
       });
   }, []);
+
+  const MarkupParser = (answer) => {
+    return { __html: marked(answer) };
+  };
 
   useEffect(() => {
     setIsVisible(true);
@@ -420,13 +426,14 @@ function EvaluationPage() {
 
         {/* Add this new section */}
         {analysisResult && (
-          <div className="analysis-section">
-            <h2>Performance Analysis</h2>
-            <div className="analysis-content">
-              {analysisResult}
-            </div>
+        <div className="analysis-section">
+          <h2>Performance Analysis</h2>
+          <div
+          className="analysis-content"
+          dangerouslySetInnerHTML={MarkupParser(analysisResult)}
+          />
           </div>
-        )}
+          )}
       </div>
     )
   );

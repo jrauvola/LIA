@@ -1,6 +1,6 @@
 import base64
 import vertexai
-from vertexai.generative_models import GenerativeModel
+from vertexai.generative_models import GenerativeModel # to call Gemini
 from langchain_core.prompts import PromptTemplate
 
 
