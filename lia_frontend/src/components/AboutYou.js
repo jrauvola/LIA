@@ -173,11 +173,11 @@ function AboutYou() {
           </div>
           <div>
             <label className="text-white text-lg mb-2 block">
-              Company Website Link (Optional)
+              Include the job description (Recommended)
             </label>
             <input
               type="text"
-              placeholder="www.website.com"
+              placeholder="This job entails..."
               className="w-full p-2 border-b border-gray-600 bg-transparent text-gray-400 focus:outline-none"
             />
           </div>

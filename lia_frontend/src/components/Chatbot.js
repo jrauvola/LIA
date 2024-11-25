@@ -33,8 +33,8 @@ const ProcessingOverlay = () => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white p-8 rounded-lg flex flex-col items-center">
       <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500 mb-4"></div>
-      <p className="text-gray-800 text-lg font-semibold">LiA is taking notes</p>
-      <p className="text-gray-600 mt-2">Your next question will be ready momentarily</p>
+      <p className="text-gray-800 text-lg font-semibold">LiA is taking notes...</p>
+      <p className="text-gray-600 mt-2">Get ready for your next question</p>
     </div>
   </div>
 );
@@ -536,7 +536,7 @@ function Chatbot() {
       {showFeedbackButton && (
         <button
           onClick={handleFeedback}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white py-4 px-8 rounded-full hover:bg-pink-600 transition-colors duration-300 text-xl font-semibold z-50 shadow-lg"
+          className="fixed bottom-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white py-4 px-8 rounded-full hover:bg-pink-600 transition-colors duration-300 text-xl font-semibold z-50 shadow-lg"
         >
           Get Your Interview Feedback
         </button>
