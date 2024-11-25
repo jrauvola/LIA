@@ -99,7 +99,7 @@ const RubricPage = () => {
               onClick={() => handleCategoryClick(category)}
             >
               <span className="category-name">{category}</span>
-              <span className="category-score">{data.Score}/10</span>
+              <span className="category-score">{data.Score}/3</span>
             </div>
           ))}
         </div>
@@ -115,7 +115,7 @@ const RubricPage = () => {
                 dangerouslySetInnerHTML={MarkupParser(rubricData[selectedCategory].Justification || 'No justification provided.')}
                 />
                 <div className="score-display">
-                  Score: {rubricData[selectedCategory].Score}/10
+                  Score: {rubricData[selectedCategory].Score}/3
                 </div>
               </>
             )}

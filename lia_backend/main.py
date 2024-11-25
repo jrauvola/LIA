@@ -13,6 +13,7 @@ from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
 from expert_agent import generate_exp_ans_cot
 from scoreboard_breakdown import analyze_interview_performance
+from evaluator import evaluation_class
 import pandas as pd
 from collections import Counter
 import tempfile
@@ -110,45 +111,6 @@ class interview_class:
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
 
-class evaluation_class:
-    def __init__(self):
-        self.evaluation_dict = {
-            0: {
-                "Relevance to the Question": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Technical Correctness": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Completeness of the Answer": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Anecdotal Element": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Communication Clarity": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Problem Solving Approach": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Handling Ambiguity": {
-                    "Score": 0,
-                    "Justification": ""
-                }
-            }
-        }
-    
-# @app.route('/')
-# def test():
-#     return jsonify({"status": "Server is running"})
-
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
 def build_pp():
@@ -201,9 +163,8 @@ def display_question():
 
 @app.route('/print_evaluate', methods=['POST'])
 def display_evaluate():
-    return jsonify({
-        'nextQuestion': evaluator.eval_input(interview_instance, interview_instance.question_num)
-    })
+    eval_response = evaluator.eval_input(interview_instance, interview_instance.question_num)
+    return jsonify({'evaluation': eval_response})
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
@@ -276,44 +237,11 @@ def stop_question():
         interview_instance.interview_dict[j]["expert_answer"] = expert_response
         print("Expert answer generated and stored:", expert_response)
 
-        # Get evaluation from evaluator.py
+        # Get and parse evaluation response
         eval_response = evaluator.eval_input(interview_instance, j)
 
-        # Process each rubric category
-        import re
-
-        # Define the categories we're looking for
-        categories = [
-            "Relevance to the Question",
-            "Technical Correctness",
-            "Completeness of the Answer",
-            "Anecdotal Element",
-            "Communication Clarity",
-            "Problem Solving Approach",
-            "Handling Ambiguity"
-        ]
-
-        # Initialize evaluation for this question if it doesn't exist
-        if j not in evaluation_instance.evaluation_dict:
-            evaluation_instance.evaluation_dict[j] = {
-                category: {"Score": 0, "Justification": ""} for category in categories
-            }
-
-        # Process each category
-        for category in categories:
-            # Find the section for this category
-            pattern = rf"{category} \((\d)/3\)(.*?)(?=\n\d\.|$)"
-            match = re.search(pattern, eval_response, re.DOTALL)
-
-            if match:
-                score = int(match.group(1))
-                justification = match.group(2).strip()
-
-                # Store in evaluation dictionary
-                evaluation_instance.evaluation_dict[j][category] = {
-                    "Score": score,
-                    "Justification": justification
-                }
+        # Store in evaluation instance
+        evaluation_instance.evaluation_dict[j] = eval_response
 
         print("Complete evaluation dictionary:", evaluation_instance.evaluation_dict)
         print("Features extracted:")
@@ -323,16 +251,12 @@ def stop_question():
 
         interview_instance.answer_num = j + 1
 
-        # except Exception as e:
-            # print(f"Error in processing: {str(e)}")
-            # return jsonify({'error': 'Failed to process response'}), 500
-
         return jsonify({
             'message': 'stop_question success',
             'transcript': transcript,
             'webm_url': webm_url,
             'expert_answer': expert_response,
-            'evaluation': evaluation_instance.evaluation_dict[j]  # Include evaluation in response
+            'evaluation': eval_response  # Send parsed JSON
         })
 
     except Exception as e:
@@ -440,21 +364,34 @@ def get_expert_answer():
 @app.route('/rubric_score', methods=['GET'])
 def get_rubric_score():
     try:
-        # Get question number from query parameter, default to 0
         question_num = request.args.get('question_num', 0, type=int)
 
-        # Validate question exists in evaluation
         if question_num not in evaluation_instance.evaluation_dict:
             return jsonify({'error': f'Evaluation for question {question_num} not found'}), 404
 
-        # Get all rubric scores and justifications for this question
         question_evaluation = evaluation_instance.evaluation_dict[question_num]
 
-        # Structure response
+        # Ensure proper structure
+        categories = [
+            "Relevance to the Question",
+            "Technical Correctness",
+            "Completeness of the Answer",
+            "Anecdotal Element",
+            "Communication Clarity",
+            "Problem Solving Approach",
+            "Handling Ambiguity"
+        ]
+
+        # Structure the response with proper keys
         response_data = {
             'question_num': question_num,
-            'total_questions': len(evaluation_instance.evaluation_dict),  # Should be 5 (0-4)
-            'rubric_categories': question_evaluation  # Contains all 7 categories with scores and justifications
+            'total_questions': len(evaluation_instance.evaluation_dict),
+            'rubric_categories': {
+                cat: {
+                    'Score': question_evaluation[cat]['Score'],
+                    'Justification': question_evaluation[cat]['Justification']
+                } for cat in categories if cat in question_evaluation
+            }
         }
 
         return jsonify(response_data)
