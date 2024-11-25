@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
+import { InterviewProvider, useInterview } from './InterviewContext'; // Import context
 import { useNavigate } from 'react-router-dom';
 import RecordRTC from 'recordrtc';
 import './Chatbot.css';
@@ -7,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import TypewriterMessage from './TypewriterMessage';
 import { FaPlay, FaPause, FaVolumeMute } from 'react-icons/fa';
 import { marked } from 'marked';
-
 
 const ChatMessage = memo(({ role, message, isInterim = false }) => {
   const formatMessage = (msg) => {
@@ -27,20 +27,41 @@ const ChatMessage = memo(({ role, message, isInterim = false }) => {
   );
 });
 
+const ProcessingOverlay = () => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-8 rounded-lg flex flex-col items-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500 mb-4"></div>
+      <p className="text-gray-800 text-lg font-semibold">LiA is taking notes</p>
+      <p className="text-gray-600 mt-2">Your next question will be ready momentarily</p>
+    </div>
+  </div>
+);
+
+const ProcessingFeedbackOverlay = () => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-8 rounded-lg flex flex-col items-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500 mb-4"></div>
+      <p className="text-gray-800 text-lg font-semibold">LiA is analyzing your mock interview</p>
+      <p className="text-gray-600 mt-2">Your feedback will be ready momentarily</p>
+    </div>
+  </div>
+);
+
 function Chatbot() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSoundcheck, setIsSoundcheck] = useState(false);
+  const { conversation, setConversation, attemptCount, setAttemptCount, showFeedbackButton, setShowFeedbackButton, questionCount, setQuestionCount, addMessage, incrementAttemptCount } = useInterview();
   const [error, setError] = useState('');
   const [mediaUrl, setMediaUrl] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
-  const [conversation, setConversation] = useState([]);
+  // const [conversation, setConversation] = useState([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processingDuration, setProcessingDuration] = useState(0);
-  const [questionCount, setQuestionCount] = useState(0);
+  // const [questionCount, setQuestionCount] = useState(0);
   const [audioContext, setAudioContext] = useState(null);
   const [audioAnalyser, setAudioAnalyser] = useState(null);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [attemptCount, setAttemptCount] = useState(0);
+  // const [attemptCount, setAttemptCount] = useState(0);
   const videoRef = useRef();
   const recorderRef = useRef(null);
   const recordingTimerRef = useRef(null);
@@ -52,9 +73,12 @@ function Chatbot() {
   const [typingMessage, setTypingMessage] = useState(null);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [liveTranscript, setLiveTranscript] = useState('');
-  const [showStartPrompt, setShowStartPrompt] = useState(true);
+  const [showStartPrompt, setShowStartPrompt] = useState(!conversation.length);
   const [currentVideo, setCurrentVideo] = useState('appearing');
   const liaVideoRef = useRef(null);
+  const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
+  // const [showFeedbackButton, setShowFeedbackButton] = useState(false);
+  const [isProcessingFeedback, setIsProcessingFeedback] = useState(false);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -65,6 +89,14 @@ function Chatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
+
+  const handleFeedback = () => {
+    setIsProcessingFeedback(true);
+    setTimeout(() => {
+      setIsProcessingFeedback(false);
+      navigate('/evaluation');
+    }, 12000);
+  };
 
   const generateQuestionAPI = async () => {
     try {
@@ -236,6 +268,7 @@ function Chatbot() {
 
   const stopRecording = async () => {
     console.log('Stopping recording...');
+    setIsProcessingAnswer(true);
     if (recorderRef.current) {
       console.log('Recorder state before stopping:', recorderRef.current.getState());
       
@@ -265,9 +298,9 @@ function Chatbot() {
     
     if (videoRef.current && videoRef.current.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;  
-
+      videoRef.current.srcObject = null;
     }
+
     setIsRecording(false);
     stopRecordingTimer();
     
@@ -275,7 +308,7 @@ function Chatbot() {
     const newCount = attemptCount + 1;
     setAttemptCount(newCount);
     if (newCount > 4) {
-      navigate('/evaluation');
+      setShowFeedbackButton(true);
     }
   };
 
@@ -316,14 +349,12 @@ function Chatbot() {
       }
 
       await generateQuestionAPI();
+      setIsProcessingAnswer(false);
 
       console.log('File upload to GCP completed successfully.');
     } catch (error) {
       console.error('Upload error:', error);
-      // console.error('Error details:', {
-      //   message: error.message,
-      //   response: error.response?.data
-      // });
+      setIsProcessingAnswer(false);
       setError('Failed to upload recording');
     }
   };
@@ -432,108 +463,118 @@ function Chatbot() {
   };
 
 
-  const addMessage = (role, message) => {
-    setConversation(prev => [
-      ...prev, 
-      { id: uuidv4(), role, message }
-    ]);
-  };
+  // const addMessage = (role, message) => {
+  //   setConversation(prev => [
+  //     ...prev,
+  //     { id: uuidv4(), role, message }
+  //   ]);
+  // };
 
   return (
-    <div className="container">
-      <div className="video-container">
-        <video 
-          ref={liaVideoRef}
-          className="lia-video"
-          src={getCurrentVideoSrc()}
-          autoPlay
-          muted
-          // loop={currentVideo === 'staying'}
-          loop
-        />
-        <video 
-          className={`user-video-minimized ${isRecording ? 'recording' : ''}`}
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-        />
-        {error && <p>Error: {error}</p>}
-        <div className="timer">
-          <p>Questions Generated: {questionCount}</p>
-          <p>Recording Duration: {recordingDuration}s</p>
-          {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
-        </div>
-        <div className="video-controls">
-          <div className="recording-controls-bar">
-            {isRecording ? (
-              <>
-                <button className="control-button" onClick={stopRecording}>
-                  <FaPause />
-                </button>
-                <button 
-                  className="record-button"
-                  onClick={stopRecording}
-                />
-              </>
-            ) : (
-              <>
-                <button 
-                  className="control-button"
-                  onClick={async () => {
-                    setRecordingDuration(0);
-                    await displayQuestionAPI();
-                    startRecording();
-                  }}
-                >
-                  <FaPlay />
-                </button>
-                <button className="record-button" />
-              </>
-            )}
-            <button className="control-button">
-              <FaVolumeMute />
-            </button>
-            <span className="timer-display">
-              {String(Math.floor(recordingDuration / 60)).padStart(2, '0')}:
-              {String(recordingDuration % 60).padStart(2, '0')}:
-              {String(Math.floor((recordingDuration * 100) % 100)).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
+  <div className="container">
+    <div className="video-container">
+      <video
+        ref={liaVideoRef}
+        className="lia-video"
+        src={getCurrentVideoSrc()}
+        autoPlay
+        muted
+        loop
+      />
+      <video
+        className={`user-video-minimized ${isRecording ? 'recording' : ''}`}
+        ref={videoRef}
+        autoPlay
+        playsInline
+      />
+      {error && <p>Error: {error}</p>}
+      <div className="timer">
+        <p>Questions Generated: {questionCount}</p>
+        <p>Recording Duration: {recordingDuration}s</p>
+        {processingDuration > 0 && <p>Processing Duration: {processingDuration}s</p>}
       </div>
-      <div className="chat-container" ref={chatContainerRef}>
-        {/*<img className="lia-image" src="/LIA.webp" alt="LIA" />*/}
-        <div className="messages">
-          {showStartPrompt ? (
-            <div className="start-prompt">
-              To Start your interview press the start button in the middle of the chatbot area
-            </div>
+      <div className="video-controls">
+        <div className="recording-controls-bar">
+          {isRecording ? (
+            <>
+              <button className="control-button" onClick={() => stopRecording(setRecordingDuration)}>
+                <FaPause />
+              </button>
+              <button
+                className="record-button"
+                onClick={() => stopRecording(setRecordingDuration)}
+              />
+            </>
           ) : (
             <>
-              {conversation.map((msg) => (
-                <ChatMessage 
-                  key={msg.id}
-                  role={msg.role}
-                  message={msg.message}
-                />
-              ))}
-              {liveTranscript && isRecording && (
-                <ChatMessage
-                  key="live-transcript"
-                  role="user"
-                  message={liveTranscript}
-                  isInterim={true}
-                />
-              )}
+              <button
+                className="control-button"
+                onClick={async () => {
+                  setRecordingDuration(0);
+                  await displayQuestionAPI();
+                  startRecording();
+                }}
+              >
+                <FaPlay />
+              </button>
+              <button className="record-button" />
             </>
           )}
-        </div>
-        <div className="chat-controls">
-          {/* Any additional chat controls can go here */}
+          <button className="control-button">
+            <FaVolumeMute />
+          </button>
+          <span className="timer-display">
+            {String(Math.floor(recordingDuration / 60)).padStart(2, '0')}:
+            {String(recordingDuration % 60).padStart(2, '0')}:
+            {String(Math.floor((recordingDuration * 100) % 100)).padStart(2, '0')}
+          </span>
         </div>
       </div>
+      {/* Add Feedback Button */}
+      {showFeedbackButton && (
+        <button
+          onClick={handleFeedback}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white py-4 px-8 rounded-full hover:bg-pink-600 transition-colors duration-300 text-xl font-semibold z-50 shadow-lg"
+        >
+          Get Your Interview Feedback
+        </button>
+      )}
     </div>
-  );
+    <div className="chat-container" ref={chatContainerRef}>
+      <div className="messages">
+        {showStartPrompt ? (
+          <div className="start-prompt">
+            To Start your interview press the start button in the middle of the chatbot area
+          </div>
+        ) : (
+          <>
+            {conversation.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                role={msg.role}
+                message={msg.message}
+              />
+            ))}
+            {liveTranscript && isRecording && (
+              <ChatMessage
+                key="live-transcript"
+                role="user"
+                message={liveTranscript}
+                isInterim={true}
+              />
+            )}
+          </>
+        )}
+      </div>
+      <div className="chat-controls">
+        {/* Any additional chat controls can go here */}
+      </div>
+    </div>
+    {/* Both overlays */}
+    {isProcessingAnswer && <ProcessingOverlay />}
+    {isProcessingFeedback && <ProcessingFeedbackOverlay />}
+  </div>
+);
 }
 
 export default Chatbot;

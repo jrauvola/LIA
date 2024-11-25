@@ -9,6 +9,7 @@ import RubricPage from './components/RubricPage';  // Add this import
 import NavigationBar from './components/NavigationBar';
 import LandingPage from './components/LandingPage';
 import { ThemeProvider } from './context/ThemeContext';
+import { InterviewProvider } from './components/InterviewContext';
 import './App.css';
 
 function App() {
@@ -18,18 +19,20 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/home" element={<><NavigationBar /><HomePage /></>} />
-          <Route path="/about-you" element={<><NavigationBar /><AboutYou /></>} />
-          <Route path="/chatbot" element={<><NavigationBar /><Chatbot /></>} />
-          <Route path="/evaluation" element={<><NavigationBar /><EvaluationPage /></>} />
-          <Route path="/expertpage" element={<><NavigationBar /><ExpertPage /></>} />  {/* Add this route */}
-          <Route path="/rubricpage" element={<><NavigationBar /><RubricPage /></>} />
-          {/* Add other routes as needed */}
-        </Routes>
-      </Router>
+      <InterviewProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={<><NavigationBar /><HomePage /></>} />
+            <Route path="/about-you" element={<><NavigationBar /><AboutYou /></>} />
+            <Route path="/chatbot" element={<><NavigationBar /><Chatbot /></>} />
+            <Route path="/evaluation" element={<><NavigationBar /><EvaluationPage /></>} />
+            <Route path="/expertpage" element={<><NavigationBar /><ExpertPage /></>} />  {/* Add this route */}
+            <Route path="/rubricpage" element={<><NavigationBar /><RubricPage /></>} />
+            {/* Add other routes as needed */}
+          </Routes>
+        </Router>
+      </InterviewProvider>
     </ThemeProvider>
   );
 }
