@@ -34,7 +34,7 @@ const ProcessingOverlay = () => (
     <div className="bg-white p-8 rounded-lg flex flex-col items-center">
       <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500 mb-4"></div>
       <p className="text-gray-800 text-lg font-semibold">LiA is taking notes...</p>
-      <p className="text-gray-600 mt-2">Get ready for you next question</p>
+      <p className="text-gray-600 mt-2">Get ready for your next question</p>
     </div>
   </div>
 );
