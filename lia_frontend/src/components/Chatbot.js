@@ -536,7 +536,7 @@ function Chatbot() {
       {showFeedbackButton && (
         <button
           onClick={handleFeedback}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white py-4 px-8 rounded-full hover:bg-pink-600 transition-colors duration-300 text-xl font-semibold z-50 shadow-lg"
+          className="fixed bottom-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white py-4 px-8 rounded-full hover:bg-pink-600 transition-colors duration-300 text-xl font-semibold z-50 shadow-lg"
         >
           Get Your Interview Feedback
         </button>
