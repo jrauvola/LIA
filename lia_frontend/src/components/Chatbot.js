@@ -11,8 +11,10 @@ import { marked } from 'marked';
 
 const ChatMessage = memo(({ role, message, isInterim = false }) => {
   const formatMessage = (msg) => {
-    return msg.replace(/^##\s*Technical Interview Question based on Personal Profile:\s*/i, '');
-  };
+    return msg
+        .replace(/^##\s*Technical Interview Question based on Personal Profile:\s*/i, '')
+        .replace(/^\sQuestion:\s*/i, '');
+      };
 
   return (
     <div className={`chat-message ${role} ${isInterim ? 'interim' : ''}`}>

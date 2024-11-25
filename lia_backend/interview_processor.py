@@ -36,14 +36,15 @@ def retrievalQA():
     vector_db = initialize_rag(project_name="adsp-capstone-team-dawn", bucket_name="lia_rag", blob="data_science.txt")
     print("Grabbing Retriever")
     retriever = vector_db.as_retriever(
-        search_type="similarity", search_kwargs={"k": 4}  # k: Number of Documents to return, defaults to 4.
+        search_type="similarity", 
+        search_kwargs={"k": 4}  # k: Number of Documents to return, defaults to 4.
     )
     print("Initialize retriever")
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
     print("Grab LLM")
     llm = VertexAI(
         model_name="gemini-pro",
-        max_output_tokens=256,
+        max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,
         top_k=40,
@@ -55,11 +56,11 @@ def retrievalQA():
     )
     return qa
 
-
+# Q2 and Q3
 def generate_resume_questions(qa, interview_instance):
     qa_prompt = f"""
                     Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
-                    Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate the question as if you are talking to the person. Make the question under 15 words.***
+                    Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate only the main question to be asked, as if you are talking to the person. Make the question under 15 words.***
                     Personal Profile: '''{interview_instance.personal_profile}'''
                      """
 
@@ -68,6 +69,7 @@ def generate_resume_questions(qa, interview_instance):
     interview_instance.add_question(response["result"], question_num=interview_instance.question_num +1)
     print("Question Generated")
 
+# Q4 and Q5
 def generate_dynamic_questions(qa, interview_instance):
     window_dict = {}
     question_num = interview_instance.question_num
@@ -78,7 +80,7 @@ def generate_dynamic_questions(qa, interview_instance):
         window_dict = interview_instance.interview_dict
     qa_prompt = f"""
                     Context: ```You are a nice recruiter interviewing a candidate for the data science role. Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations.```
-                    Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate the question as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
+                    Prompt: *** Ask the candidate one follow-up interview question based on there answers recorded in Interview Conversations. Generate only the question to be asked, as if you are talking to the person. Make sure to react to the candidate's answers. Make the question under 35 words.***
                     Interview Conversations: '''{window_dict}'''
                     Answer: """
 

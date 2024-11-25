@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { marked } from 'marked';
 import './RubricPage.css';
 
 const RubricPage = () => {
@@ -48,6 +49,10 @@ const RubricPage = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
     }
+  };
+
+  const MarkupParser = (answer) => {
+    return { __html: marked(answer) };
   };
 
   if (loading) {
@@ -105,9 +110,10 @@ const RubricPage = () => {
             {selectedCategory && (
               <>
                 <h3 className="justification-title">{selectedCategory}</h3>
-                <p className="justification-text">
-                  {rubricData[selectedCategory].Justification || 'No justification provided.'}
-                </p>
+                <p
+                className="justification-text"
+                dangerouslySetInnerHTML={MarkupParser(rubricData[selectedCategory].Justification || 'No justification provided.')}
+                />
                 <div className="score-display">
                   Score: {rubricData[selectedCategory].Score}/10
                 </div>

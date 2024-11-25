@@ -2,6 +2,9 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
+
+
+
 function NavigationBar() {
   const location = useLocation();
   const isAboutYouPage = location.pathname === '/about-you';
@@ -46,7 +49,7 @@ function NavigationBar() {
               }
               onClick={(e) => isAboutYouPage && e.preventDefault()}
             >
-              Improvement Chatbot
+              Interview Chatbot
             </NavLink>
           </li>
           <li>
