@@ -233,7 +233,7 @@ def stop_question():
 
         # Generate and store expert answer
         current_question = interview_instance.interview_dict[j]["question"]
-        expert_response = generate_exp_ans_cot(current_question, qa)
+        expert_response = generate_exp_ans_cot(current_question, qa, interview_instance)
         interview_instance.interview_dict[j]["expert_answer"] = expert_response
         print("Expert answer generated and stored:", expert_response)
 
