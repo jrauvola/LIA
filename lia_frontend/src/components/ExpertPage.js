@@ -57,7 +57,7 @@ function ExpertPage() {
   return (
     <div className="expert-container">
       <div className="expert-textbox">
-        <h2>Expert Example Answer</h2>
+        <h2>LIA's Expert Answer</h2>
         {error ? (
           <p className="error-message">{error}</p>
         ) : (

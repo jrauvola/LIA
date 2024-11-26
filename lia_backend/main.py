@@ -355,7 +355,7 @@ def get_expert_answer():
             'question': question,
             'expert_answer': expert_answer,
             'current_question': question_num,
-            'total_questions': total_questions
+            'total_questions': total_questions - 1
         })
     except Exception as e:
         print(f"Error getting expert answer: {str(e)}")
