@@ -346,6 +346,8 @@ def get_expert_answer():
 
         # Get question and expert answer
         question = interview_instance.interview_dict[question_num]["question"]
+        answered_questions = sum(1 for q in interview_instance.interview_dict.values() 
+                        if "answer" in q and q["answer"])
         expert_answer = interview_instance.interview_dict[question_num]["expert_answer"]
 
         # Get total number of questions for frontend navigation
@@ -355,7 +357,7 @@ def get_expert_answer():
             'question': question,
             'expert_answer': expert_answer,
             'current_question': question_num,
-            'total_questions': total_questions - 1
+            'total_questions': answered_questions
         })
     except Exception as e:
         print(f"Error getting expert answer: {str(e)}")
