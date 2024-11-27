@@ -25,7 +25,7 @@ body {
   font-weight: bold;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  /* margin-bottom: 2rem; */
   padding: 1rem;
   background-color: rgb(0, 0, 0);
   border-radius: 8px;
@@ -230,9 +230,9 @@ body {
   .justification-panel {
     max-width: 100%;
   }
- 
+/*  
   .question-navigation {
     flex-direction: column;
     gap: 0.5rem;
-  }
+  } */
  }
