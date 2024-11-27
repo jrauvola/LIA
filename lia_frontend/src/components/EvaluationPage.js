@@ -304,8 +304,8 @@ function EvaluationPage() {
     ) : (
       <div className="evaluation-container">
         <h1>Social Skills Assessment</h1>
-
-        <div className="question-navigation">
+  
+        <div className="nav-section">
           <div className="navigation-buttons">
             <button
               onClick={handleExpertPageNavigation}
@@ -321,8 +321,10 @@ function EvaluationPage() {
             </button>
           </div>
         </div>
-
-        <div className="skills">
+  
+        <div className="content-wrapper">
+          <div className="metrics-container">
+          <div className="skills">
           <h2>Text Features</h2>
           {renderTextMetricBar("quantifier_words_pct")}
           {renderTextMetricBar("filler_nonfluency_pct")}
@@ -423,17 +425,18 @@ function EvaluationPage() {
               })
           }
         </div>
-
-        {/* Add this new section */}
-        {analysisResult && (
-        <div className="analysis-section">
-          <h2>Performance Analysis</h2>
-          <div
-          className="analysis-content"
-          dangerouslySetInnerHTML={MarkupParser(analysisResult)}
-          />
           </div>
+  
+          {analysisResult && (
+            <div className="analysis-section">
+              <h2>Performance Analysis</h2>
+              <div
+                className="analysis-content"
+                dangerouslySetInnerHTML={MarkupParser(analysisResult)}
+              />
+            </div>
           )}
+        </div>
       </div>
     )
   );
