@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { marked } from 'marked';
 import './RubricPage.css';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const RubricPage = () => {
   const [rubricData, setRubricData] = useState(null);
@@ -10,6 +11,17 @@ const RubricPage = () => {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleEvaluationPageNavigation = () => {
+    navigate('/evaluation');
+  };
+
+  const handleExpertPageNavigation = () => {
+    navigate('/expertpage');
+  };
 
   // Fetch rubric data when component mounts or question changes
   useEffect(() => {
@@ -88,6 +100,23 @@ const RubricPage = () => {
           Next Question
         </button>
       </div>
+
+      <div className="question-navigation">
+          <div className="navigation-buttons">
+            <button
+              onClick={handleEvaluationPageNavigation}
+              className="view-button expert-button"
+            >
+              Go Back to Evaluation Page
+            </button>
+            <button
+              onClick={handleExpertPageNavigation}
+              className="view-button rubric-button"
+            >
+              View Expert Answer
+            </button>
+          </div>
+        </div>
 
       <div className="rubric-content">
         <div className="rubric-categories">

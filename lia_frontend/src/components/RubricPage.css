@@ -63,6 +63,21 @@ body {
   border-radius: 20px;
  }
  
+ .nav-button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  border-radius: 20px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin: 0 0.5rem;
+}
+
+.nav-button:hover {
+  background-color: #0056b3;
+}
+
  /* Rubric content layout */
  .rubric-content {
   display: flex;
