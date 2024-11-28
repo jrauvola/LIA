@@ -92,13 +92,27 @@ function Chatbot() {
     scrollToBottom();
   }, [conversation]);
 
-  const handleFeedback = () => {
+  const handleFeedback = async () => {
+  try {
     setIsProcessingFeedback(true);
-    setTimeout(() => {
-      setIsProcessingFeedback(false);
-      navigate('/evaluation');
-    }, 12000);
-  };
+
+    // Make API call and wait for response
+    const response = await fetch('http://localhost:80/scoreboard_breakdown');
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // Hide loading screen and navigate to evaluation page
+    setIsProcessingFeedback(false);
+    navigate('/evaluation');
+  } catch (error) {
+    console.error('Error getting interview analysis:', error);
+    setIsProcessingFeedback(false);
+    // Optionally show error message to user
+  }
+};
 
   const generateQuestionAPI = async () => {
     try {

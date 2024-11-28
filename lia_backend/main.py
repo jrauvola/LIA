@@ -13,6 +13,7 @@ from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
 from expert_agent import generate_exp_ans_cot
 from scoreboard_breakdown import analyze_interview_performance
+from scoreboard_breakdown import PerformanceAnalysis
 from evaluator import evaluation_class
 import pandas as pd
 from collections import Counter
@@ -132,6 +133,9 @@ def build_pp():
 
     global evaluation_instance
     evaluation_instance = evaluation_class()
+
+    global performance_instance
+    performance_instance = PerformanceAnalysis()
 
     print("initialize retrievalQA")
     global qa
@@ -400,6 +404,7 @@ def get_rubric_score():
         print(f"Error getting rubric scores for question {question_num}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/scoreboard_breakdown', methods=['GET'])
 def get_scoreboard_breakdown():
     try:
@@ -462,18 +467,28 @@ def get_scoreboard_breakdown():
             return {**text_metrics, **audio_metrics, **video_metrics}
 
         try:
-            # Get averaged metrics and analysis
+            # Get averaged metrics
             user_metrics = calculate_averages()
-            analysis_result = analyze_interview_performance(user_metrics, qa)
 
-            # Return just the analysis text
+            # Create and populate performance analysis
+            global performance_instance
+            performance_instance = PerformanceAnalysis()
+            analysis_dict = analyze_interview_performance(user_metrics, qa)
+
+            # Store the analysis in our global instance
+            performance_instance.analysis_dict = analysis_dict
+
+            # Return the structured analysis dictionary
             return jsonify({
-                'analysis': analysis_result
+                'analysis': performance_instance.analysis_dict
             })
 
         except Exception as e:
             print(f"Error in analysis: {str(e)}")
-            return jsonify({'error': 'Failed to generate analysis'}), 500
+            # Return empty structured response if analysis fails
+            return jsonify({
+                'analysis': PerformanceAnalysis().analysis_dict
+            }), 500
 
     except Exception as e:
         print(f"Error getting scoreboard breakdown: {str(e)}")

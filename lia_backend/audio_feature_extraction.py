@@ -72,7 +72,7 @@ def extract_audio_features(gcs_uri, answer_index):
         intensityMean = intensity.get_average()
 
         # Transform intensityMean from 222-253 to 25-71
-        transformed_intensity_mean = ((intensityMean - 222) / (253 - 222)) * (71 - 25) + 25
+        transformed_intensity_mean = ((intensityMean - 222) / (253 - 222)) * (61 - 25) + 25
         features['intensityMean'] = float(transformed_intensity_mean)
 
         # 5. Pause Duration Features
