@@ -1,8 +1,8 @@
-/* for scrollable element */
+/* Add wrapper styles at the top */
 .content-wrapper {
   display: flex;
   gap: 2rem;
-  height: 215vh; /* Set a fixed height for the wrapper */
+  min-height: 100vh;
 }
 
 .metrics-container, .analysis-section {
@@ -10,23 +10,106 @@
   background-color: rgb(37,37,37);
   padding: 2rem;
   border-radius: 8px;
-  max-width: 800px;
-  height: 100%; /* Fill the content wrapper height */
-  overflow: hidden; /* Prevent container from growing */
+  height: 100%;
+  overflow: hidden;
+  margin: 20px;
+}
+
+/* Collapsible section styles */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid #0080e9;
+  transition: opacity 0.2s ease;
+}
+
+.section-header:hover {
+  opacity: 0.8;
+}
+
+.section-header .arrow {
+  transition: transform 0.3s ease;
+}
+
+.section-header .arrow.collapsed {
+  transform: rotate(-90deg);
+}
+
+.section-content {
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.section-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.feedback-section {
+  transition: all 0.3s ease-in-out;
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.feedback-section.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.metrics-container {
+  flex: 1.2;
+  max-width: 900px;
 }
 
 .analysis-section {
+  flex: 0.8;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
+  background-color: rgb(37,37,37);
+  padding: 2rem;
+  border-radius: 8px;
+  height: 100%;
+  overflow: hidden;
+  margin: 20px;
+}
+
+.analysis-section h2 {
+  color: #ffffff;
+  margin: 15px 0 20px 0;  /* Added top margin */
+  font-size: 1.4em;
+  padding: 15px 0 10px 0;  /* Added top padding */
+  border-bottom: 2px solid #0080e9;
+  font-weight: bold;
 }
 
 .analysis-content {
-  overflow-y: auto; /* Make content scrollable */
-  flex-grow: 1; /* Take up remaining space */
-  padding-right: 1rem; /* Space for scrollbar */
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 15px;
+  background-color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-y: auto;
+  flex-grow: 1;
+  padding-right: 1rem;
+  margin-bottom: 20px;
 }
 
-/* Optional: Style the scrollbar */
 .analysis-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -45,6 +128,9 @@
   padding: 2rem;
   max-width: 1800px;
   margin: 0 auto;
+  background: #000000;
+  min-height: 100vh;
+  font-family: 'Georgia';
 }
 
 .nav-section {
@@ -53,39 +139,9 @@
   margin-bottom: 2rem;
 }
 
-.content-wrapper {
-  display: flex;
-  gap: 2rem;
-}
-
-.metrics-container {
-  flex: 1;
-  background-color: rgb(37,37,37);
-  padding: 2rem;
-  border-radius: 8px;
-  max-width: 800px;
-}
-
-.analysis-section {
-  flex: 1;
-  background-color: rgb(37,37,37);
-  padding: 2rem;
-  border-radius: 8px;
-  max-width: 800px;
-}
-
-/* above this is newly added */
-
-.evaluation-container {
-  padding: 40px;
-  background: #000000;
-  min-height: 100vh;
-  font-family: 'Georgia';
-}
-
 .evaluation-container h1 {
   text-align: center;
-  /* margin-bottom: 40px; */
+  margin-bottom: 40px;
   font-size: 2.5em;
   font-weight: 600;
   background: linear-gradient(45deg, #ffffff, #ffd9eb);
@@ -103,7 +159,7 @@
 }
 
 .evaluation-container h1::after {
-  /* content: ''; */
+  content: '';
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -118,7 +174,7 @@
   max-width: 800px;
   margin: 0 auto;
   background: rgb(37,37,37);
-  /* padding: 30px; */
+  padding: 30px;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
@@ -293,8 +349,8 @@
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: opacity 0.2s ease-in-out;
-  transform: translateY(-100%);  /* Added this line */
-  margin-top: -10px;  /* Added this line */
+  transform: translateY(-100%);
+  margin-top: -10px;
 }
 
 .tooltip::before {
@@ -304,8 +360,8 @@
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 8px solid rgba(0, 0, 0, 0.9);  /* Changed from border-bottom to border-top */
-  bottom: -8px;  /* Changed from top: -8px to bottom: -8px */
+  border-top: 8px solid rgba(0, 0, 0, 0.9);
+  bottom: -8px;
   left: 15px;
 }
 
@@ -313,6 +369,58 @@
   opacity: 0;
 }
 
+/* Analysis Section Styles */
+.analysis-section h2 {
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #0080e9;
+  font-weight: bold;
+}
+
+.analysis-section h3,
+.analysis-section h4 {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.analysis-section h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.analysis-section h4 {
+  font-size: 16px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.analysis-content p,
+.performance-analysis,
+.feedback-section,
+.feedback-box {
+  color: #ffffff;
+}
+
+.feedback-section,
+.overall-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.overall-section {
+  margin-top: 15px;
+}
+
+.feedback-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -323,14 +431,27 @@
   to { width: 100%; }
 }
 
+/* General Styles */
 h2 {
   margin-bottom: 1rem;
   color: #ffffff;
   font-size: 1.4em;
   padding-bottom: 10px;
+  border-bottom: none;
 }
 
+/* Media Queries */
 @media (max-width: 768px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+
+  .metrics-container,
+  .analysis-section {
+    min-width: 90%;
+    margin: 1rem;
+  }
+
   .navigation-buttons {
     flex-wrap: wrap;
     justify-content: center;
@@ -358,50 +479,5 @@ h2 {
 
   .tooltip {
     max-width: 200px;
-  }
-}
-
-.analysis-section {
-  max-width: 800px;
-  /* margin: 30px auto 0; */
-  background: rgb(37,37,37);
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  /* Remove any height limitations */
-  max-height: none;
-  /* Add margin-bottom for spacing */
-  margin-bottom: 30px;
-}
-
-.analysis-section h2 {
-  color: #ffffff;
-  margin-bottom: 20px;
-  font-size: 1.4em;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #ff78a5;
-}
-
-.analysis-content {
-  color: #ffffff;
-  font-size: 14px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  /* Remove any height limitations */
-  max-height: none;
-  /* Enable scrolling if content is very long */
-  overflow-y: auto;
-  /* Add some bottom margin */
-  margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-  .analysis-section {
-    margin: 20px 15px;
-    padding: 20px;
   }
 }
