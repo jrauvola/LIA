@@ -107,13 +107,13 @@ const RubricPage = () => {
               onClick={handleEvaluationPageNavigation}
               className="view-button expert-button"
             >
-              Go Back to Evaluation Page
+              Go Back to Social Skills Assessment
             </button>
             <button
               onClick={handleExpertPageNavigation}
               className="view-button rubric-button"
             >
-              View Expert Answer
+              View Expert Answers
             </button>
           </div>
         </div>

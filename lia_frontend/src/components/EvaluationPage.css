@@ -23,7 +23,7 @@
   cursor: pointer;
   margin-bottom: 1rem;
   padding: 0.5rem 0;
-  border-bottom: 2px solid #0080e9;
+  /*border-bottom: 2px solid #0080e9;*/
   transition: opacity 0.2s ease;
 }
 
@@ -437,7 +437,7 @@ h2 {
   color: #ffffff;
   font-size: 1.4em;
   padding-bottom: 10px;
-  border-bottom: none;
+  border-bottom: 2px solid #0080e9;
 }
 
 /* Media Queries */

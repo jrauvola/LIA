@@ -76,7 +76,7 @@ function ExpertPage() {
             onClick={handleEvaluationPageNavigation}
             className="view-button expert-button"
           >
-            Go Back to Evaluation Page
+            Go Back to Social Skills Assessment
           </button>
           <button
             onClick={handleRubricPageNavigation}
