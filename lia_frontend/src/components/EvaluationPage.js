@@ -491,9 +491,9 @@ function EvaluationPage() {
                 {analysisResult.text_feedback && (
                   <div className={`feedback-section ${!sections.text ? 'collapsed' : ''}`}>
                     <h3>Text Analysis</h3>
-                    <h4>Strengths</h4>
+                    <h4>Strength</h4>
                     <p>{analysisResult.text_feedback.strength}</p>
-                    <h4>Areas for Improvement</h4>
+                    <h4>Area for Improvement</h4>
                     <p>{analysisResult.text_feedback.weakness}</p>
                   </div>
                 )}
@@ -501,9 +501,9 @@ function EvaluationPage() {
                 {analysisResult.audio_feedback && (
                   <div className={`feedback-section ${!sections.audio ? 'collapsed' : ''}`}>
                     <h3>Audio Analysis</h3>
-                    <h4>Strengths</h4>
+                    <h4>Strength</h4>
                     <p>{analysisResult.audio_feedback.strength}</p>
-                    <h4>Areas for Improvement</h4>
+                    <h4>Area for Improvement</h4>
                     <p>{analysisResult.audio_feedback.weakness}</p>
                   </div>
                 )}
@@ -511,9 +511,9 @@ function EvaluationPage() {
                 {analysisResult.video_feedback && (
                   <div className={`feedback-section ${!sections.video ? 'collapsed' : ''}`}>
                     <h3>Video Analysis</h3>
-                    <h4>Strengths</h4>
+                    <h4>Strength</h4>
                     <p>{analysisResult.video_feedback.strength}</p>
-                    <h4>Areas for Improvement</h4>
+                    <h4>Area for Improvement</h4>
                     <p>{analysisResult.video_feedback.weakness}</p>
                   </div>
                 )}
