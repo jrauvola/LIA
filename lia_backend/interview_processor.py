@@ -8,6 +8,9 @@ from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 import vertexai
 from vertexai.language_models import TextGenerationModel
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
 
 
 def initialize_rag(project_name, bucket_name, blob):
@@ -57,17 +60,35 @@ def retrievalQA():
     return qa
 
 # Q2 and Q3
-def generate_resume_questions(qa, interview_instance):
-    qa_prompt = f"""
-                    Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
-                    Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Generate only the main question to be asked, as if you are talking to the person. Make the question under 15 words.***
-                    Personal Profile: '''{interview_instance.personal_profile}'''
-                     """
+def generate_resume_questions(interview_instance):
+    class ResumeQuestion(BaseModel):
+        question: str = Field(description="interview question")
 
-    print("retrievalQA")
-    response = qa({"query": qa_prompt})
-    interview_instance.add_question(response["result"], question_num=interview_instance.question_num +1)
-    print("Question Generated")
+    query = f"""
+                Context: ```You are a recruiter interviewing a candidate for the data science role. Now you are asking the candidate first question in addition to self introduction ```
+                Prompt: *** Ask the candidate one technical interview question based on Personal Profile. Be conversational and specific. Make the question under 30 words.***
+                Personal Profile: '''{interview_instance.personal_profile}'''
+                """
+    model = VertexAI(
+        model_name="gemini-pro",
+        max_output_tokens=2000,
+        temperature=0.1,
+        top_p=0.8,
+        top_k=40,
+        verbose=True,
+    )
+    parser = JsonOutputParser(pydantic_object=ResumeQuestion)
+
+    prompt = PromptTemplate(
+        template="Answer the user query.\n{format_instructions}\n{query}\n",
+        input_variables=["query"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+    chain = prompt | model | parser
+    question = chain.invoke({"query": query})
+
+    interview_instance.add_question(question["question"], question_num=interview_instance.question_num + 1)
+
 
 # Q4 and Q5
 def generate_dynamic_questions(qa, interview_instance):
@@ -84,9 +105,19 @@ def generate_dynamic_questions(qa, interview_instance):
                     Interview Conversations: '''{window_dict}'''
                     Answer: """
 
-    response = qa({"query": qa_prompt})
+    retries = 0
+    fallback_question = "Can you elaborate on your previous answer and provide more details?"
+    max_retries = 2
 
-    question_num = question_num
-    interview_instance.add_question(response["result"], question_num=question_num+1)
+    while retries < max_retries:
+        response = qa({"query": qa_prompt})
+        question = response["result"]
+
+        if question and not question.lower().startswith("i'm sorry") and len(question.split()) < 40:
+            # question_num = question_num
+            interview_instance.add_question(response["result"], question_num=question_num + 1)
+        else:
+            interview_instance.add_question(fallback_question, question_num=question_num + 1)
+
+
     print("Question Generated")
-
