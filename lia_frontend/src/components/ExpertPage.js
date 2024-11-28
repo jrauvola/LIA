@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
 import './ExpertPage.css';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function ExpertPage() {
   const [expertData, setExpertData] = useState({
@@ -10,6 +11,17 @@ function ExpertPage() {
     total_questions: 0
   });
   const [error, setError] = useState(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleEvaluationPageNavigation = () => {
+    navigate('/evaluation');
+  };
+
+  const handleRubricPageNavigation = () => {
+    navigate('/rubricpage');
+  };
 
   const fetchExpertAnswer = async (questionNum) => {
     try {
@@ -55,9 +67,28 @@ function ExpertPage() {
   };
 
   return (
+
     <div className="expert-container">
+
+      <div className="question-navigation">
+        <div className="navigation-buttons">
+          <button
+            onClick={handleEvaluationPageNavigation}
+            className="view-button expert-button"
+          >
+            Go Back to Evaluation Page
+          </button>
+          <button
+            onClick={handleRubricPageNavigation}
+            className="view-button rubric-button"
+          >
+            View Rubric Assessment
+          </button>
+        </div>
+      </div>
+
       <div className="expert-textbox">
-        <h2>Expert Example Answer</h2>
+        <h2>LIA's Expert Answer</h2>
         {error ? (
           <p className="error-message">{error}</p>
         ) : (
