@@ -24,18 +24,6 @@ class evaluation_class:
                 "Anecdotal Element": {
                     "Score": 0,
                     "Justification": ""
-                },
-                "Communication Clarity": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Problem Solving Approach": {
-                    "Score": 0,
-                    "Justification": ""
-                },
-                "Handling Ambiguity": {
-                    "Score": 0,
-                    "Justification": ""
                 }
             }
         }
@@ -56,10 +44,7 @@ def eval_input(interview_instance, question_num):
        "Relevance to the Question": {{"Score": <int>, "Justification": <str>}},
        "Technical Correctness": {{"Score": <int>, "Justification": <str>}},
        "Completeness of the Answer": {{"Score": <int>, "Justification": <str>}},
-       "Anecdotal Element": {{"Score": <int>, "Justification": <str>}},
-       "Communication Clarity": {{"Score": <int>, "Justification": <str>}},
-       "Problem Solving Approach": {{"Score": <int>, "Justification": <str>}},
-       "Handling Ambiguity": {{"Score": <int>, "Justification": <str>}}
+       "Anecdotal Element": {{"Score": <int>, "Justification": <str>}}
    }}
 
     Scoring Guidelines:
@@ -86,24 +71,6 @@ def eval_input(interview_instance, question_num):
         * 1 - Weak or irrelevant example(s)
         * 2 - One or two relevant examples
         * 3 - Multiple compelling examples that clearly illustrate the candidate's experience
-
-    5. Communication Clarity (0-3):
-        * 0 - Unclear and difficult to understand
-        * 1 - Mostly unclear, some clear parts
-        * 2 - Mostly clear, some unclear parts
-        * 3 - Clear, concise, and easy to understand
-
-    6. Problem Solving Approach (0-3):
-        * 0 - No discernible approach
-        * 1 - Illogical or incomplete approach
-        * 2 - Mostly logical approach, some gaps
-        * 3 - Systematic and logical approach
-
-    7. Handling Ambiguity (0-3):
-        * 0 - Unable to handle ambiguity
-        * 1 - Attempts to handle ambiguity but struggles
-        * 2 - Mostly handles ambiguity effectively
-        * 3 - Effectively handles ambiguity, making reasonable assumptions or asking clarifying questions
 
     Provide your evaluation in the exact JSON format specified above.
    """
@@ -146,10 +113,7 @@ def eval_input(interview_instance, question_num):
                 "Relevance to the Question",
                 "Technical Correctness",
                 "Completeness of the Answer",
-                "Anecdotal Element",
-                "Communication Clarity",
-                "Problem Solving Approach",
-                "Handling Ambiguity"
+                "Anecdotal Element"
             ]
         }
 
@@ -184,10 +148,7 @@ def test_eval_input():
             "Relevance to the Question",
             "Technical Correctness",
             "Completeness of the Answer",
-            "Anecdotal Element",
-            "Communication Clarity",
-            "Problem Solving Approach",
-            "Handling Ambiguity"
+            "Anecdotal Element"
         ]
 
         print("\n--- Validating Structure ---")
@@ -208,13 +169,13 @@ def test_eval_input():
         print(traceback.format_exc())
         return None
 
-if __name__ == "__main__":
-    print("\n=== Starting Test ===")
-    vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
-    result = test_eval_input()
-    if result:
-        print("\n=== Test Completed Successfully ===")
-        print("Final result structure:")
-        print(json.dumps(result, indent=2))
-    else:
-        print("\n=== Test Failed ===")
+# if __name__ == "__main__":
+#     print("\n=== Starting Test ===")
+#     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
+#     result = test_eval_input()
+#     if result:
+#         print("\n=== Test Completed Successfully ===")
+#         print("Final result structure:")
+#         print(json.dumps(result, indent=2))
+#     else:
+#         print("\n=== Test Failed ===")

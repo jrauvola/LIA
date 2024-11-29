@@ -107,7 +107,7 @@ const RubricPage = () => {
               onClick={handleEvaluationPageNavigation}
               className="view-button expert-button"
             >
-              Go Back to Social Skills Assessment
+              View Social Skills Assessment
             </button>
             <button
               onClick={handleExpertPageNavigation}

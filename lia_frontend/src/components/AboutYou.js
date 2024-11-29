@@ -1,11 +1,16 @@
-// AboutYou.js
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './AboutYou.css';
 
 function AboutYou() {
-  const [profile, setProfile] = useState({ experience: '', industry: 'Finance', role: '' });
+  const [profile, setProfile] = useState({ 
+    experience: '', 
+    industry: 'Finance', 
+    role: '',
+    impressive_project: '',
+    job_description: ''
+  });
   const resumeRef = useRef(null);
   const navigate = useNavigate();
   const [isResumeUploaded, setIsResumeUploaded] = useState(false);
@@ -27,9 +32,10 @@ function AboutYou() {
     if (resumeFile) {
       formData.append('file', resumeFile);
     }
-    formData.append('experience', profile.experience);
-    formData.append('industry', profile.industry);
-    formData.append('role', profile.role);
+    // Append all profile fields to formData
+    Object.entries(profile).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
       console.log('Request Config:', {
@@ -135,6 +141,9 @@ function AboutYou() {
           </label>
           <input
             type="text"
+            name="impressive_project"
+            value={profile.impressive_project}
+            onChange={handleInputChange}
             placeholder="But it blew up..."
             className="w-full p-2 mb-4 border-b border-gray-600 bg-transparent text-gray-400 focus:outline-none"
           />
@@ -177,6 +186,9 @@ function AboutYou() {
             </label>
             <input
               type="text"
+              name="job_description"
+              value={profile.job_description}
+              onChange={handleInputChange}
               placeholder="This job entails..."
               className="w-full p-2 border-b border-gray-600 bg-transparent text-gray-400 focus:outline-none"
             />

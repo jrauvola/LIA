@@ -79,16 +79,20 @@ CORS(app, resources={
 })
 
 class interview_class:
-    def __init__(self, personal_profile, experience, industry, role):
+    def __init__(self, personal_profile, experience, industry, role, job_description, impressive_project):
         self.interview_dict = {
             0:  {"question": "Hi I'm Lia! Let's get started. Tell me a little about yourself!",
                  "answer": "",
                  "expert_answer": ""}
         }
-        self.personal_profile = {"personal_profile": personal_profile,
-                                 "experience": experience,
-                                 "industry": industry,
-                                 "role": role}
+        self.personal_profile = {
+            "personal_profile": personal_profile,
+            "experience": experience,
+            "industry": industry,
+            "role": role,
+            "job_description": job_description,
+            "impressive_project": impressive_project
+        }
         self.evaluator = {}
         self.question_num = 0
         self.answer_num = 0
@@ -121,15 +125,18 @@ def build_pp():
     if uploaded_file is None:
         return jsonify({'error': 'No file uploaded'}), 400
 
+    # Get all form fields
     experience = request.form.get('experience')
     industry = request.form.get('industry')
     role = request.form.get('role')
+    job_description = request.form.get('job_description')
+    impressive_project = request.form.get('impressive_project')
 
     ## create one function to clean resume text
     clean_resume = resume.clean_and_process_resume(uploaded_file)
 
     global interview_instance
-    interview_instance = interview_class(clean_resume, experience, industry, role)
+    interview_instance = interview_class(clean_resume, experience, industry, role, job_description, impressive_project)
 
     global evaluation_instance
     evaluation_instance = evaluation_class()
@@ -172,25 +179,28 @@ def display_evaluate():
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
-    print("triggered")
-    global qa
-    i = interview_instance.question_num + 1
-    print('generate_question question num:', interview_instance.question_num)
-    if i <5:
-        app.logger.info("Generating")
-        if i < 3:
-            interview_processor.generate_resume_questions(qa, interview_instance)
-        else:
-            interview_processor.generate_dynamic_questions(qa, interview_instance)
+   print("triggered")
+   global qa
+   i = interview_instance.question_num + 1
+   print('generate_question question num:', interview_instance.question_num)
+   if i < 5:
+       app.logger.info("Generating")
+       if i == 1:
+           interview_processor.generate_resume_questions(qa, interview_instance)
+       elif i == 2:
+           interview_processor.generate_job_specific_question(interview_instance)
+       elif i == 3:
+           interview_processor.generate_super_technical_question(qa, interview_instance)
+       else:
+           interview_processor.generate_dynamic_questions(qa, interview_instance)
 
-        interview_instance.question_num = interview_instance.question_num + 1
+       interview_instance.question_num = interview_instance.question_num + 1
 
-        return jsonify({'message': 'Question generation requested successfully'}), 200
+       return jsonify({'message': 'Question generation requested successfully'}), 200
 
-    else:
-        # calling generate() will print the evaluation metrics
-
-        return jsonify({'message': 'No more questions to generate'}), 200
+   else:
+       # calling generate() will print the evaluation metrics
+       return jsonify({'message': 'No more questions to generate'}), 200
 
 
 @app.route('/stop_recording', methods=['POST'])
@@ -382,10 +392,7 @@ def get_rubric_score():
             "Relevance to the Question",
             "Technical Correctness",
             "Completeness of the Answer",
-            "Anecdotal Element",
-            "Communication Clarity",
-            "Problem Solving Approach",
-            "Handling Ambiguity"
+            "Anecdotal Element"
         ]
 
         # Structure the response with proper keys
