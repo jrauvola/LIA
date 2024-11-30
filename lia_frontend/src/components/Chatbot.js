@@ -81,6 +81,8 @@ function Chatbot() {
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
   // const [showFeedbackButton, setShowFeedbackButton] = useState(false);
   const [isProcessingFeedback, setIsProcessingFeedback] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [fullTranscript, setFullTranscript] = useState('');
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -258,6 +260,11 @@ function Chatbot() {
       setIsRecording(true);
       setRecordingDuration(0);
       startRecordingTimer();
+
+      // Start speech recognition
+      if (recognition) {
+        recognition.start();
+      }
     } catch (err) {
       console.error('❌ startRecording: Error:', err);
       if (err.name === 'NotAllowedError') {
@@ -271,42 +278,68 @@ function Chatbot() {
   const stopRecording = async () => {
     console.log('Stopping recording...');
     setIsProcessingAnswer(true);
+    
+    // Stop speech recognition first and ensure it's completely stopped
+    if (recognition) {
+        recognition.stop();
+        setRecognition(null); // Clear the recognition instance
+    }
+
+    // Clear all transcript states immediately
+    setFullTranscript('');
+    setLiveTranscript('');
+    setInterimTranscript('');
+    
+    // Stop all audio processing first
+    if (audioContext) {
+      audioContext.close().catch(err => {
+        console.error('Error closing audio context:', err);
+      });
+    }
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    // Stop the recorder
     if (recorderRef.current) {
-      console.log('Recorder state before stopping:', recorderRef.current.getState());
-      
       recorderRef.current.stopRecording(() => {
         const blob = recorderRef.current.getBlob();
         console.log('Recording stopped, blob size:', blob.size);
-        console.log('Blob type:', blob.type);
         
         const mediaUrl = URL.createObjectURL(blob);
         setMediaUrl(mediaUrl);
         
-        // Log the tracks before stopping them
-        if (videoRef.current && videoRef.current.srcObject) {
-          const tracks = videoRef.current.srcObject.getTracks();
-          console.log('Tracks before stopping:', tracks.map(track => ({
-            kind: track.kind,
-            enabled: track.enabled,
-            readyState: track.readyState
-          })));
-        }
+        const formData = new FormData();
+        formData.append('video', blob, 'video.webm');
+        // Clean up transcript: trim spaces and handle punctuation
+        const cleanTranscript = (fullTranscript || '')
+          .trim()
+          .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+          .replace(/\s+([.,!?])/g, '$1') // Remove spaces before punctuation
+          .replace(/([.,!?])\s*/g, '$1 ') // Ensure single space after punctuation
+          .trim();
         
-        uploadToGCP(blob);
+        formData.append('transcript', cleanTranscript);
+        
+        uploadToGCP(formData);
       });
-    } else {
-      console.warn('No recorder reference found when stopping recording');
     }
-    
+
+    // Stop all media tracks
     if (videoRef.current && videoRef.current.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => {
+        track.stop();
+        console.log(`Stopped track: ${track.kind}`);
+      });
       videoRef.current.srcObject = null;
     }
 
     setIsRecording(false);
     stopRecordingTimer();
     
-    // Increment attempt count and check if we should navigate
     const newCount = attemptCount + 1;
     setAttemptCount(newCount);
     if (newCount > 4) {
@@ -314,19 +347,10 @@ function Chatbot() {
     }
   };
 
-  const uploadToGCP = async (blob) => {
+  const uploadToGCP = async (formData) => {
     try {
       console.log('Starting file upload to GCP...');
-      console.log('Blob details:', {
-        size: blob.size,
-        type: blob.type
-      });
-
-      const formData = new FormData();
-      formData.append('video', blob, 'video.webm');
       
-      console.log('FormData created with video blob');
-
       const response = await axios.post('http://127.0.0.1/stop_recording', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -338,11 +362,11 @@ function Chatbot() {
         const userMessage = {
           id: uuidv4(),
           role: 'user',
-          message: response.data.transcript
+          message: liveTranscript // Use the live transcript instead of response data
         };
         setConversation(prev => [...prev, userMessage]);
-        
         setLiveTranscript('');
+        setInterimTranscript('');
       }
 
       if (response.data.mediaUrl) {
@@ -464,6 +488,125 @@ function Chatbot() {
     }
   };
 
+  useEffect(() => {
+    console.log('Setting up speech recognition. isRecording:', isRecording);
+    console.log('Current liveTranscript:', liveTranscript);
+
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new window.webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        let isIntentionallyStopping = false;
+
+        recognition.onstart = () => {
+            console.log('Speech recognition started');
+            console.log('Current full transcript:', fullTranscript);
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            
+            // Process all results from this recognition session
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                console.log('Processing transcript:', transcript);
+                
+                if (event.results[i].isFinal) {
+                    // Add proper punctuation
+                    let processedTranscript = transcript
+                        .trim()
+                        .replace(/\s+/g, ' ')
+                        .replace(/\s+([.,!?])/g, '$1')
+                        .replace(/([.,!?])\s*/g, '$1 ')
+                        .replace(/([a-z])\s+([A-Z])/g, '$1. $2');
+                    
+                    // Add period if sentence doesn't end with punctuation
+                    if (!processedTranscript.match(/[.,!?]$/)) {
+                        processedTranscript += '.';
+                    }
+
+                    // Capitalize the first letter of the sentence
+                    processedTranscript = processedTranscript.charAt(0).toUpperCase() + processedTranscript.slice(1);
+                    
+                    finalTranscript += processedTranscript + ' ';
+                    console.log('Final processed transcript:', processedTranscript);
+                    
+                    setFullTranscript(prev => {
+                        const newTranscript = prev ? prev + ' ' + processedTranscript : processedTranscript;
+                        setLiveTranscript(newTranscript);
+                        return newTranscript;
+                    });
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            if (interimTranscript) {
+                console.log('Setting interim transcript:', interimTranscript);
+                setInterimTranscript(interimTranscript.trim());
+            }
+        };
+
+        recognition.onend = () => {
+            console.log('Recognition ended, fullTranscript:', fullTranscript);
+            if (!isIntentionallyStopping && isRecording) {
+                console.log('Automatically restarting recognition');
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error restarting recognition:', error);
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Recognition error:', event.error);
+            if (event.error !== 'no-speech' && isRecording && !isIntentionallyStopping) {
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        console.error('Error restarting after error:', error);
+                    }
+                }, 1000);
+            }
+        };
+
+        const modifiedRecognition = {
+            ...recognition,
+            stop: () => {
+                console.log('Stopping recognition, final transcript:', fullTranscript);
+                isIntentionallyStopping = true;
+                recognition.stop();
+            },
+            start: () => {
+                console.log('Starting recognition');
+                isIntentionallyStopping = false;
+                recognition.start();
+            }
+        };
+
+        setRecognition(modifiedRecognition);
+
+        // Only start recognition if we're recording
+        if (isRecording) {
+            try {
+                modifiedRecognition.start();
+            } catch (error) {
+                console.error('Error starting recognition:', error);
+            }
+        }
+
+        return () => {
+            console.log('Cleanup: stopping recognition');
+            isIntentionallyStopping = true;
+            recognition.stop();
+        };
+    }
+  }, [isRecording, fullTranscript]);
 
   // const addMessage = (role, message) => {
   //   setConversation(prev => [
