@@ -193,8 +193,9 @@ def generate_question():
 def stop_question():
     print("stop_question triggered")
     try:
-        # Get the uploaded WebM file from the request
+        # Get the uploaded WebM file and transcript from the request
         webm_file = request.files.get('video')
+        transcript = request.form.get('transcript')  # Get transcript from form data
 
         if not webm_file:
             return jsonify({'error': 'No WebM file uploaded'}), 400
@@ -205,13 +206,17 @@ def stop_question():
         # Reset file pointer to the beginning of the file
         webm_file.seek(0)
 
-        # Process the WebM file and get the transcript
-        transcript, webm_url = recording_processor.processor(webm_file)
+        # Save WebM file and get URL
+        webm_url = utility.gcp_storage_webm(webm_file)
+
+        if not transcript:
+            # Fallback to audio processing if no transcript provided
+            transcript, _ = recording_processor.processor(webm_file)
 
         if transcript is None:
             return jsonify({'error': 'Failed to process audio'}), 500
 
-        # try:
+        # Store the answer
         print(interview_instance.interview_dict)
         interview_instance.add_answer(transcript, j)
 
@@ -256,7 +261,7 @@ def stop_question():
             'transcript': transcript,
             'webm_url': webm_url,
             'expert_answer': expert_response,
-            'evaluation': eval_response  # Send parsed JSON
+            'evaluation': eval_response
         })
 
     except Exception as e:
