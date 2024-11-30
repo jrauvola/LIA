@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './EvaluationPage.css';
+import PerformanceAnalysis from './PerformanceAnalysis';
 import { marked } from 'marked';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 
 const metricDisplayNames = {
   // Text Features
@@ -71,11 +73,24 @@ function EvaluationPage() {
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
-
   const location = useLocation();
   const navigate = useNavigate();
+  const [sections, setSections] = useState({
+    text: true,
+    audio: true,
+    video: true
+  });
 
+  const toggleSection = (section) => {
+    setSections(prev => ({
+      text: prev.text,
+      audio: prev.audio,
+      video: prev.video,
+      [section]: !prev[section]
+    }));
+  };
 
+  // Tooltip click outside handler
   useEffect(() => {
     const handleClickOutside = () => {
       setActiveTooltip(null);
@@ -86,6 +101,7 @@ function EvaluationPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Fetch interview data
   useEffect(() => {
     fetch('http://localhost:80/get_interview_data')
       .then(response => response.json())
@@ -103,24 +119,26 @@ function EvaluationPage() {
       });
   }, []);
 
+  // New fetch for analysis data
   useEffect(() => {
-    fetch('http://localhost:80/scoreboard_breakdown')
-      .then(response => response.json())
-      .then(data => {
+    const fetchAnalysis = async () => {
+      try {
+        const response = await fetch('http://localhost:80/scoreboard_breakdown');
+        const data = await response.json();
         if (data.error) {
           console.error('Error fetching analysis:', data.error);
         } else {
-          setAnalysisResult(data.analysis);
+          setAnalysisResult(data.analysis); // This now contains the structured feedback
         }
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error:', error);
-      });
-  }, []);
+      }
+    };
 
-  const MarkupParser = (answer) => {
-    return { __html: marked(answer) };
-  };
+    if (!analysisResult) {
+      fetchAnalysis();
+    }
+  }, [analysisResult]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -295,6 +313,16 @@ function EvaluationPage() {
     );
   };
 
+  const renderSectionHeader = (title, section) => (
+    <div className="section-header" onClick={() => toggleSection(section)}>
+      <h2>{title}</h2>
+      <ChevronDown
+        className={`arrow ${!sections[section] ? 'collapsed' : ''}`}
+        size={24}
+      />
+    </div>
+  );
+
   return (
     !interviewData || !averages ? (
       <div className="loading-container">
@@ -305,7 +333,7 @@ function EvaluationPage() {
       <div className="evaluation-container">
         <h1>Social Skills Assessment</h1>
 
-        <div className="question-navigation">
+        <div className="nav-section">
           <div className="navigation-buttons">
             <button
               onClick={handleExpertPageNavigation}
@@ -322,118 +350,177 @@ function EvaluationPage() {
           </div>
         </div>
 
-        <div className="skills">
-          <h2>Text Features</h2>
-          {renderTextMetricBar("quantifier_words_pct")}
-          {renderTextMetricBar("filler_nonfluency_pct")}
-          {renderTextMetricBar("wpsec")}
-          {renderTextMetricBar("upsec")}
+        <div className="content-wrapper">
+          <div className="metrics-container">
+            <div className="skills">
+              <div className="section-header" onClick={() => toggleSection('text')}>
+                <h2>Text Features</h2>
+                <ChevronDown
+                  className={`arrow ${!sections.text ? 'collapsed' : ''}`}
+                  size={24}
+                />
+              </div>
+              <div className={`section-content ${!sections.text ? 'collapsed' : ''}`}>
+                {renderTextMetricBar("quantifier_words_pct")}
+                {renderTextMetricBar("filler_nonfluency_pct")}
+                {renderTextMetricBar("wpsec")}
+                {renderTextMetricBar("upsec")}
+              </div>
 
-          <h2>Audio Features</h2>
-          {interviewData.audio_features[currentQuestion] &&
-            Object.entries(interviewData.audio_features[currentQuestion])
-              .filter(([key]) => key !== 'audio_length' && key !== 'maxDurPause')
-              .map(([key, value]) => {
-                const expertZoneData = getExpertZone(key, 'audio');
-                return (
-                  <div className="skill" key={key}>
-                    <div
-                      className="skill-name"
-                      onClick={(e) => handleTooltipClick(e, key)}
-                    >
-                      {metricDisplayNames[key]}
-                    </div>
-                    <div className="skill-bar-container">
-                      <div
-                        className="skill-bar"
-                        onClick={(e) => handleTooltipClick(e, key)}
-                      >
-                        <div
-                          className={`skill-per ${isVisible ? 'animate' : ''}`}
-                          style={{ '--width': `${normalizeValue(value, key)}%` }}
-                          data-per={value.toFixed(2)}
-                        />
-                        {expertZoneData && (
+              <div className="section-header" onClick={() => toggleSection('audio')}>
+                <h2>Audio Features</h2>
+                <ChevronDown
+                  className={`arrow ${!sections.audio ? 'collapsed' : ''}`}
+                  size={24}
+                />
+              </div>
+              <div className={`section-content ${!sections.audio ? 'collapsed' : ''}`}>
+                {interviewData.audio_features[currentQuestion] &&
+                  Object.entries(interviewData.audio_features[currentQuestion])
+                    .filter(([key]) => key !== 'audio_length' && key !== 'maxDurPause')
+                    .map(([key, value]) => {
+                      const expertZoneData = getExpertZone(key, 'audio');
+                      return (
+                        <div className="skill" key={key}>
                           <div
-                            className="advanced-zone"
-                            style={expertZoneData.style}
-                            data-range={expertZoneData.range}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    {activeTooltip === key && (
-                      <Tooltip
-                        text={metricDefinitions[key]}
-                        position={tooltipPosition}
-                        onClose={() => setActiveTooltip(null)}
-                      />
-                    )}
-                  </div>
-                );
-              })
-          }
+                            className="skill-name"
+                            onClick={(e) => handleTooltipClick(e, key)}
+                          >
+                            {metricDisplayNames[key]}
+                          </div>
+                          <div className="skill-bar-container">
+                            <div
+                              className="skill-bar"
+                              onClick={(e) => handleTooltipClick(e, key)}
+                            >
+                              <div
+                                className={`skill-per ${isVisible ? 'animate' : ''}`}
+                                style={{ '--width': `${normalizeValue(value, key)}%` }}
+                                data-per={value.toFixed(2)}
+                              />
+                              {expertZoneData && (
+                                <div
+                                  className="advanced-zone"
+                                  style={expertZoneData.style}
+                                  data-range={expertZoneData.range}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          {activeTooltip === key && (
+                            <Tooltip
+                              text={metricDefinitions[key]}
+                              position={tooltipPosition}
+                              onClose={() => setActiveTooltip(null)}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+              </div>
 
-          <h2>Video Features</h2>
-          {interviewData.video_features[currentQuestion] &&
-            Object.entries(interviewData.video_features[currentQuestion])
-              .filter(([key, value]) =>
-                typeof value === 'number' &&
-                key !== 'total_frames' &&
-                metricDisplayNames[key]
-              )
-              .map(([key, value]) => {
-                const expertZoneData = getExpertZone(key, 'video');
-                return (
-                  <div className="skill" key={key}>
-                    <div
-                      className="skill-name"
-                      onClick={(e) => handleTooltipClick(e, key)}
-                    >
-                      {metricDisplayNames[key]}
-                    </div>
-                    <div className="skill-bar-container">
-                      <div
-                        className="skill-bar"
-                        onClick={(e) => handleTooltipClick(e, key)}
-                      >
-                        <div
-                          className={`skill-per ${isVisible ? 'animate' : ''}`}
-                          style={{ '--width': `${normalizeValue(value, key)}%` }}
-                          data-per={value.toFixed(2)}
-                        />
-                        {expertZoneData && (
+              <div className="section-header" onClick={() => toggleSection('video')}>
+                <h2>Video Features</h2>
+                <ChevronDown
+                  className={`arrow ${!sections.video ? 'collapsed' : ''}`}
+                  size={24}
+                />
+              </div>
+              <div className={`section-content ${!sections.video ? 'collapsed' : ''}`}>
+                {interviewData.video_features[currentQuestion] &&
+                  Object.entries(interviewData.video_features[currentQuestion])
+                    .filter(([key, value]) =>
+                      typeof value === 'number' &&
+                      key !== 'total_frames' &&
+                      metricDisplayNames[key]
+                    )
+                    .map(([key, value]) => {
+                      const expertZoneData = getExpertZone(key, 'video');
+                      return (
+                        <div className="skill" key={key}>
                           <div
-                            className="advanced-zone"
-                            style={expertZoneData.style}
-                            data-range={expertZoneData.range}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    {activeTooltip === key && (
-                      <Tooltip
-                        text={metricDefinitions[key]}
-                        position={tooltipPosition}
-                        onClose={() => setActiveTooltip(null)}
-                      />
-                    )}
-                  </div>
-                );
-              })
-          }
-        </div>
-
-        {/* Add this new section */}
-        {analysisResult && (
-        <div className="analysis-section">
-          <h2>Performance Analysis</h2>
-          <div
-          className="analysis-content"
-          dangerouslySetInnerHTML={MarkupParser(analysisResult)}
-          />
+                            className="skill-name"
+                            onClick={(e) => handleTooltipClick(e, key)}
+                          >
+                            {metricDisplayNames[key]}
+                          </div>
+                          <div className="skill-bar-container">
+                            <div
+                              className="skill-bar"
+                              onClick={(e) => handleTooltipClick(e, key)}
+                            >
+                              <div
+                                className={`skill-per ${isVisible ? 'animate' : ''}`}
+                                style={{ '--width': `${normalizeValue(value, key)}%` }}
+                                data-per={value.toFixed(2)}
+                              />
+                              {expertZoneData && (
+                                <div
+                                  className="advanced-zone"
+                                  style={expertZoneData.style}
+                                  data-range={expertZoneData.range}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          {activeTooltip === key && (
+                            <Tooltip
+                              text={metricDefinitions[key]}
+                              position={tooltipPosition}
+                              onClose={() => setActiveTooltip(null)}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+              </div>
+            </div>
           </div>
+
+          {analysisResult && (
+            <div className="analysis-section">
+              <h2>Performance Analysis</h2>
+              <div className="analysis-content">
+                {analysisResult.overall_feedback && (
+                  <div className={`feedback-section ${Object.values(sections).some(v => !v) ? 'collapsed' : ''}`}>
+                    <h3>Overall Feedback</h3>
+                    <p>{analysisResult.overall_feedback}</p>
+                  </div>
+                )}
+
+                {analysisResult.text_feedback && (
+                  <div className={`feedback-section ${!sections.text ? 'collapsed' : ''}`}>
+                    <h3>Text Analysis</h3>
+                    <h4>Strength</h4>
+                    <p>{analysisResult.text_feedback.strength}</p>
+                    <h4>Area for Improvement</h4>
+                    <p>{analysisResult.text_feedback.weakness}</p>
+                  </div>
+                )}
+
+                {analysisResult.audio_feedback && (
+                  <div className={`feedback-section ${!sections.audio ? 'collapsed' : ''}`}>
+                    <h3>Audio Analysis</h3>
+                    <h4>Strength</h4>
+                    <p>{analysisResult.audio_feedback.strength}</p>
+                    <h4>Area for Improvement</h4>
+                    <p>{analysisResult.audio_feedback.weakness}</p>
+                  </div>
+                )}
+
+                {analysisResult.video_feedback && (
+                  <div className={`feedback-section ${!sections.video ? 'collapsed' : ''}`}>
+                    <h3>Video Analysis</h3>
+                    <h4>Strength</h4>
+                    <p>{analysisResult.video_feedback.strength}</p>
+                    <h4>Area for Improvement</h4>
+                    <p>{analysisResult.video_feedback.weakness}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
+        </div>
       </div>
     )
   );

@@ -13,6 +13,7 @@ from audio_feature_extraction import update_audio_features
 from text_feature_extraction import update_text_features
 from expert_agent import generate_exp_ans_cot
 from scoreboard_breakdown import analyze_interview_performance
+from scoreboard_breakdown import PerformanceAnalysis
 from evaluator import evaluation_class
 import pandas as pd
 from collections import Counter
@@ -78,16 +79,20 @@ CORS(app, resources={
 })
 
 class interview_class:
-    def __init__(self, personal_profile, experience, industry, role):
+    def __init__(self, personal_profile, experience, industry, role, job_description, impressive_project):
         self.interview_dict = {
             0:  {"question": "Hi I'm Lia! Let's get started. Tell me a little about yourself!",
                  "answer": "",
                  "expert_answer": ""}
         }
-        self.personal_profile = {"personal_profile": personal_profile,
-                                 "experience": experience,
-                                 "industry": industry,
-                                 "role": role}
+        self.personal_profile = {
+            "personal_profile": personal_profile,
+            "experience": experience,
+            "industry": industry,
+            "role": role,
+            "job_description": job_description,
+            "impressive_project": impressive_project
+        }
         self.evaluator = {}
         self.question_num = 0
         self.answer_num = 0
@@ -120,18 +125,24 @@ def build_pp():
     if uploaded_file is None:
         return jsonify({'error': 'No file uploaded'}), 400
 
+    # Get all form fields
     experience = request.form.get('experience')
     industry = request.form.get('industry')
     role = request.form.get('role')
+    job_description = request.form.get('job_description')
+    impressive_project = request.form.get('impressive_project')
 
     ## create one function to clean resume text
     clean_resume = resume.clean_and_process_resume(uploaded_file)
 
     global interview_instance
-    interview_instance = interview_class(clean_resume, experience, industry, role)
+    interview_instance = interview_class(clean_resume, experience, industry, role, job_description, impressive_project)
 
     global evaluation_instance
     evaluation_instance = evaluation_class()
+
+    global performance_instance
+    performance_instance = PerformanceAnalysis()
 
     print("initialize retrievalQA")
     global qa
@@ -168,25 +179,28 @@ def display_evaluate():
 
 @app.route('/generate_question', methods=['POST'])
 def generate_question():
-    print("triggered")
-    global qa
-    i = interview_instance.question_num + 1
-    print('generate_question question num:', interview_instance.question_num)
-    if i <5:
-        app.logger.info("Generating")
-        if i < 3:
-            interview_processor.generate_resume_questions(qa, interview_instance)
-        else:
-            interview_processor.generate_dynamic_questions(qa, interview_instance)
+   print("triggered")
+   global qa
+   i = interview_instance.question_num + 1
+   print('generate_question question num:', interview_instance.question_num)
+   if i < 5:
+       app.logger.info("Generating")
+       if i == 1:
+           interview_processor.generate_resume_questions(qa, interview_instance)
+       elif i == 2:
+           interview_processor.generate_job_specific_question(interview_instance)
+       elif i == 3:
+           interview_processor.generate_super_technical_question(qa, interview_instance)
+       else:
+           interview_processor.generate_dynamic_questions(qa, interview_instance)
 
-        interview_instance.question_num = interview_instance.question_num + 1
+       interview_instance.question_num = interview_instance.question_num + 1
 
-        return jsonify({'message': 'Question generation requested successfully'}), 200
+       return jsonify({'message': 'Question generation requested successfully'}), 200
 
-    else:
-        # calling generate() will print the evaluation metrics
-
-        return jsonify({'message': 'No more questions to generate'}), 200
+   else:
+       # calling generate() will print the evaluation metrics
+       return jsonify({'message': 'No more questions to generate'}), 200
 
 
 @app.route('/stop_recording', methods=['POST'])
@@ -383,10 +397,7 @@ def get_rubric_score():
             "Relevance to the Question",
             "Technical Correctness",
             "Completeness of the Answer",
-            "Anecdotal Element",
-            "Communication Clarity",
-            "Problem Solving Approach",
-            "Handling Ambiguity"
+            "Anecdotal Element"
         ]
 
         # Structure the response with proper keys
@@ -406,6 +417,7 @@ def get_rubric_score():
     except Exception as e:
         print(f"Error getting rubric scores for question {question_num}: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/scoreboard_breakdown', methods=['GET'])
 def get_scoreboard_breakdown():
@@ -469,18 +481,28 @@ def get_scoreboard_breakdown():
             return {**text_metrics, **audio_metrics, **video_metrics}
 
         try:
-            # Get averaged metrics and analysis
+            # Get averaged metrics
             user_metrics = calculate_averages()
-            analysis_result = analyze_interview_performance(user_metrics, qa)
 
-            # Return just the analysis text
+            # Create and populate performance analysis
+            global performance_instance
+            performance_instance = PerformanceAnalysis()
+            analysis_dict = analyze_interview_performance(user_metrics, qa)
+
+            # Store the analysis in our global instance
+            performance_instance.analysis_dict = analysis_dict
+
+            # Return the structured analysis dictionary
             return jsonify({
-                'analysis': analysis_result
+                'analysis': performance_instance.analysis_dict
             })
 
         except Exception as e:
             print(f"Error in analysis: {str(e)}")
-            return jsonify({'error': 'Failed to generate analysis'}), 500
+            # Return empty structured response if analysis fails
+            return jsonify({
+                'analysis': PerformanceAnalysis().analysis_dict
+            }), 500
 
     except Exception as e:
         print(f"Error getting scoreboard breakdown: {str(e)}")

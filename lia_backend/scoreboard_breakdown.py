@@ -1,13 +1,7 @@
 import vertexai
-from vertexai.generative_models import GenerativeModel
-import vertexai.preview.generative_models as generative_models
+from vertexai.generative_models import GenerativeModel, GenerationConfig
 from langchain_core.prompts import PromptTemplate
-from langchain_google_community import GCSDirectoryLoader
-from langchain.chains import RetrievalQA
-from langchain_google_vertexai import VertexAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_google_vertexai import VertexAI
+import json
 
 # Define expert zones
 EXPERT_ZONES = {
@@ -34,8 +28,26 @@ EXPERT_ZONES = {
 }
 
 
+class PerformanceAnalysis:
+    def __init__(self):
+        self.analysis_dict = {
+            "overall_feedback": "",
+            "video_feedback": {
+                "strength": "",
+                "weakness": ""
+            },
+            "audio_feedback": {
+                "strength": "",
+                "weakness": ""
+            },
+            "text_feedback": {
+                "strength": "",
+                "weakness": ""
+            }
+        }
+
+
 def analyze_interview_performance(user_metrics, retrieval_qa):
-    # Create a formatted string of expert zones with descriptions
     metrics_info = """
     TEXT FEATURES (Expert Zones):
     - quantifier_words_pct: Higher is better [2.75 - 3.42]
@@ -58,9 +70,7 @@ def analyze_interview_performance(user_metrics, retrieval_qa):
     - average_stress: Lower is better [0.1 - 0.3]
     """
 
-    # Calculate distance from expert zones for each metric
     distance_analysis = "DISTANCE ANALYSIS FROM EXPERT ZONES:\n"
-
     for category in EXPERT_ZONES:
         distance_analysis += f"\n{category.upper()} METRICS:\n"
         for metric, zone in EXPERT_ZONES[category].items():
@@ -75,7 +85,6 @@ def analyze_interview_performance(user_metrics, retrieval_qa):
                 else:
                     distance = 0
                     position = "within"
-
                 distance_analysis += f"- {metric}: {value:.2f} ({position} expert zone [{zone[0]:.2f} - {zone[1]:.2f}])\n"
 
     template = f"""Context: You are an AI interview coach analyzing a candidate's mock interview performance metrics.
@@ -86,30 +95,101 @@ def analyze_interview_performance(user_metrics, retrieval_qa):
     USER'S METRICS AND ANALYSIS:
     {distance_analysis}
 
-    Task: Analyze the candidate's performance following these steps:
+    Provide your analysis in the following exact JSON structure:
+    {{
+        "overall_feedback": "A comprehensive summary of overall performance",
+        "video_feedback": {{
+            "strength": "The single most impressive video metric with specific values",
+            "weakness": "The single video metric needing most improvement with specific values"
+        }},
+        "audio_feedback": {{
+            "strength": "The single most impressive audio metric with specific values",
+            "weakness": "The single audio metric needing most improvement with specific values"
+        }},
+        "text_feedback": {{
+            "strength": "The single most impressive text metric with specific values",
+            "weakness": "The single text metric needing most improvement with specific values"
+        }}
+    }}
 
-    1. Overall Assessment:
-    - Evaluate how many metrics fall within, above, or below their expert zones
-    - Assess the magnitude of deviation from expert zones where applicable
+    Requirements for each section:
+    1. overall_feedback: Provide a concise summary of overall performance across all metrics
+    2. For each category (video, audio, text):
+       - strength: Identify the single metric where performance was best relative to expert zone
+       - weakness: Identify the single metric where performance needs most improvement
 
-    2. Detailed Analysis:
-    - Identify the TWO metrics where the candidate performed best (closest to or within expert zone, considering whether higher/lower is better)
-    - Identify the TWO metrics where the candidate needs the most improvement (furthest from expert zone)
-    - Group observations by text, audio, and video categories
-
-    3. Provide a comprehensive summary that:
-    - Starts with an overall assessment of performance relative to expert zones
-    - Details specific strengths and areas for improvement with exact values and target ranges
-    - Groups insights by feature category (text, audio, video)
-    - Maintains a constructive and encouraging tone
-    - Provides specific, actionable recommendations for improving the metrics furthest from expert zones
-
-    Format your response in clear sections with specific metrics, values, and expert zones mentioned.
+    Be specific and include actual values and target ranges in your feedback.
     """
 
-    analysis_prompt = template.format(metrics=user_metrics)
+    vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
+    model = GenerativeModel("gemini-1.5-flash-preview-0514")
 
-    analysis = retrieval_qa({"query": analysis_prompt})
+    generation_config = GenerationConfig(
+        max_output_tokens=8192,
+        temperature=0.3,
+        top_p=0.98
+    )
 
-    return analysis['result']
+    response = model.generate_content(
+        template,
+        generation_config=generation_config,
+        stream=False
+    )
 
+    try:
+        response_text = response.text.strip()
+        if response_text.startswith('```json'):
+            response_text = response_text[7:-3]
+        analysis_dict = json.loads(response_text)
+
+        performance_analysis = PerformanceAnalysis()
+        performance_analysis.analysis_dict = analysis_dict
+
+        return performance_analysis.analysis_dict
+
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+        print(f"Raw response: {response.text}")
+        return PerformanceAnalysis().analysis_dict
+
+
+# def test_analyze_performance():
+#     class MockRetrievalQA:
+#         def __call__(self, query_dict):
+#             return {"result": "Mock analysis result"}
+#
+#     mock_metrics = {
+#         "quantifier_words_pct": 3.0,
+#         "filler_nonfluency_pct": 4.0,
+#         "wpsec": 3.5,
+#         "upsec": 1.2,
+#         "blink_rate": 12,
+#         "average_smile_intensity": 35,
+#         "average_engagement": 0.8,
+#         "average_stress": 0.2
+#     }
+#
+#     try:
+#         print("\n=== Starting Performance Analysis Test ===")
+#         mock_qa = MockRetrievalQA()
+#         response = analyze_interview_performance(mock_metrics, mock_qa)
+#
+#         print("\n--- Response Structure ---")
+#         print(json.dumps(response, indent=2))
+#
+#         return response
+#
+#     except Exception as e:
+#         print(f"\nError in test: {str(e)}")
+#         return None
+#
+#
+# if __name__ == "__main__":
+#     print("\n=== Starting Test ===")
+#     result = test_analyze_performance()
+#     if result:
+#         print("\n=== Test Completed Successfully ===")
+#         print("Final result structure:")
+#         print(json.dumps(result, indent=2))
+#     else:
+#         print("\n=== Test Failed ===")
