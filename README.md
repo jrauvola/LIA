@@ -26,11 +26,12 @@ LiA (Large Interview Assistant) is an AI-powered tool that helps users prepare f
 9. [About Us](#About-Us)
 
 # **💡Project Motivation**
-Meet **Eric**, a dedicated professional navigating a career change into the world of data science. Like many, Eric faces a common challenge: when it comes to interviews, anxiety takes over. The moment he's in front of an interviewer, his mind goes blank. He struggles to find the right words, especially when technical questions come up.
 
-Eric's journey into data science is still in its early stages—he doesn’t have much experience yet, and he's not sure how to prepare for interviews in this competitive field. What makes it tougher is that Eric feels he's behind his peers. Many of them are smarter, with more advanced technical skills, and he feels like he's constantly playing catch-up.
+Meet **Khushi**, a data science graduate excited to start her career but feeling overwhelmed by the challenges of breaking into the competitive job market. Like many new graduates, Khushi struggles with interview anxiety. The moment she sits in front of an interviewer, her mind goes blank. She finds it especially hard to confidently tackle technical questions or articulate her achievements.
 
-**What is LiA and how it will help?** 
+Khushi’s journey into data science is still in its early stages—she doesn’t have much experience yet and often feels unsure about how to prepare for interviews effectively. To make things harder, Khushi sometimes feels she's behind her peers. Many of them seem to have stronger technical skills or more impressive projects, leaving her with a sense of playing catch-up.
+
+**That’s where LiA steps in.**
 
 LiA leverages the power of AI to provide an interactive interview practice environment. Whether you're preparing for behavioral interviews, technical questions, or data science case studies, LiA is here to simulate real interview scenarios, giving you the confidence to succeed.
 
