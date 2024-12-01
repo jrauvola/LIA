@@ -68,18 +68,28 @@ const Tooltip = ({ text, position, onClose }) => {
 function EvaluationPage() {
   const [interviewData, setInterviewData] = useState(null);
   const [averages, setAverages] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState(null);
-  const [analysisResult, setAnalysisResult] = useState(null);
-  const location = useLocation();
+  // const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisData, setAnalysisData] = useState(null);
+  // const location = useLocation();
   const navigate = useNavigate();
   const [sections, setSections] = useState({
     text: true,
     audio: true,
     video: true
   });
+
+  // // Add the analysis hook here, right after state declarations
+  // useEffect(() => {
+  //   if (location.state?.analysisData) {
+  //     setAnalysisResult(location.state.analysisData);
+  //   }
+  // }, [location]);
+  //
+  // Add a function to trigger refetch
 
   const toggleSection = (section) => {
     setSections(prev => ({
@@ -101,48 +111,39 @@ function EvaluationPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Fetch interview data
+  // Single useEffect for data fetching
   useEffect(() => {
-    fetch('http://localhost:80/get_interview_data')
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          console.error('Error fetching interview data:', data.error);
-        } else {
-          setInterviewData(data);
-          const calculatedAverages = calculateAverages(data);
-          setAverages(calculatedAverages);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }, []);
+  const fetchData = async () => {
+    try {
+      const [interviewResponse, analysisResponse] = await Promise.all([
+        fetch('http://localhost:80/get_interview_data'),
+        fetch('http://localhost:80/performance_analysis')
+      ]);
 
-  // New fetch for analysis data
-  useEffect(() => {
-    const fetchAnalysis = async () => {
-      try {
-        const response = await fetch('http://localhost:80/scoreboard_breakdown');
-        const data = await response.json();
-        if (data.error) {
-          console.error('Error fetching analysis:', data.error);
-        } else {
-          setAnalysisResult(data.analysis); // This now contains the structured feedback
-        }
-      } catch (error) {
-        console.error('Error:', error);
+      const interviewData = await interviewResponse.json();
+      const analysisData = await analysisResponse.json();
+
+      console.log('Interview Data:', interviewData);
+      console.log('Analysis Data:', analysisData);
+
+      if (!interviewData.error) {
+        setInterviewData(interviewData);
+        const calculatedAverages = calculateAverages(interviewData);
+        console.log('Calculated Averages:', calculatedAverages);
+        setAverages(calculatedAverages);
       }
-    };
 
-    if (!analysisResult) {
-      fetchAnalysis();
+      if (analysisData.analysis) {
+        console.log('Setting Analysis Data:', analysisData.analysis);
+        setAnalysisData(analysisData.analysis);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
     }
-  }, [analysisResult]);
+  };
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, [currentQuestion]);
+  fetchData();
+}, []);
 
   const handleTooltipClick = (e, metric) => {
     e.preventDefault();
@@ -286,19 +287,16 @@ function EvaluationPage() {
             onClick={(e) => handleTooltipClick(e, metric)}
           >
             <div
-              className={`skill-per ${isVisible ? 'animate' : ''}`}
-              style={{
-                '--width': `${normalizeValue(value, metric)}%`,
-                backgroundColor: '#ff80ab'
-              }}
-              data-per={`${value.toFixed(2)}${metric.includes('pct') ? '%' : metric.includes('wps') ? ' wps' : ''}`}
+                className={`skill-per ${isVisible ? 'animate' : ''}`}
+                style={{'--width': `${normalizeValue(value, metric)}%`}}  // Remove backgroundColor
+                data-per={`${value.toFixed(2)}${metric.includes('pct') ? '%' : metric.includes('wps') ? ' wps' : ''}`}
             />
             {expertZoneData && (
-              <div
-                className="advanced-zone"
-                style={expertZoneData.style}
-                data-range={expertZoneData.range}
-              />
+                <div
+                    className="advanced-zone"
+                    style={expertZoneData.style}
+                    data-range={expertZoneData.range}
+                />
             )}
           </div>
         </div>
@@ -324,205 +322,222 @@ function EvaluationPage() {
   );
 
   return (
-    !interviewData || !averages ? (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading evaluation data...</p>
-      </div>
-    ) : (
       <div className="evaluation-container">
-        <h1>Social Skills Assessment</h1>
-
-        <div className="nav-section">
-          <div className="navigation-buttons">
-            <button
-              onClick={handleExpertPageNavigation}
-              className="view-button expert-button"
-            >
-              View Expert Answers
-            </button>
-            <button
-              onClick={handleRubricPageNavigation}
-              className="view-button rubric-button"
-            >
-              View Rubric Assessment
-            </button>
-          </div>
-        </div>
-
-        <div className="content-wrapper">
-          <div className="metrics-container">
-            <div className="skills">
-              <div className="section-header" onClick={() => toggleSection('text')}>
-                <h2>Text Features</h2>
-                <ChevronDown
-                  className={`arrow ${!sections.text ? 'collapsed' : ''}`}
-                  size={24}
-                />
-              </div>
-              <div className={`section-content ${!sections.text ? 'collapsed' : ''}`}>
-                {renderTextMetricBar("quantifier_words_pct")}
-                {renderTextMetricBar("filler_nonfluency_pct")}
-                {renderTextMetricBar("wpsec")}
-                {renderTextMetricBar("upsec")}
-              </div>
-
-              <div className="section-header" onClick={() => toggleSection('audio')}>
-                <h2>Audio Features</h2>
-                <ChevronDown
-                  className={`arrow ${!sections.audio ? 'collapsed' : ''}`}
-                  size={24}
-                />
-              </div>
-              <div className={`section-content ${!sections.audio ? 'collapsed' : ''}`}>
-                {interviewData.audio_features[currentQuestion] &&
-                  Object.entries(interviewData.audio_features[currentQuestion])
-                    .filter(([key]) => key !== 'audio_length' && key !== 'maxDurPause')
-                    .map(([key, value]) => {
-                      const expertZoneData = getExpertZone(key, 'audio');
-                      return (
-                        <div className="skill" key={key}>
-                          <div
-                            className="skill-name"
-                            onClick={(e) => handleTooltipClick(e, key)}
-                          >
-                            {metricDisplayNames[key]}
-                          </div>
-                          <div className="skill-bar-container">
-                            <div
-                              className="skill-bar"
-                              onClick={(e) => handleTooltipClick(e, key)}
-                            >
-                              <div
-                                className={`skill-per ${isVisible ? 'animate' : ''}`}
-                                style={{ '--width': `${normalizeValue(value, key)}%` }}
-                                data-per={value.toFixed(2)}
-                              />
-                              {expertZoneData && (
-                                <div
-                                  className="advanced-zone"
-                                  style={expertZoneData.style}
-                                  data-range={expertZoneData.range}
-                                />
-                              )}
-                            </div>
-                          </div>
-                          {activeTooltip === key && (
-                            <Tooltip
-                              text={metricDefinitions[key]}
-                              position={tooltipPosition}
-                              onClose={() => setActiveTooltip(null)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-              </div>
-
-              <div className="section-header" onClick={() => toggleSection('video')}>
-                <h2>Video Features</h2>
-                <ChevronDown
-                  className={`arrow ${!sections.video ? 'collapsed' : ''}`}
-                  size={24}
-                />
-              </div>
-              <div className={`section-content ${!sections.video ? 'collapsed' : ''}`}>
-                {interviewData.video_features[currentQuestion] &&
-                  Object.entries(interviewData.video_features[currentQuestion])
-                    .filter(([key, value]) =>
-                      typeof value === 'number' &&
-                      key !== 'total_frames' &&
-                      metricDisplayNames[key]
-                    )
-                    .map(([key, value]) => {
-                      const expertZoneData = getExpertZone(key, 'video');
-                      return (
-                        <div className="skill" key={key}>
-                          <div
-                            className="skill-name"
-                            onClick={(e) => handleTooltipClick(e, key)}
-                          >
-                            {metricDisplayNames[key]}
-                          </div>
-                          <div className="skill-bar-container">
-                            <div
-                              className="skill-bar"
-                              onClick={(e) => handleTooltipClick(e, key)}
-                            >
-                              <div
-                                className={`skill-per ${isVisible ? 'animate' : ''}`}
-                                style={{ '--width': `${normalizeValue(value, key)}%` }}
-                                data-per={value.toFixed(2)}
-                              />
-                              {expertZoneData && (
-                                <div
-                                  className="advanced-zone"
-                                  style={expertZoneData.style}
-                                  data-range={expertZoneData.range}
-                                />
-                              )}
-                            </div>
-                          </div>
-                          {activeTooltip === key && (
-                            <Tooltip
-                              text={metricDefinitions[key]}
-                              position={tooltipPosition}
-                              onClose={() => setActiveTooltip(null)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-              </div>
+        {!interviewData ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Missing Interview Data</p>
             </div>
-          </div>
+        ) : !averages ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Missing Averages</p>
+            </div>
+        ) : !analysisData ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Missing Analysis Data</p>
+            </div>
+        ) : (
+            <>
+              <h1>Social Skills Assessment</h1>
 
-          {analysisResult && (
-            <div className="analysis-section">
-              <h2>Performance Analysis</h2>
-              <div className="analysis-content">
-                {analysisResult.overall_feedback && (
-                  <div className={`feedback-section ${Object.values(sections).some(v => !v) ? 'collapsed' : ''}`}>
-                    <h3>Overall Feedback</h3>
-                    <p>{analysisResult.overall_feedback}</p>
-                  </div>
-                )}
+              <div className="nav-section">
+                <div className="navigation-buttons">
+                  <button
+                      onClick={handleExpertPageNavigation}
+                      className="view-button expert-button"
+                  >
+                    View Expert Answers
+                  </button>
+                  <button
+                      onClick={handleRubricPageNavigation}
+                      className="view-button rubric-button"
+                  >
+                    View Rubric Assessment
+                  </button>
+                </div>
+              </div>
 
-                {analysisResult.text_feedback && (
-                  <div className={`feedback-section ${!sections.text ? 'collapsed' : ''}`}>
-                    <h3>Text Analysis</h3>
-                    <h4>Strength</h4>
-                    <p>{analysisResult.text_feedback.strength}</p>
-                    <h4>Area for Improvement</h4>
-                    <p>{analysisResult.text_feedback.weakness}</p>
-                  </div>
-                )}
+              <div className="content-wrapper">
+                <div className="metrics-container">
+                  <div className="skills">
+                    {/* Text Features Section */}
+                    <div className="section-header" onClick={() => toggleSection('text')}>
+                      <h2>Text Features</h2>
+                      <ChevronDown
+                          className={`arrow ${!sections.text ? 'collapsed' : ''}`}
+                          size={24}
+                      />
+                    </div>
+                    <div className={`section-content ${!sections.text ? 'collapsed' : ''}`}>
+                      {renderTextMetricBar("quantifier_words_pct")}
+                      {renderTextMetricBar("filler_nonfluency_pct")}
+                      {renderTextMetricBar("wpsec")}
+                      {renderTextMetricBar("upsec")}
+                    </div>
 
-                {analysisResult.audio_feedback && (
-                  <div className={`feedback-section ${!sections.audio ? 'collapsed' : ''}`}>
-                    <h3>Audio Analysis</h3>
-                    <h4>Strength</h4>
-                    <p>{analysisResult.audio_feedback.strength}</p>
-                    <h4>Area for Improvement</h4>
-                    <p>{analysisResult.audio_feedback.weakness}</p>
-                  </div>
-                )}
+                    {/* Audio Features Section */}
+                    <div className="section-header" onClick={() => toggleSection('audio')}>
+                      <h2>Audio Features</h2>
+                      <ChevronDown
+                          className={`arrow ${!sections.audio ? 'collapsed' : ''}`}
+                          size={24}
+                      />
+                    </div>
+                    <div className={`section-content ${!sections.audio ? 'collapsed' : ''}`}>
+                      {interviewData.audio_features[currentQuestion] &&
+                          Object.entries(interviewData.audio_features[currentQuestion])
+                              .filter(([key]) => key !== 'audio_length' && key !== 'maxDurPause')
+                              .map(([key, value]) => {
+                                const expertZoneData = getExpertZone(key, 'audio');
+                                return (
+                                    <div className="skill" key={key}>
+                                      <div
+                                          className="skill-name"
+                                          onClick={(e) => handleTooltipClick(e, key)}
+                                      >
+                                        {metricDisplayNames[key]}
+                                      </div>
+                                      <div className="skill-bar-container">
+                                        <div
+                                            className="skill-bar"
+                                            onClick={(e) => handleTooltipClick(e, key)}
+                                        >
+                                          <div
+                                              className={`skill-per ${isVisible ? 'animate' : ''}`}
+                                              style={{'--width': `${normalizeValue(value, key)}%`}}  // Keep as is - this one was correct
+                                              data-per={value.toFixed(2)}
+                                          />
+                                          {expertZoneData && (
+                                              <div
+                                                  className="advanced-zone"
+                                                  style={expertZoneData.style}
+                                                  data-range={expertZoneData.range}
+                                              />
+                                          )}
+                                        </div>
+                                      </div>
+                                      {activeTooltip === key && (
+                                          <Tooltip
+                                              text={metricDefinitions[key]}
+                                              position={tooltipPosition}
+                                              onClose={() => setActiveTooltip(null)}
+                                          />
+                                      )}
+                                    </div>
+                                );
+                              })}
+                    </div>
 
-                {analysisResult.video_feedback && (
-                  <div className={`feedback-section ${!sections.video ? 'collapsed' : ''}`}>
-                    <h3>Video Analysis</h3>
-                    <h4>Strength</h4>
-                    <p>{analysisResult.video_feedback.strength}</p>
-                    <h4>Area for Improvement</h4>
-                    <p>{analysisResult.video_feedback.weakness}</p>
+                    {/* Video Features Section */}
+                    <div className="section-header" onClick={() => toggleSection('video')}>
+                      <h2>Video Features</h2>
+                      <ChevronDown
+                          className={`arrow ${!sections.video ? 'collapsed' : ''}`}
+                          size={24}
+                      />
+                    </div>
+                    <div className={`section-content ${!sections.video ? 'collapsed' : ''}`}>
+                      {interviewData.video_features[currentQuestion] &&
+                          Object.entries(interviewData.video_features[currentQuestion])
+                              .filter(([key, value]) =>
+                                  typeof value === 'number' &&
+                                  key !== 'total_frames' &&
+                                  metricDisplayNames[key]
+                              )
+                              .map(([key, value]) => {
+                                const expertZoneData = getExpertZone(key, 'video');
+                                return (
+                                    <div className="skill" key={key}>
+                                      <div
+                                          className="skill-name"
+                                          onClick={(e) => handleTooltipClick(e, key)}
+                                      >
+                                        {metricDisplayNames[key]}
+                                      </div>
+                                      <div className="skill-bar-container">
+                                        <div
+                                            className="skill-bar"
+                                            onClick={(e) => handleTooltipClick(e, key)}
+                                        >
+                                          <div
+                                              className={`skill-per ${isVisible ? 'animate' : ''}`}
+                                              style={{'--width': `${normalizeValue(value, key)}%`}}  // Keep as is - this one was correct
+                                              data-per={value.toFixed(2)}
+                                          />
+                                          {expertZoneData && (
+                                              <div
+                                                  className="advanced-zone"
+                                                  style={expertZoneData.style}
+                                                  data-range={expertZoneData.range}
+                                              />
+                                          )}
+                                        </div>
+                                      </div>
+                                      {activeTooltip === key && (
+                                          <Tooltip
+                                              text={metricDefinitions[key]}
+                                              position={tooltipPosition}
+                                              onClose={() => setActiveTooltip(null)}
+                                          />
+                                      )}
+                                    </div>
+                                );
+                              })}
+                    </div>
                   </div>
+                </div>
+
+                {/* Analysis Section */}
+                {analysisData && (
+                    <div className="analysis-section">
+                      <h2>Performance Analysis</h2>
+                      <div className="analysis-content">
+                        {analysisData.overall_feedback && (
+                            <div
+                                className={`feedback-section ${Object.values(sections).some(v => !v) ? 'collapsed' : ''}`}>
+                              <h3>Overall Feedback</h3>
+                              <p>{analysisData.overall_feedback}</p>
+                            </div>
+                        )}
+
+                        {analysisData.text_feedback && (
+                            <div className={`feedback-section ${!sections.text ? 'collapsed' : ''}`}>
+                              <h3>Text Analysis</h3>
+                              <h4>Strength</h4>
+                              <p>{analysisData.text_feedback.strength}</p>
+                              <h4>Area for Improvement</h4>
+                              <p>{analysisData.text_feedback.weakness}</p>
+                            </div>
+                        )}
+
+                        {analysisData.audio_feedback && (
+                            <div className={`feedback-section ${!sections.audio ? 'collapsed' : ''}`}>
+                              <h3>Audio Analysis</h3>
+                              <h4>Strength</h4>
+                              <p>{analysisData.audio_feedback.strength}</p>
+                              <h4>Area for Improvement</h4>
+                              <p>{analysisData.audio_feedback.weakness}</p>
+                            </div>
+                        )}
+
+                        {analysisData.video_feedback && (
+                            <div className={`feedback-section ${!sections.video ? 'collapsed' : ''}`}>
+                              <h3>Video Analysis</h3>
+                              <h4>Strength</h4>
+                              <p>{analysisData.video_feedback.strength}</p>
+                              <h4>Area for Improvement</h4>
+                              <p>{analysisData.video_feedback.weakness}</p>
+                            </div>
+                        )}
+                      </div>
+                    </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+            </>
+        )}
       </div>
-    )
   );
 }
 

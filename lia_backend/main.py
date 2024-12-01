@@ -71,6 +71,10 @@ CORS(app, resources={
         "origins": "http://localhost:3000",
         "supports_credentials": True
     },
+    r"/performance_analysis": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
+    },
     r"/rubric_score": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
@@ -239,6 +243,7 @@ def stop_question():
 
         if not transcript:
             # Fallback to audio processing if no transcript provided
+            webm_file.seek(0)
             transcript, _ = recording_processor.processor(webm_file)
 
         if transcript is None:
@@ -505,6 +510,7 @@ def get_scoreboard_breakdown():
 
             # Store the analysis in our global instance
             performance_instance.analysis_dict = analysis_dict
+            print(performance_instance.analysis_dict)
 
             # Return the structured analysis dictionary
             return jsonify({
@@ -521,6 +527,77 @@ def get_scoreboard_breakdown():
     except Exception as e:
         print(f"Error getting scoreboard breakdown: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+
+# For re-renders
+@app.route('/performance_analysis', methods=['GET'])
+def get_performance_analysis():
+    try:
+        global performance_instance
+        if not performance_instance or not performance_instance.analysis_dict:
+            # If performance_instance doesn't exist or has no analysis, calculate it
+            if interview_instance:
+                # Calculate averages from interview data
+                user_metrics = {}
+
+                # Add text metrics
+                text_count = len(interview_instance.text_features)
+                if text_count > 0:
+                    text_metrics = {
+                        'quantifier_words_pct': 0,
+                        'filler_nonfluency_pct': 0,
+                        'wpsec': 0,
+                        'upsec': 0
+                    }
+                    for features in interview_instance.text_features:
+                        for metric in text_metrics:
+                            text_metrics[metric] += features.get(metric, 0)
+                    for metric in text_metrics:
+                        user_metrics[metric] = text_metrics[metric] / text_count
+
+                # Add audio metrics
+                audio_count = len(interview_instance.audio_features)
+                if audio_count > 0:
+                    audio_metrics = {
+                        'avgBand1': 0,
+                        'unvoiced_percent': 0,
+                        'f1STD': 0,
+                        'f3meanf1': 0,
+                        'intensityMean': 0,
+                        'avgDurPause': 0
+                    }
+                    for features in interview_instance.audio_features:
+                        for metric in audio_metrics:
+                            audio_metrics[metric] += features.get(metric, 0)
+                    for metric in audio_metrics:
+                        user_metrics[metric] = audio_metrics[metric] / audio_count
+
+                # Add video metrics
+                video_count = len(interview_instance.video_features)
+                if video_count > 0:
+                    video_metrics = {
+                        'blink_rate': 0,
+                        'average_smile_intensity': 0,
+                        'average_engagement': 0,
+                        'average_stress': 0
+                    }
+                    for features in interview_instance.video_features:
+                        for metric in video_metrics:
+                            video_metrics[metric] += features.get(metric, 0)
+                    for metric in video_metrics:
+                        user_metrics[metric] = video_metrics[metric] / video_count
+
+                # Generate analysis
+                performance_instance.analysis_dict = analyze_interview_performance(user_metrics, qa)
+
+        return jsonify({
+            'analysis': performance_instance.analysis_dict
+        }), 200
+
+    except Exception as e:
+        print(f"Error in performance analysis: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)

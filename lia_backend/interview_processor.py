@@ -46,7 +46,7 @@ def retrievalQA():
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
     print("Grab LLM")
     llm = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,
@@ -70,7 +70,7 @@ def generate_resume_questions(qa, interview_instance):
                 Personal Profile: '''{interview_instance.personal_profile}'''
                 """
     model = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,
@@ -117,7 +117,7 @@ def generate_job_specific_question(interview_instance):
                 """
 
     model = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,
@@ -171,7 +171,7 @@ def generate_super_technical_question(qa, interview_instance):
         print(f"Found {len(context_response)} chunks with average similarity score: {avg_similarity}")
 
     model = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,
@@ -257,7 +257,7 @@ def generate_dynamic_questions(qa, interview_instance):
 
     # Define model at the start so it's available for both paths
     model = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,

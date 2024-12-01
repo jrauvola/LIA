@@ -60,7 +60,7 @@ def generate_exp_ans_cot(question, retrieval_qa, interview_instance):
     # If similarity is too low, use Gemini directly
     print("Generating expert answer using Gemini only")
     model = VertexAI(
-        model_name="gemini-pro",
+        model_name="gemini-1.5-pro",
         max_output_tokens=2000,
         temperature=0.1,
         top_p=0.8,

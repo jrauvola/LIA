@@ -50,24 +50,24 @@ class PerformanceAnalysis:
 def analyze_interview_performance(user_metrics, retrieval_qa):
     metrics_info = """
     TEXT FEATURES (Expert Zones):
-    - quantifier_words_pct: Higher is better [2.75 - 3.42]
-    - filler_nonfluency_pct: Lower is better [3.30 - 6.48]
-    - wpsec: Higher is better [3.11 - 3.64]
-    - upsec: Higher is better [1.17 - 1.38]
+    - quantifier_words_pct: Higher than 2.75 is better
+    - filler_nonfluency_pct: Lower then 6.48 is better
+    - wpsec: Higher than 3.11 is better
+    - upsec: Higher than 1.17 is better
 
     AUDIO FEATURES (Expert Zones):
-    - avgBand1: Lower is better [323.94 - 394.53]
-    - unvoiced_percent: Lower is better [27.39 - 36.05]
-    - f1STD: Lower is better [262.23 - 300.52]
-    - f3meanf1: Higher is better [4.57 - 4.78]
-    - intensityMean: Higher is better [58.03 - 61.46]
-    - avgDurPause: Lower is better [0.34 - 0.50]
+    - avgBand1: Lower than 394.53 is better
+    - unvoiced_percent: Lower than 36.05 is better
+    - f1STD: Lower than 300.52 is better
+    - f3meanf1: Higher than 4.57 is better
+    - intensityMean: Higher than 58.03 is better
+    - avgDurPause: Lower than 0.50 is better
 
     VIDEO FEATURES (Expert Zones):
     - blink_rate: Aim for range [10 - 15]
     - average_smile_intensity: Aim for range [30 - 45]
     - average_engagement: Aim for range [0.7 - 0.9]
-    - average_stress: Lower is better [0.1 - 0.3]
+    - average_stress: Lower than 0.3 is better
     """
 
     distance_analysis = "DISTANCE ANALYSIS FROM EXPERT ZONES:\n"
@@ -116,13 +116,15 @@ def analyze_interview_performance(user_metrics, retrieval_qa):
     1. overall_feedback: Provide a concise summary of overall performance across all metrics
     2. For each category (video, audio, text):
        - strength: Identify the single metric where performance was best relative to expert zone
-       - weakness: Identify the single metric where performance needs most improvement
+       - weakness: Identify the single metric where performance needs most improvement relative to expert zone
+    3. Do not include any number
+    4. Only advice on how they can get better in the particular section
 
     Be specific and include actual values and target ranges in your feedback.
     """
 
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
-    model = GenerativeModel("gemini-1.5-flash-preview-0514")
+    model = GenerativeModel("gemini-1.5-pro")
 
     generation_config = GenerationConfig(
         max_output_tokens=8192,
