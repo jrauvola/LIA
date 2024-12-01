@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.so
+
+# Virtual Environment
+venv/
+.env/
+.venv/
+ENV/
+lia_env/
+
+# Development
+.git
+.gitignore
+.idea/
+.vscode/
+*.log
+*.swp
+.DS_Store
+
+# Test files
+tests/
+test_*.py
+*_test.py
+audio_test.py
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Temporary files
+*.tmp
+temp/
+tmp/

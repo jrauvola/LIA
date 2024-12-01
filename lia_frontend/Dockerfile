@@ -4,11 +4,11 @@ FROM node:18-alpine as build
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the package.json and package-lock.json
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install all dependencies
-RUN npm install
+# Install dependencies
+RUN npm ci --only=production
 
 # Copy the rest of your client application
 COPY . .
@@ -16,8 +16,32 @@ COPY . .
 # Build the application for production
 RUN npm run build
 
-# Use nginx to serve the app on port 80
+# Use nginx with alpine for smaller image size
 FROM nginx:alpine
+
+# Copy nginx configuration if you have custom config
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from build stage
 COPY --from=build /app/build /usr/share/nginx/html
+
+# Add security headers and gzip configuration
+RUN echo 'server {\
+    listen 80;\
+    location / {\
+        root /usr/share/nginx/html;\
+        index index.html index.htm;\
+        try_files $uri $uri/ /index.html;\
+        add_header X-Frame-Options "SAMEORIGIN";\
+        add_header X-XSS-Protection "1; mode=block";\
+        add_header X-Content-Type-Options "nosniff";\
+        gzip on;\
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;\
+    }\
+}' > /etc/nginx/conf.d/default.conf
+
+# Expose port 80
 EXPOSE 80
+
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

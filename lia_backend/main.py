@@ -205,15 +205,29 @@ def generate_question():
 
 @app.route('/stop_recording', methods=['POST'])
 def stop_question():
-    print("stop_question triggered")
+    print("\n=== STOP RECORDING ENDPOINT START ===")
+    print("Request Content-Type:", request.content_type)
+    print("Request Files:", request.files.keys())
+    print("Request Form Data:", request.form.keys())
+    
     try:
-        # Get the uploaded WebM file and transcript from the request
         webm_file = request.files.get('video')
-        transcript = request.form.get('transcript')  # Get transcript from form data
-
+        transcript = request.form.get('transcript')
+        
+        print("\n=== RECEIVED DATA ===")
+        print("WebM File Present:", bool(webm_file))
+        print("Transcript Present:", bool(transcript))
+        print("Transcript Content:", transcript)
+        
         if not webm_file:
+            print("ERROR: No WebM file uploaded")
             return jsonify({'error': 'No WebM file uploaded'}), 400
-
+            
+        # Add before file operations
+        print("\n=== FILE OPERATIONS ===")
+        print("WebM File Type:", type(webm_file))
+        print("WebM File Size:", webm_file.content_length)
+        
         j = interview_instance.answer_num
         print('stop_question answer num:', j)
 

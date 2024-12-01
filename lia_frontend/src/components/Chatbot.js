@@ -200,97 +200,95 @@ function Chatbot() {
   };
 
   const startRecording = async () => {
-    try {
-      setShowStartPrompt(false);
-      console.log('🎥 startRecording: Requesting media permissions');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 16000,
-          sampleSize: 16
-        }
-      });
-      
-      console.log('Stream tracks:', stream.getTracks().map(track => ({
-        kind: track.kind,
-        enabled: track.enabled,
-        muted: track.muted,
-        readyState: track.readyState
-      })));
-
-      videoRef.current.srcObject = stream;
-      console.log('Video source object set:', videoRef.current.srcObject !== null);
-
-      // Initialize audio context
-      const context = await initializeAudioContext();
-      console.log('Audio context created:', context);
-      
-      const source = context.createMediaStreamSource(stream);
-      console.log('Media stream source created:', source);
-      
-      const analyser = context.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.minDecibels = -90;
-      analyser.maxDecibels = -10;
-      analyser.smoothingTimeConstant = 0.85;
-      
-      source.connect(analyser);
-      console.log('Audio analysis chain connected');
-      
-      setAudioContext(context);
-      setAudioAnalyser(analyser);
-      
-      // Start analysis with proper reference
-      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
-
-      // Mute the video track
-      videoRef.current.muted = true;
-      videoRef.current.volume = 0;
-      console.log('🎬 startRecording: Initializing RecordRTC');
-      console.log('🎬 startRecording: RecordRTC configuration:', {
-        type: 'video',
-        mimeType: 'video/webm',
-        numberOfAudioChannels: 1,
-        desiredSampRate: 16000,
-        bufferSize: 4096
-      });
-
-      recorderRef.current = new RecordRTC(stream, {
-        type: 'video',
-        mimeType: 'video/webm',
-        recorderType: RecordRTC.MediaStreamRecorder,
-        numberOfAudioChannels: 1,
-        desiredSampRate: 16000,
-        bufferSize: 4096
-      });
-
-      console.log('Recorder state before starting:', recorderRef.current.getState());
-      recorderRef.current.startRecording();
-      console.log('Recorder state after starting:', recorderRef.current.getState());
-      setIsRecording(true);
-      setRecordingDuration(0);
-      startRecordingTimer();
-
-      // Start speech recognition
-      if (recognition) {
-        recognition.start();
+    setShowStartPrompt(false);
+    console.log('🎥 startRecording: Requesting media permissions');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1,
+        sampleRate: 16000,
+        sampleSize: 16
       }
-    } catch (err) {
-      console.error('❌ startRecording: Error:', err);
-      if (err.name === 'NotAllowedError') {
-        setError('Please grant microphone and camera permissions');
-      } else {
-        setError(`Failed to start recording: ${err.message}`);
-      }
+    });
+    
+    console.log('Stream tracks:', stream.getTracks().map(track => ({
+      kind: track.kind,
+      enabled: track.enabled,
+      muted: track.muted,
+      readyState: track.readyState
+    })));
+
+    videoRef.current.srcObject = stream;
+    console.log('Video source object set:', videoRef.current.srcObject !== null);
+
+    // Initialize audio context
+    const context = await initializeAudioContext();
+    console.log('Audio context created:', context);
+    
+    const source = context.createMediaStreamSource(stream);
+    console.log('Media stream source created:', source);
+    
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.minDecibels = -90;
+    analyser.maxDecibels = -10;
+    analyser.smoothingTimeConstant = 0.85;
+    
+    source.connect(analyser);
+    console.log('Audio analysis chain connected');
+    
+    setAudioContext(context);
+    setAudioAnalyser(analyser);
+    
+    // Start analysis with proper reference
+    animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+
+    // Mute the video track
+    videoRef.current.muted = true;
+    videoRef.current.volume = 0;
+    console.log('🎬 startRecording: Initializing RecordRTC');
+    console.log('🎬 startRecording: RecordRTC configuration:', {
+      type: 'video',
+      mimeType: 'video/webm',
+      numberOfAudioChannels: 1,
+      desiredSampRate: 16000,
+      bufferSize: 4096
+    });
+
+    recorderRef.current = new RecordRTC(stream, {
+      type: 'video',
+      mimeType: 'video/webm',
+      recorderType: RecordRTC.MediaStreamRecorder,
+      numberOfAudioChannels: 1,
+      desiredSampRate: 16000,
+      bufferSize: 4096
+    });
+
+    console.log('Recorder state before starting:', recorderRef.current.getState());
+    recorderRef.current.startRecording();
+    console.log('Recorder state after starting:', recorderRef.current.getState());
+    setIsRecording(true);
+    setRecordingDuration(0);
+    startRecordingTimer();
+
+    // Start speech recognition
+    if (recognition) {
+      recognition.start();
     }
   };
 
   const stopRecording = async () => {
-    console.log('Stopping recording...');
+    console.log('=== STOP RECORDING START ===');
+    console.log('Current States:', {
+        isRecording,
+        fullTranscript,
+        liveTranscript,
+        interimTranscript
+    });
+
     setIsProcessingAnswer(true);
     
     // Stop speech recognition first and ensure it's completely stopped
@@ -334,6 +332,18 @@ function Chatbot() {
           .replace(/\s+([.,!?])/g, '$1') // Remove spaces before punctuation
           .replace(/([.,!?])\s*/g, '$1 ') // Ensure single space after punctuation
           .trim();
+        
+        console.log('=== TRANSCRIPT PREPARATION ===');
+        console.log('Full Transcript State:', fullTranscript);
+        console.log('Live Transcript State:', liveTranscript);
+        console.log('Interim Transcript State:', interimTranscript);
+        
+        console.log('Clean Transcript:', cleanTranscript);
+        console.log('Transcript Length:', cleanTranscript.length);
+        
+        // Before FormData append
+        console.log('=== FORM DATA PREPARATION ===');
+        console.log('FormData transcript being added:', cleanTranscript);
         
         formData.append('transcript', cleanTranscript);
         
@@ -503,11 +513,27 @@ function Chatbot() {
   };
 
   useEffect(() => {
-    console.log('Setting up speech recognition. isRecording:', isRecording);
-    console.log('Current liveTranscript:', liveTranscript);
+    console.log('\n=== RECOGNITION SETUP ===');
+    console.log('Is Recording:', isRecording);
+    console.log('Recognition Object Exists:', !!recognition);
+    console.log('Audio Context State:', audioContext?.state);
+    console.log('Current Transcript States:', {
+        full: fullTranscript,
+        live: liveTranscript,
+        interim: interimTranscript
+    });
 
     if ('webkitSpeechRecognition' in window) {
+        console.log('Speech Recognition API Available');
         const recognition = new window.webkitSpeechRecognition();
+        
+        // Log configuration
+        console.log('Recognition Configuration:', {
+            continuous: recognition.continuous,
+            interimResults: recognition.interimResults,
+            lang: recognition.lang
+        });
+
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
@@ -515,20 +541,35 @@ function Chatbot() {
         let isIntentionallyStopping = false;
 
         recognition.onstart = () => {
-            console.log('Speech recognition started');
-            console.log('Current full transcript:', fullTranscript);
+            console.log('=== SPEECH RECOGNITION START ===');
+            console.log('Recognition State:', recognition.state);
+            console.log('Current Transcripts:', {
+                full: fullTranscript,
+                live: liveTranscript,
+                interim: interimTranscript
+            });
         };
 
         recognition.onresult = (event) => {
+            console.log('\n=== SPEECH RECOGNITION RESULT EVENT ===');
+            console.log('Event Results Length:', event.results.length);
+            console.log('Event Result Index:', event.resultIndex);
+            console.log('Is Final:', event.results[event.resultIndex].isFinal);
+            console.log('Confidence:', event.results[event.resultIndex][0].confidence);
+            
             let interimTranscript = '';
             let finalTranscript = '';
             
-            // Process all results from this recognition session
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
-                console.log('Processing transcript:', transcript);
+                console.log(`\nProcessing Result ${i}:`, {
+                    transcript,
+                    confidence: event.results[i][0].confidence,
+                    isFinal: event.results[i].isFinal
+                });
                 
                 if (event.results[i].isFinal) {
+                    console.log('Processing final transcript piece:', transcript);
                     // Add proper punctuation
                     let processedTranscript = transcript
                         .trim()
@@ -557,11 +598,17 @@ function Chatbot() {
                     interimTranscript += transcript;
                 }
             }
-            
+
             if (interimTranscript) {
-                console.log('Setting interim transcript:', interimTranscript);
-                setInterimTranscript(interimTranscript.trim());
-            }
+              setInterimTranscript(interimTranscript.trim());
+          }
+            
+            console.log('\nTranscript States After Processing:', {
+                interimTranscript,
+                finalTranscript,
+                fullTranscript,
+                liveTranscript
+            });
         };
 
         recognition.onend = () => {
@@ -577,7 +624,10 @@ function Chatbot() {
         };
 
         recognition.onerror = (event) => {
-            console.error('Recognition error:', event.error);
+            console.log('=== SPEECH RECOGNITION ERROR ===');
+            console.log('Error Type:', event.error);
+            console.log('Error Message:', event.message);
+            console.log('Recognition State:', recognition.state);
             if (event.error !== 'no-speech' && isRecording && !isIntentionallyStopping) {
                 setTimeout(() => {
                     try {
@@ -621,6 +671,20 @@ function Chatbot() {
         };
     }
   }, [isRecording, fullTranscript]);
+
+  useEffect(() => {
+    console.log('\n=== TRANSCRIPT STATE CHANGE ===');
+    console.log('Full Transcript:', fullTranscript);
+    console.log('Live Transcript:', liveTranscript);
+    console.log('Interim Transcript:', interimTranscript);
+  }, [fullTranscript, liveTranscript, interimTranscript]);
+
+  useEffect(() => {
+    console.log('\n=== RECORDING STATE CHANGE ===');
+    console.log('Is Recording:', isRecording);
+    console.log('Recognition Available:', !!recognition);
+    console.log('Audio Context State:', audioContext?.state);
+  }, [isRecording]);
 
   // const addMessage = (role, message) => {
   //   setConversation(prev => [

@@ -54,15 +54,26 @@ def gcp_storage_transcript(transcript):
     return transcript_url
 
 def gcp_storage_webm(webm_file):
-    print("Saving WebM file to 'lia_recordings' bucket")
+    print("\n=== GCP STORAGE OPERATION START ===")
+    print("Input WebM File Type:", type(webm_file))
+    print("File Position:", webm_file.tell())
+    
     try:
         storage_client = storage.Client()
+        print("Storage Client Created Successfully")
+        
         webm_bucket_name = "lia_recordings"
-
-        # Use a filename format without colons
         timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H_%M_%S_%f")
         webm_object_name = f"recording_{timestamp}.webm"
-
+        
+        print("Bucket Name:", webm_bucket_name)
+        print("Object Name:", webm_object_name)
+        
+        # Before upload
+        print("\n=== PRE-UPLOAD CHECKS ===")
+        print("File Position:", webm_file.tell())
+        print("File Seekable:", webm_file.seekable())
+        
         webm_bucket = storage_client.bucket(webm_bucket_name)
         webm_blob = webm_bucket.blob(webm_object_name)
         webm_blob.upload_from_file(webm_file)
