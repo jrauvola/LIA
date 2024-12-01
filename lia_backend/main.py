@@ -24,6 +24,9 @@ from google.cloud import storage
 from google.cloud import speech
 import datetime
 from video_feature_extraction import update_video_features
+from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
 
 app = Flask(__name__, static_folder='client/build', static_url_path='')
 app.config['DEBUG'] = True
@@ -78,6 +81,10 @@ CORS(app, resources={
     r"/rubric_score": {
         "origins": "http://localhost:3000",
         "supports_credentials": True
+    },
+    r"/test_parallel": {
+        "origins": "http://localhost:3000",
+        "supports_credentials": True
     }
 
 })
@@ -119,6 +126,9 @@ class interview_class:
                 f"Personal Profile: {self.personal_profile}\n"
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
+    
+MAX_WORKERS = 3  # Adjust based on your needs
+thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
@@ -243,7 +253,7 @@ def stop_question():
 
         if not transcript:
             # Fallback to audio processing if no transcript provided
-            webm_file.seek(0)
+            #webm_file.seek(0)
             transcript, _ = recording_processor.processor(webm_file)
 
         if transcript is None:
@@ -598,6 +608,51 @@ def get_performance_analysis():
         print(f"Error in performance analysis: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/test_parallel', methods=['GET'])
+def test_parallel():
+    try:
+        start_time = time.time()
+        
+        # Simulate three different analysis tasks
+        def task1(x):
+            time.sleep(2)  # Simulate API call or heavy computation
+            return x * 2
+
+        def task2(x):
+            time.sleep(2)  # Simulate API call or heavy computation
+            return x * 3
+
+        def task3(x):
+            time.sleep(2)  # Simulate API call or heavy computation
+            return x * 4
+
+        # Submit tasks to thread pool
+        future1 = thread_pool.submit(task1, 10)
+        future2 = thread_pool.submit(task2, 10)
+        future3 = thread_pool.submit(task3, 10)
+
+        # Get results
+        result1 = future1.result()
+        result2 = future2.result()
+        result3 = future3.result()
+
+        end_time = time.time()
+        
+        return jsonify({
+            'results': {
+                'task1': result1,
+                'task2': result2,
+                'task3': result3
+            },
+            'total_time': end_time - start_time
+        })
+
+    except Exception as e:
+        print(f"Error in parallel processing: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+MAX_WORKERS = 3  # Adjust based on your needs
+thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)

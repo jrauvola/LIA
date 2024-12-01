@@ -531,6 +531,9 @@ function Chatbot() {
         recognition.lang = 'en-US';
 
         let isIntentionallyStopping = false;
+        let lastSpeechTimestamp = Date.now();
+        let silenceTimer = null;
+        const PAUSE_THRESHOLD = 1000; // 1 second pause threshold
 
         recognition.onstart = () => {
             console.log('=== SPEECH RECOGNITION START ===');
@@ -562,23 +565,21 @@ function Chatbot() {
                 
                 if (event.results[i].isFinal) {
                     console.log('Processing final transcript piece:', transcript);
-                    // Add proper punctuation
-                    let processedTranscript = transcript
-                        .trim()
-                        .replace(/\s+/g, ' ')
-                        .replace(/\s+([.,!?])/g, '$1')
-                        .replace(/([.,!?])\s*/g, '$1 ')
-                        .replace(/([a-z])\s+([A-Z])/g, '$1. $2');
-                    
-                    // Add period if sentence doesn't end with punctuation
-                    if (!processedTranscript.match(/[.,!?]$/)) {
-                        processedTranscript += '.';
-                    }
+                    // Add periods after longer pauses (>1 second)
+                    let processedTranscript = transcript;
 
-                    // Capitalize the first letter of the sentence
+                    // Clean up existing punctuation
+                    processedTranscript = processedTranscript
+                        .trim()
+                        .replace(/\s+/g, ' ')                     // Replace multiple spaces with single space
+                        .replace(/\s+([.,!?])/g, '$1')           // Remove spaces before punctuation
+                        .replace(/([.,!?])\s*/g, '$1 ')          // Ensure single space after punctuation
+                        .replace(/([.?!])\s+(\w)/g, '$1 $2')     // Capitalize after sentence endings
+                        .replace(/\s*([.,])\s*/g, '$1 ');        // Clean up comma spacing
+
+                    // Capitalize first letter of transcript
                     processedTranscript = processedTranscript.charAt(0).toUpperCase() + processedTranscript.slice(1);
                     
-                    finalTranscript += processedTranscript + ' ';
                     console.log('Final processed transcript:', processedTranscript);
                     
                     setFullTranscript(prev => {
@@ -629,6 +630,17 @@ function Chatbot() {
                     }
                 }, 1000);
             }
+        };
+
+        recognition.onspeechend = () => {
+            const pauseDuration = Date.now() - lastSpeechTimestamp;
+            if (pauseDuration > PAUSE_THRESHOLD) {
+                setFullTranscript(prev => prev + '. ');
+            }
+        };
+
+        recognition.onspeechstart = () => {
+            lastSpeechTimestamp = Date.now();
         };
 
         const modifiedRecognition = {
