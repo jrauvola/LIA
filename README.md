@@ -3,7 +3,7 @@
 AI-Powered Interview Preparation Tool </h1>
 
 
-<div style="text-align: center;">
+<div align="center">
     <img src="https://github.com/jrauvola/LIA/blob/master/image_processed.png" alt="Description" width="500" height="300">
 </div>
 
