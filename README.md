@@ -2,7 +2,10 @@
 
 AI-Powered Interview Preparation Tool </h1>
 
-![alt text](https://github.com/jrauvola/LIA/blob/master/image_processed.png){ width=50% }
+
+<img src="https://github.com/jrauvola/LIA/blob/master/image_processed.png" alt="Description" width="500" height="300">
+
+![alt text](https://github.com/jrauvola/LIA/blob/master/image_processed.png)
 
 
 LiA (Large Interview Assistant) is an AI-powered tool that helps users prepare for job interviews through interactive practice sessions and real-time feedback. It tailors questions to various tech fields, like data science, and provides personalized guidance, helping users improve their responses and gain confidence for real-world interviews.
