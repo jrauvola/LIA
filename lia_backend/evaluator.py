@@ -79,7 +79,7 @@ def eval_input(interview_instance, question_num):
     eval_prompt = prompt.format(question=question, answer=answer)
 
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
-    model = GenerativeModel("gemini-1.5-flash-preview-0514")
+    model = GenerativeModel("gemini-1.5-pro")
 
 
     generation_config = GenerationConfig(

@@ -97,22 +97,14 @@ function Chatbot() {
   const handleFeedback = async () => {
   try {
     setIsProcessingFeedback(true);
-
-    // Make API call and wait for response
-    const response = await fetch('http://localhost:80/scoreboard_breakdown');
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    // Hide loading screen and navigate to evaluation page
+    // First generate the analysis
+    await fetch('http://localhost:80/scoreboard_breakdown');
     setIsProcessingFeedback(false);
+    // Navigate to evaluation page which will fetch the stored analysis
     navigate('/evaluation');
   } catch (error) {
     console.error('Error getting interview analysis:', error);
     setIsProcessingFeedback(false);
-    // Optionally show error message to user
   }
 };
 

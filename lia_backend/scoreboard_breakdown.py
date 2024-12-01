@@ -122,7 +122,7 @@ def analyze_interview_performance(user_metrics, retrieval_qa):
     """
 
     vertexai.init(project="adsp-capstone-team-dawn", location="us-central1")
-    model = GenerativeModel("gemini-1.5-flash-preview-0514")
+    model = GenerativeModel("gemini-1.5-pro")
 
     generation_config = GenerationConfig(
         max_output_tokens=8192,
