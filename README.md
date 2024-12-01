@@ -38,7 +38,7 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 **Key Features:**
 - **Interactive Q&A Sessions**: Practice answering behavioral, technical, and domain-specific questions.
 - **Real-Time Feedback**: Receive instant feedback on the quality of your answers, including tips for improvement.
-- **Tailored Practice**: Customize your sessions based on the type of job you're applying for—whether it's data science, engineering, or product management.
+- **Tailored Practice**: Customize your sessions based on the job you're applying for.
 - **Progress Tracking**: Track your performance over time and focus on areas that need improvement.
 
 # **📣Overview of LiA**
@@ -48,13 +48,7 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 ## **🧠LiA's Brain: Our LLM Agents**
 At the core of LiA lies a sophisticated network of Language Model (LLM) agents, each designed to enhance your interview preparation experience. These agents leverage advanced AI technologies to provide personalized support, guidance, and feedback tailored to your unique needs.
 
-In this section, we will explore three key agents that make up LiA's brain:
-
-- **Question Generation Agent**: This agent curates a diverse set of interview questions based on Eric's target role and experience level, ensuring Eric's practice relevant scenarios.
-- **Expert Agent**: Equipped with domain-specific knowledge, this agent offers insights and advice on best practices, helping you understand industry expectations and prepare effectively.
-- **Evaluation Agent**: This agent assesses  Eric's responses in real-time, providing constructive feedback and performance metrics to help Eric refine your answers and boost Eric's confidence.
-
-Together, these agents form a comprehensive support system, empowering Eric to tackle interviews with confidence and skill.
+Together, these agents form a comprehensive support system, empowering Khushi to tackle interviews with confidence and skill.
 
 ### **💬Question Generation Agent**
 This agent takes key information about the candidate’s prior experience, project background, and details of the role they are preparing for—such as a **Data Scientist position in the Gaming Industry**. By leveraging this contextual data, the agent formulates highly relevant and customized interview questions that align with both the candidate’s expertise and the target industry.
@@ -117,15 +111,15 @@ Once the information is standardized, it is utilized to create tailored and nuan
 ### **🗣️Voice Sensor**
 LiA's voice sensor employs advanced audio processing to analyze key vocal characteristics that contribute to interview success. By measuring specific acoustic features in real-time, we provide insights into how your voice may be perceived by interviewers:
 
-Conversational Flow: Tracks the percentage of unvoiced segments and average pause duration to assess natural speech rhythm and fluency
+- Conversational Flow: Tracks the percentage of unvoiced segments and average pause duration to assess natural speech rhythm and fluency
 
-Confidence: Measures voice intensity mean to evaluate projected confidence and assertiveness
+- Confidence: Measures voice intensity mean to evaluate projected confidence and assertiveness
 
-Expressiveness: Analyzes fundamental frequency variation (F1 Standard Deviation) to gauge vocal dynamism and engagement
+- Expressiveness: Analyzes fundamental frequency variation (F1 Standard Deviation) to gauge vocal dynamism and engagement
 
-Voice Modulation: Monitors average frequency band characteristics to detect monotone speech patterns that might indicate nervousness or disengagement
+- Voice Modulation: Monitors average frequency band characteristics to detect monotone speech patterns that might indicate nervousness or disengagement
 
-Clarity: Evaluates the relationship between third and first formant frequencies to assess speech articulation and pronunciation clarity
+- Clarity: Evaluates the relationship between third and first formant frequencies to assess speech articulation and pronunciation clarity
 
 The voice sensor provides real-time feedback through an intuitive dashboard, allowing users to visualize these metrics during practice sessions and track improvements over time.
 
@@ -179,7 +173,7 @@ At the heart of the application lies a sophisticated question generation system 
 
 The application's evaluation systems are equally customized, with both technical and social skills assessments adapting to the specific requirements of the user's target role. The technical assessment criteria are carefully calibrated to mirror the actual hiring processes of major tech companies, with evaluation metrics and feedback specifically tuned to the user's intended domain, whether it be frontend development, backend engineering, or machine learning. Similarly, the social skills analysis employs a sophisticated multimodal approach, analyzing verbal content, audio characteristics, and visual cues, with the importance of each factor weighted according to the specific demands of the target role—for instance, placing higher emphasis on communication style for customer-facing positions.
 
-The final layer of customization appears in the application's feedback and improvement systems. Rather than providing generic "perfect answers," the system generates expert responses that precisely match the technical depth, communication style, and specific requirements of the target role and company. This customization extends into the improvement pathway, where the feedback loop prioritizes suggestions based on the user's most significant areas for growth. The system maintains a memory of previous performance metrics, allowing users to track their progress over time and focus their practice on the areas that will most impact their interview success.
+The final layer of customization appears in the application's feedback and improvement systems. Rather than providing genKhushi "perfect answers," the system generates expert responses that precisely match the technical depth, communication style, and specific requirements of the target role and company. This customization extends into the improvement pathway, where the feedback loop prioritizes suggestions based on the user's most significant areas for growth. The system maintains a memory of previous performance metrics, allowing users to track their progress over time and focus their practice on the areas that will most impact their interview success.
 
 ## **🎹Interactive Session**
 
