@@ -47,16 +47,10 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 ## **🧠LiA's Brain: Our LLM Agents**
 At the core of LiA lies a sophisticated network of Language Model (LLM) agents, each designed to enhance your interview preparation experience. These agents leverage advanced AI technologies to provide personalized support, guidance, and feedback tailored to your unique needs.
 
-Together, these agents form a comprehensive support system, empowering Khushi to tackle interviews with confidence and skill.
-
 ### **💬Question Generation Agent**
 This agent takes key information about the candidate’s prior experience, project background, and details of the role they are preparing for—such as a **Data Scientist position in the Gaming Industry**. By leveraging this contextual data, the agent formulates highly relevant and customized interview questions that align with both the candidate’s expertise and the target industry.
 
-**Input Gathering**: The agent collects input on the candidate’s past roles, project details, target industry, and role requirements to build a comprehensive profile.
-
-**LLM Integration**: This profile is then fed into Gemini by LiA, and is optimized through prompt engineering. By crafting precise prompts, Gemini is guided to generate questions that reflect the nuances of the candidate’s background in relation to their future role.
-
-**Industry & Experience-Personalized Questions**: The model generates a set of personalized interview questions, drawing on industry trends, specific technical skills, and behavioral competencies tailored to the Data Scientist in Gaming scenario (or similar positions).
+**Industry & Experience-Personalized Questions**: The agent collects input on the candidate’s past roles, project details, target industry, and role requirements to build a comprehensive profile. This profile is then fed into Gemini by LiA, and is optimized through prompt engineering. By crafting precise prompts, Gemini is guided to generate questions that reflect the nuances of the candidate’s background in relation to their future role. The model generates a set of personalized interview questions, drawing on tailored industry trends, specific technical skills, and behavioral competencies.
 
 ### **👩‍🔬Expert Agent**
 The **Expert Agent** is your personal interview coach within LiA, specializing in generating high-quality, customized example answers for interview questions. Designed to help users understand and convey their skills effectively, the Expert Agent tailors its responses using key details from both the user’s resume and the target job description. This customization allows users to see how to leverage their unique experiences, skills, and qualifications to meet job-specific expectations.
