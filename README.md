@@ -156,7 +156,7 @@ Optimize audio feature extraction for improved performance and user experience. 
 | Design | Figma, Blender, EEVEE|
 | Project Management | Trello |
 | Language| Python, JavaScript |
-| Frameworks| Flask |
+| Frameworks| Flask, LangChain |
 | LLM | Gemini 1.5 Pro |
 | Cloud | Google Cloud Platform |
 
