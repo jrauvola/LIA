@@ -145,9 +145,11 @@ LiA is strategically positioned in the rapidly growing job preparation market, p
 
 # **🚪Future Works**
 **Data Collection and User Insights**
+
 Continuously refine the social skills targets as more user data is gathered. Analyze user behavior to identify which parts of the platform are most engaging. Collect human rubric scores to enhance the accuracy of automated scoring. Additionally, include a dedicated section for users to ask role- or company-specific questions, fostering engagement and clarity.
 
 **Product Enhancement and Feature Expansion**
+
 Optimize audio feature extraction for improved performance and user experience. Expand the knowledge base to encompass a growing number of domains. Further personalize and dynamically adapt question generation to better align with individual user profiles and needs.
 
 # **🛠️Tools Utilized**
