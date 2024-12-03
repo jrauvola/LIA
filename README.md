@@ -19,7 +19,7 @@ LiA (Large Interview Assistant) is an AI-powered tool that helps users prepare f
      * [Evaluation Agent](#evaluation-agent)
    * [LiA's Real Time Information: Tracking Your Confidence in Real-Time](#liAs-real-time-information-tracking-your-confidence-in-real-time)
    * [LiA's Interface: Your Interview Playground](#lias-interface-your-interview-playground)
-   * [LiA's Toolkit: The Technology Behind the Magic](#liA's-toolkit:-the-technology-behind-the-magic)
+   * [LiA's Toolkit: The Technology Behind the Magic](#lias-toolkit:-the-technology-behind-the-magic)
 7. [Future Works](#Future-Works)
 8. [Tools Utilized](#Tools-Utilized)
 9. [About Us](#About-Us)
@@ -103,8 +103,6 @@ LiA's voice sensor employs advanced audio processing to analyze key vocal charac
 
 - Clarity: Evaluates the relationship between third and first formant frequencies to assess speech articulation and pronunciation clarity
 
-The voice sensor provides real-time feedback through an intuitive dashboard, allowing users to visualize these metrics during practice sessions and track improvements over time.
-
 ### **🎦Facial Expression Sensor**
 LiA's facial expression sensor leverages state-of-the-art computer vision technology to interpret your non-verbal communication during interviews. Here's how it works:
 
@@ -116,7 +114,6 @@ LiA's facial expression sensor leverages state-of-the-art computer vision techno
   
 - Engagement Level: By analyzing a combination of facial movements and expressions, LiA gauges your overall engagement during the interview, highlighting potential ways for overall improvement. 
 
-The facial expression sensor offers real-time feedback through an intuitive interface, allowing you to adjust your non-verbal cues to best prepare yourself for your future interview!
 
 ## **👥LiA's Interface: Your Interview Playground**
 LiA's interface is designed to provide an immersive and interactive interview experience that closely mimics real-life scenarios. Here's what you can expect:
