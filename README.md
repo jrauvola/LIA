@@ -124,11 +124,11 @@ LiA's interface is designed to provide an immersive and interactive interview ex
   
 - **Real-Time Video Simulation**: Engage in mock interviews through a video conferencing setup that simulates face-to-face interactions with an interviewer. This prepares you for the dynamics of virtual interviews, which are increasingly common.
   
-- **Interactive Feedback Dashboard**: During and after the interview, access a comprehensive dashboard displaying real-time analytics on your performance. Metrics include speech pace, filler word usage, confidence levels, facial expressions, and more.
+- **Interactive Social Skill Dashboard**: During and after the interview, access a comprehensive dashboard displaying real-time analytics on your performance. Metrics include speech pace, filler word usage, confidence levels, facial expressions, and more.
   
 - **Customizable Settings**: Tailor your practice sessions by selecting the type of questions based on your industry, personal information ingestion, and specific skills you want to focus on.
   
-- **Playback and Analysis**: Review a dynamic analysis of your mock interviews to self-assess and observe your performance from an interviewer's perspective leading to better outcomes. 
+- **Feedback and Analysis**: Review a dynamic analysis of your mock interviews to self-assess and observe your performance from an interviewer's perspective leading to better outcomes. 
 
 ## **🛠️LiA's Toolkit: The Technology Behind the Magic**
 
@@ -137,6 +137,8 @@ LiA's interface is designed to provide an immersive and interactive interview ex
 **Back-End**: Powered by Flask for handling API requests and integrating AI models, ensuring efficient processing of data and seamless communication between the front-end and back-end.
 
 **AI Integration**: Incorporates Gemini 1.5 Pro for generating questions and providing expert answers, as well as computer vision models for facial expression analysis.
+
+**Deployment**: Hosted on Google Cloud Platform (GCP) using Cloud Run, a fully managed serverless platform that automatically scales based on demand.
 
 
 # **💸 LiA's Market Fit and Growth Potential**
