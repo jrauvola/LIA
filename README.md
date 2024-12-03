@@ -83,14 +83,14 @@ Informed by extensive research and insights from data science professionals who 
 
 **Evaluation Process**
 
-Our Evaluation Agent, leverages this scoring rubric to assess the user's answers to interview questions. By utilizing advanced prompt engineering techniques, LiA provides detailed feedback highlighting areas where the user may be lacking and offers specific guidance on how to enhance their responses.
+Our Evaluation Agent leverages this scoring rubric to assess user answers to interview questions. Using advanced prompt engineering techniques, the agent provides not only a detailed score but also a clear rationale for each evaluation. This ensures users understand the reasoning behind their scores and receive actionable feedback to improve their responses.
+
 
 
 ## **🤠LiA's Real Time Information: Tracking Your Confidence in Real-Time**
 ### **💬Resume Parser**
 
 The first step in the LiA platform is collecting detailed user information, such as experiences and projects, by extracting key details from their resumes. Recognizing the diverse formats of resumes, the system standardizes extracted data for consistency while ensuring user privacy by removing any personal information.
-
 
 
 ### **🗣️Voice Sensor**
@@ -111,17 +111,15 @@ The voice sensor provides real-time feedback through an intuitive dashboard, all
 ### **🎦Facial Expression Sensor**
 LiA's facial expression sensor leverages state-of-the-art computer vision technology to interpret your non-verbal communication during interviews. Here's how it works:
 
-- **Emotion Recognition**: The sensor detects micro-expressions and emotional cues, identifying feelings such as happiness, surprise, fear, and confusion. This helps you understand how your emotional responses might be perceived by an interviewer.
+- Emotion Recognition: The sensor detects micro-expressions and emotional cues, identifying feelings such as happiness, surprise, fear, and confusion. This helps you understand how your emotional responses might be perceived by an interviewer.
   
-- **Smile Detection**: LiA monitors the frequency and authenticity of your smiles. A genuine smile can convey confidence and friendliness, while a lack of smiling may come across as disengagement.
+- Smile Detection: LiA monitors the frequency and authenticity of your smiles. A genuine smile can convey confidence and friendliness, while a lack of smiling may come across as disengagement.
   
-- **Eye Contact Analysis**: Maintaining appropriate eye contact is crucial in building rapport. The sensor tracks your gaze to assess how well you maintain eye contact, providing feedback on your attentiveness and confidence.
+- Eye Contact Analysis: Maintaining appropriate eye contact is crucial in building rapport. The sensor tracks your gaze to assess how well you maintain eye contact, providing feedback on your attentiveness and confidence.
   
-- **Engagement Level**: By analyzing a combination of facial movements and expressions, LiA gauges your overall engagement during the interview, highlighting potential ways for overall improvement. 
+- Engagement Level: By analyzing a combination of facial movements and expressions, LiA gauges your overall engagement during the interview, highlighting potential ways for overall improvement. 
 
 The facial expression sensor offers real-time feedback through an intuitive interface, allowing you to adjust your non-verbal cues to best prepare yourself for your future interview!
-
-**Overall:** These metrics are displayed in real-time alongside the voice analysis, giving users comprehensive feedback on both verbal and non-verbal aspects of their interview performance. The system also provides gentle prompts when it detects extended periods of minimal eye contact or neutral expressions, helping users develop more engaging interview presence.
 
 ## **👥LiA's Interface: Your Interview Playground**
 LiA's interface is designed to provide an immersive and interactive interview experience that closely mimics real-life scenarios. Here's what you can expect:
