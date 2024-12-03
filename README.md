@@ -19,7 +19,7 @@ LiA (Large Interview Assistant) is an AI-powered tool that helps users prepare f
      * [Evaluation Agent](#evaluation-agent)
    * [LiA's Real Time Information: Tracking Your Confidence in Real-Time](#liAs-real-time-information-tracking-your-confidence-in-real-time)
    * [LiA's Interface: Your Interview Playground](#lias-interface-your-interview-playground)
-   * [LiA's Toolkit: The Technology Behind the Magic](#lias-toolkit:-the-technology-behind-the-magic)
+   * [LiA's Toolkit: The Technology Behind the Magic](#lias-toolkit-the-technology-behind-the-magic)
 7. [Future Works](#Future-Works)
 8. [Tools Utilized](#Tools-Utilized)
 9. [About Us](#About-Us)
