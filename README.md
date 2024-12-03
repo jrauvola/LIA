@@ -97,7 +97,7 @@ LiA's voice sensor employs advanced audio processing to analyze key vocal charac
 
 ### **🎦Facial Expression Sensor**
 LiA's facial expression sensor leverages state-of-the-art computer vision technology to interpret your non-verbal communication during interviews. Here's how it works:
-
+| Category | Description |
 |----------|----------|
 | Emotion Recognition | The sensor detects micro-expressions and emotional cues, identifying feelings such as happiness, surprise, fear, and confusion. This helps you understand how your emotional responses might be perceived by an interviewer. |
 | Smile Detection | LiA monitors the frequency and authenticity of your smiles. A genuine smile can convey confidence and friendliness, while a lack of smiling may come across as disengagement. |
