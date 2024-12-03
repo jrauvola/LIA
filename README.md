@@ -52,8 +52,6 @@ Together, these agents form a comprehensive support system, empowering Khushi to
 ### **💬Question Generation Agent**
 This agent takes key information about the candidate’s prior experience, project background, and details of the role they are preparing for—such as a **Data Scientist position in the Gaming Industry**. By leveraging this contextual data, the agent formulates highly relevant and customized interview questions that align with both the candidate’s expertise and the target industry.
 
-#### **How It Works**
-
 **Input Gathering**: The agent collects input on the candidate’s past roles, project details, target industry, and role requirements to build a comprehensive profile.
 
 **LLM Integration**: This profile is then fed into Gemini by LiA, and is optimized through prompt engineering. By crafting precise prompts, Gemini is guided to generate questions that reflect the nuances of the candidate’s background in relation to their future role.
