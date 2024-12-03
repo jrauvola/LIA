@@ -44,7 +44,7 @@ LiA leverages the power of AI to provide an interactive interview practice envir
 - **Progress Tracking**: Track your performance over time and focus on areas that need improvement.
 
 # **📣Overview of LiA**
-![alt text](https://github.com/jrauvola/LIA/blob/2cfe1744bb09fa57aaf079e3a0b6964d80dbc323/LIA_Update_2.png)
+![alt text](https://github.com/jrauvola/LIA/blob/master/workflow.png)
 
 # **🎢Project** 
 ## **🧠LiA's Brain: Our LLM Agents**
