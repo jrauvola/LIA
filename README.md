@@ -86,29 +86,19 @@ To ensure the best performance, we developed and tested three different versions
 ### **💯Evaluation Agent**
 **Scoring Rubric Development**
 
-Informed by extensive research and insights from seasoned professionals who have experience with the Big 5, we developed a comprehensive scoring rubric for evaluating interview responses. This rubric serves as the foundation for assessing user performance within the LiA platform.
+Informed by extensive research and insights from data science professionals who have experience with the big tech companies, we developed a comprehensive scoring rubric for evaluating interview responses. This rubric serves as the foundation for assessing user performance within the LiA platform.
 
 **Evaluation Process**
 
 Our Evaluation Agent, leverages this scoring rubric to assess the user's answers to interview questions. By utilizing advanced prompt engineering techniques, LiA provides detailed feedback highlighting areas where the user may be lacking and offers specific guidance on how to enhance their responses.
 
-**Focus on Improvement**
-
-This iterative feedback loop not only empowers users to understand their current performance but also equips them with actionable strategies to improve their answers, ultimately enhancing their interview skills and confidence.
 
 ## **🤠LiA's Real Time Information: Tracking Your Confidence in Real-Time**
 ### **💬Resume Parser**
-**Gathering User Information**
 
-The initial step in the LiA platform is to collect comprehensive information about the user. This involves extracting details from their resume, along with any relevant experiences and projects.
+The first step in the LiA platform is collecting detailed user information, such as experiences and projects, by extracting key details from their resumes. Recognizing the diverse formats of resumes, the system standardizes extracted data for consistency while ensuring user privacy by removing any personal information.
 
-**Handling Resume Inconsistencies**
 
-Recognizing that resume formats can vary widely, our code is designed to standardize the information extracted. This process not only organizes the data but also ensures the removal of any personal information to maintain user privacy.
-
-**Generating Nuanced Interview Questions**
-
-Once the information is standardized, it is utilized to create tailored and nuanced interview questions. This approach helps to align the questions with the user’s unique experiences and qualifications, ultimately enhancing the interview preparation process.
 
 ### **🗣️Voice Sensor**
 LiA's voice sensor employs advanced audio processing to analyze key vocal characteristics that contribute to interview success. By measuring specific acoustic features in real-time, we provide insights into how your voice may be perceived by interviewers:
