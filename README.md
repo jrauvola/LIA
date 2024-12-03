@@ -153,7 +153,7 @@ Optimize audio feature extraction for improved performance and user experience. 
 # **🛠️Tools Utilized**
 | Category | Tool(s) |
 |----------|----------|
-| Design | Figma |
+| Design | Figma Blender EEVEE|
 | Language| Python |
 | Frameworks| Flask |
 | LLM | Gemini 1.5 Pro |
