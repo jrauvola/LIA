@@ -66,21 +66,14 @@ This agent takes key information about the candidate’s prior experience, proje
 ### **👩‍🔬Expert Agent**
 The **Expert Agent** is your personal interview coach within LiA, specializing in generating high-quality, customized example answers for interview questions. Designed to help users understand and convey their skills effectively, the Expert Agent tailors its responses using key details from both the user’s resume and the target job description. This customization allows users to see how to leverage their unique experiences, skills, and qualifications to meet job-specific expectations.
 
-**How It Works**
-
-**1. Resume and Job Description Integration**: The Expert Agent extracts relevant points from the user’s resume and combines them with requirements from the job description. This process enables the agent to craft targeted responses, showing the user how to highlight their strengths in alignment with job requirements.
-
-**2. Personalized Example Answers**: Based on the tailored analysis, the Expert Agent generates example answers for both technical and behavioral interview questions, serving as a foundation that users can adapt and refine for their responses.
-
 **Version Testing and Enhancements**
-
 To ensure the best performance, we developed and tested three different versions of the Expert Agent:
 
-**RAG (Retrieval-Augmented Generation)**: The RAG model combines retrieval-based methods with generative AI, allowing it to pull specific examples from the user’s background and tailor answers more precisely. RAG excels in delivering in-depth, contextually relevant responses, making it ideal for candidates with rich experience who need to emphasize particular achievements.
+- **RAG (Retrieval-Augmented Generation)**: The RAG model combines retrieval-based methods with generative AI, allowing it to pull specific examples from the user’s background and tailor answers more precisely. RAG excels in delivering in-depth, contextually relevant responses, making it ideal for candidates with rich experience who need to emphasize particular achievements.
 
-**Chain of Thought (CoT)**: The CoT version focuses on reasoning through multi-step questions. For instance, when generating answers for behavioral questions, the CoT model breaks down the STAR (Situation, Task, Action, Result) format, guiding users through each part of a well-structured response. This version is beneficial for tackling complex questions requiring detailed answers and logical reasoning.
+- **Chain of Thought (CoT)**: The CoT version focuses on reasoning through multi-step questions. For instance, when generating answers for behavioral questions, the CoT model breaks down the STAR (Situation, Task, Action, Result) format, guiding users through each part of a well-structured response. This version is beneficial for tackling complex questions requiring detailed answers and logical reasoning.
 
-**Baseline Version**: The baseline model simply calls the LLM API to generate example answers without employing advanced techniques like RAG or CoT. While it still uses the user’s background and job description to create relevant responses, it provides a straightforward, efficient output. This version serves as a foundational approach, ideal for generating initial answer drafts that users can further refine.
+- **Baseline Version**: The baseline model simply calls the LLM API to generate example answers without employing advanced techniques like RAG or CoT. While it still uses the user’s background and job description to create relevant responses, it provides a straightforward, efficient output. This version serves as a foundational approach, ideal for generating initial answer drafts that users can further refine.
 
 
 ### **💯Evaluation Agent**
