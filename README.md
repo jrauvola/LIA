@@ -153,11 +153,12 @@ Optimize audio feature extraction for improved performance and user experience. 
 # **🛠️Tools Utilized**
 | Category | Tool(s) |
 |----------|----------|
-| Design | Figma Blender EEVEE|
+| Design | Figma, Blender, EEVEE|
+| Project Management | Trello |
 | Language| Python |
 | Frameworks| Flask |
 | LLM | Gemini 1.5 Pro |
-| Cloud | GCP |
+| Cloud | Google Cloud Platform |
 
 # 👋 About the Team
 👩 [Yucheng Fang](https://www.linkedin.com/in/yucheng-fang-49374b170/)
