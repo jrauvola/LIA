@@ -130,14 +130,13 @@ LiA's interface is designed to provide an immersive and interactive interview ex
 
 ## **🛠️LiA's Toolkit: The Technology Behind the Magic**
 
-- **Front-End**: Built with React.js for a responsive and dynamic user experience, ensuring smooth interactions and real-time updates.
-- **Back-End**: Powered by Flask for handling API requests and integrating AI models, ensuring efficient processing of data and seamless communication between the front-end and back-end.
-- **AI Integration**: Incorporates Gemini 1.5 Pro for generating questions and providing expert answers, as well as computer vision models for facial expression analysis.
+**Front-End**: Built with React.js for a responsive and dynamic user experience, ensuring smooth interactions and real-time updates.
+**Back-End**: Powered by Flask for handling API requests and integrating AI models, ensuring efficient processing of data and seamless communication between the front-end and back-end.
+**AI Integration**: Incorporates Gemini 1.5 Pro for generating questions and providing expert answers, as well as computer vision models for facial expression analysis.
 
 
 # **💸 LiA's Market Fit and Growth Potential**
-**Market Fit**
-LiA is strategically positioned in the rapidly growing job preparation market, particularly in the tech and data science sectors. As more individuals pivot to tech-related careers, the demand for effective interview preparation tools has surged. LiA addresses this need by providing personalized, AI-driven assistance tailored to the unique challenges faced by job seekers. With features like real-time feedback, interactive practice sessions, and emotional intelligence assessments, LiA stands out as a comprehensive solution for users seeking to enhance their interview skills.
+LiA is strategically positioned in the rapidly growing job preparation market, particularly in the tech and data science sectors. LiA addresses this need by providing personalized, AI-driven assistance tailored to the unique challenges faced by job seekers. With features like real-time feedback, interactive practice sessions, and emotional intelligence assessments, LiA stands out as a comprehensive solution for users seeking to enhance their interview skills.
 
 **Target Audience**
 - **Career Changers**: Individuals like Ben, who are transitioning into data science or tech fields, often face unique challenges in interviews. LiA provides the support they need to bridge knowledge gaps and build confidence.
@@ -145,7 +144,11 @@ LiA is strategically positioned in the rapidly growing job preparation market, p
 - **Professionals Seeking Advancement**U: Established professionals aiming for promotions or transitions within their current industry can leverage LiA to refine their interview techniques and demonstrate their growth.
 
 # **🚪Future Works**
+**Data Collection and User Insights**
+Continuously refine the social skills targets as more user data is gathered. Analyze user behavior to identify which parts of the platform are most engaging. Collect human rubric scores to enhance the accuracy of automated scoring. Additionally, include a dedicated section for users to ask role- or company-specific questions, fostering engagement and clarity.
 
+**Product Enhancement and Feature Expansion**
+Optimize audio feature extraction for improved performance and user experience. Expand the knowledge base to encompass a growing number of domains. Further personalize and dynamically adapt question generation to better align with individual user profiles and needs.
 
 # **🛠️Tools Utilized**
 | Category | Tool(s) |
@@ -157,10 +160,10 @@ LiA is strategically positioned in the rapidly growing job preparation market, p
 | Cloud | GCP |
 
 # 👋 About the Team
-👩 Yucheng
+👩 [Yucheng Fang](https://www.linkedin.com/in/yucheng-fang-49374b170/)
 
-👩🏼 Khushi
+👩🏼 [Khushi Ranganatha](https://www.linkedin.com/in/khushir/)
 
-👨🏼 Josh
+👨🏼 [Josh Rauvola](https://www.linkedin.com/in/josh-rauvola-250b51168/)
 
-👨🏻 Ben
+👨🏻 [Ben Thiele](https://www.linkedin.com/in/benthiele1/)
