@@ -133,7 +133,9 @@ LiA's interface is designed to provide an immersive and interactive interview ex
 ## **🛠️LiA's Toolkit: The Technology Behind the Magic**
 
 **Front-End**: Built with React.js for a responsive and dynamic user experience, ensuring smooth interactions and real-time updates.
+
 **Back-End**: Powered by Flask for handling API requests and integrating AI models, ensuring efficient processing of data and seamless communication between the front-end and back-end.
+
 **AI Integration**: Incorporates Gemini 1.5 Pro for generating questions and providing expert answers, as well as computer vision models for facial expression analysis.
 
 
