@@ -19,7 +19,7 @@ const ChatMessage = memo(({ role, message, isInterim = false }) => {
   return (
     <div className={`chat-message ${role} ${isInterim ? 'interim' : ''}`}>
       <div className="message-header">
-        {role === 'lia' ? '💃 LIA:' : '👤 User:'}
+        {role === 'lia' ? '💃 LIA:' : '👤 You:'}
       </div>
       <div
         className="message-content"
@@ -494,13 +494,13 @@ function Chatbot() {
   const getCurrentVideoSrc = () => {
     switch(currentVideo) {
       case 'appearing':
-        return '/videos/lia_bot.mov';
+        return '/videos/lia_bot.mp4';
       case 'waving':
-        return '/videos/lia_not.mov';
+        return '/videos/lia_bot.mp4';
       case 'staying':
-        return '/videos/lia_bot.mov';
+        return '/videos/lia_bot.mp4';
       default:
-        return '/videos/lia_bot.mov';
+        return '/videos/lia_bot.mp4';
     }
   };
 
