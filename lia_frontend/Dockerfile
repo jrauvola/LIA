@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies and include the missing babel plugin
+RUN npm ci --only=production && \
+    npm install --save-dev @babel/plugin-proposal-private-property-in-object && \
+    npx update-browserslist-db@latest
 
 # Copy the rest of your client application
 COPY . .

@@ -4,6 +4,9 @@ import { marked } from 'marked';
 import './RubricPage.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+// Add API_URL constant at the top
+const API_URL = 'https://backend-945640430357.us-central1.run.app';
+
 const RubricPage = () => {
   const [rubricData, setRubricData] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -27,7 +30,7 @@ const RubricPage = () => {
   useEffect(() => {
     const fetchRubricData = async () => {
       try {
-        const response = await axios.get(`http://localhost:80/rubric_score?question_num=${currentQuestion}`);
+        const response = await axios.get(`${API_URL}/rubric_score?question_num=${currentQuestion}`);
         setRubricData(response.data.rubric_categories);
         setTotalQuestions(response.data.total_questions);
 

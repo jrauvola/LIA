@@ -9,6 +9,8 @@ import TypewriterMessage from './TypewriterMessage';
 import { FaPlay, FaPause, FaVolumeMute } from 'react-icons/fa';
 import { marked } from 'marked';
 
+const API_URL = 'https://backend-945640430357.us-central1.run.app';
+
 const ChatMessage = memo(({ role, message, isInterim = false }) => {
   const formatMessage = (msg) => {
     return msg
@@ -98,7 +100,7 @@ function Chatbot() {
   try {
     setIsProcessingFeedback(true);
     // First generate the analysis
-    await fetch('http://localhost:80/scoreboard_breakdown');
+    await fetch(`${API_URL}/scoreboard_breakdown`);
     setIsProcessingFeedback(false);
     // Navigate to evaluation page which will fetch the stored analysis
     navigate('/evaluation');
@@ -110,7 +112,7 @@ function Chatbot() {
 
   const generateQuestionAPI = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1/generate_question', null, {
+      const response = await axios.post(`${API_URL}/generate_question`, null, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -123,13 +125,13 @@ function Chatbot() {
   };
 
   const displayQuestionAPI = async () => {
-   try {
-     const response = await axios.post('http://127.0.0.1/display_question', null, {
-       headers: {
-         'Content-Type': 'application/json',
-       },
-     });
-     console.log('Question received successfully:', response.data);
+    try {
+      const response = await axios.post(`${API_URL}/display_question`, null, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Question received successfully:', response.data);
 
      if (response.data.nextQuestion) {
        // Convert the markdown in nextQuestion to HTML with decoded entities
@@ -367,7 +369,7 @@ function Chatbot() {
     try {
       console.log('Starting file upload to GCP...');
       
-      const response = await axios.post('http://127.0.0.1/stop_recording', formData, {
+      const response = await axios.post(`${API_URL}/stop_recording`, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });

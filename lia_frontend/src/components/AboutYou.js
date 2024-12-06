@@ -38,19 +38,21 @@ function AboutYou() {
     });
 
     try {
+      const BACKEND_URL = 'https://backend-945640430357.us-central1.run.app';
+      
       console.log('Request Config:', {
         method: 'post',
-        url: 'http://127.0.0.1/upload_resume',
+        url: `${BACKEND_URL}/upload_resume`,
         data: formData,
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
-      const response = await axios.post('http://127.0.0.1/upload_resume', formData, {
+    
+      const response = await axios.post(`${BACKEND_URL}/upload_resume`, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
+    
       console.log('Response Data:', response.data);
       navigate('/chatbot');
     } catch (error) {

@@ -5,6 +5,8 @@ import { marked } from 'marked';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 
+const API_URL = 'https://backend-945640430357.us-central1.run.app';
+
 const metricDisplayNames = {
   // Text Features
   quantifier_words_pct: "Quantifier Words",
@@ -116,8 +118,8 @@ function EvaluationPage() {
   const fetchData = async () => {
     try {
       const [interviewResponse, analysisResponse] = await Promise.all([
-        fetch('http://localhost:80/get_interview_data'),
-        fetch('http://localhost:80/performance_analysis')
+        fetch(`${API_URL}/get_interview_data`),
+        fetch(`${API_URL}/performance_analysis`)
       ]);
 
       const interviewData = await interviewResponse.json();

@@ -1,18 +1,41 @@
-numpy>=1.24.0,<2.0.0
-blis>=0.7.0
-spacy>=3.8.0
-langchain>=0.3.7
-langchain-community>=0.3.5
-langchain-core>=0.3.15
-langchain-google>=0.1.1
-langchain-google-community>=2.0.2
-langchain-google-vertexai>=2.0.7
-google-cloud-speech>=2.28.0
-google-cloud-storage>=2.18.2
-Flask>=3.0.3
-Flask-Cors>=5.0.0
-gunicorn>=23.0.0
-tensorflow>=2.16.0
-opencv-python>=4.10.0
-pillow>=11.0.0
-python-dotenv>=1.0.0
+#numpy==1.26.4
+#spacy==3.8.2
+google-cloud-speech==2.28.1
+google-cloud-storage==2.18.2
+Flask-Cors==5.0.0
+opencv-python==4.8.1.78
+pillow==11.0.0
+python-dotenv==1.0.1
+pdfplumber==0.11.4
+pandas==2.2.3
+
+# LangChain and its dependencies
+langchain==0.3.7
+langchain-google-vertexai==2.0.7
+langchain-google-community==2.0.2
+
+# Additional required dependencies
+google-cloud-aiplatform==1.71.1
+pydantic==2.9.2
+google-auth==2.35.0
+google-api-core==2.22.0
+langchain-core==0.3.15
+typing-inspect==0.9.0
+typing_extensions==4.12.2
+deepface==0.0.93
+tf_keras==2.16.0
+pydub==0.25.1
+mediapipe==0.10.18
+
+# Add unstructured and its dependencies
+unstructured==0.11.8
+python-magic==0.4.27
+poppler-utils==0.1.0
+
+# Add NLTK
+nltk==3.8.1
+
+# Add ChromaDB for vector storage
+chromadb==0.4.24
+
+#protobuf==3.20.3

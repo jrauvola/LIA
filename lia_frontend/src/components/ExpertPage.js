@@ -3,6 +3,9 @@ import { marked } from 'marked';
 import './ExpertPage.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+// Add API_URL constant at the top
+const API_URL = 'https://backend-945640430357.us-central1.run.app';
+
 function ExpertPage() {
   const [expertData, setExpertData] = useState({
     question: '',
@@ -25,7 +28,7 @@ function ExpertPage() {
 
   const fetchExpertAnswer = async (questionNum) => {
     try {
-      const response = await fetch(`http://localhost:80/expert_answer?question_num=${questionNum}`, {
+      const response = await fetch(`${API_URL}/expert_answer?question_num=${questionNum}`, {
         method: 'GET',
         credentials: 'include',
         headers: {

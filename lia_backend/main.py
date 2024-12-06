@@ -31,62 +31,67 @@ import time
 app = Flask(__name__, static_folder='client/build', static_url_path='')
 app.config['DEBUG'] = True
 logging.basicConfig(level=logging.DEBUG)
-CORS(app, resources={
-    r"/upload_resume": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/stop_recording": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/display_question": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/generate_question": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/print_evaluate": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/start_recording": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/process_chunk": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/get_interview_data": {
-        "origins": ["http://localhost:3000"],
-        "methods": ["GET"],
-        "supports_credentials": True,
-        "allow_headers": ["Content-Type", "Authorization"]
-    },
-    r"/expert_answer": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/scoreboard_breakdown": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/performance_analysis": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/rubric_score": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    },
-    r"/test_parallel": {
-        "origins": "http://localhost:3000",
-        "supports_credentials": True
-    }
 
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://firstapp-945640430357.us-central1.run.app"
+]
+
+CORS(app, resources={
+   r"/upload_resume": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/stop_recording": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/display_question": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/generate_question": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/print_evaluate": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/start_recording": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/process_chunk": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/get_interview_data": {
+       "origins": ALLOWED_ORIGINS,
+       "methods": ["GET"],
+       "supports_credentials": True,
+       "allow_headers": ["Content-Type", "Authorization"]
+   },
+   r"/expert_answer": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/scoreboard_breakdown": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/performance_analysis": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/rubric_score": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   },
+   r"/test_parallel": {
+       "origins": ALLOWED_ORIGINS,
+       "supports_credentials": True
+   }
 })
 
 class interview_class:
@@ -127,8 +132,8 @@ class interview_class:
                 f"Interview Questions: {self.interview_dict}\n"
                 f"Evaluator: {self.evaluator}")
     
-MAX_WORKERS = 3  # Adjust based on your needs
-thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+# MAX_WORKERS = 3  # Adjust based on your needs
+# thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 ## build personal profile ##
 @app.route('/upload_resume', methods=['POST'])
@@ -172,6 +177,7 @@ def build_pp():
 
 @app.route('/display_question', methods=['POST'])
 def display_question():
+    global interview_instance
     print('display_question question num:', interview_instance.question_num)
     k = interview_instance.question_num
     if k < 5:
@@ -188,6 +194,8 @@ def display_question():
 
 @app.route('/print_evaluate', methods=['POST'])
 def display_evaluate():
+    global evaluation_instance
+    global interview_instance
     eval_response = evaluator.eval_input(interview_instance, interview_instance.question_num)
     return jsonify({'evaluation': eval_response})
 
@@ -195,6 +203,7 @@ def display_evaluate():
 def generate_question():
    print("triggered")
    global qa
+   global interview_instance
    i = interview_instance.question_num + 1
    print('generate_question question num:', interview_instance.question_num)
    if i < 5:
@@ -219,6 +228,7 @@ def generate_question():
 
 @app.route('/stop_recording', methods=['POST'])
 def stop_question():
+    global interview_instance, evaluation_instance, qa
     print("\n=== STOP RECORDING ENDPOINT START ===")
     print("Request Content-Type:", request.content_type)
     print("Request Files:", request.files.keys())
@@ -367,6 +377,7 @@ def process_chunk():
     
 @app.route('/get_interview_data', methods=['GET'])
 def get_interview_data():
+    global interview_instance
     try:
         if interview_instance:
             return jsonify({
@@ -384,6 +395,7 @@ def get_interview_data():
 
 @app.route('/expert_answer', methods=['GET'])
 def get_expert_answer():
+    global interview_instance
     try:
         # Get question number from query parameter, default to 0
         question_num = request.args.get('question_num', 0, type=int)
@@ -413,6 +425,7 @@ def get_expert_answer():
 
 @app.route('/rubric_score', methods=['GET'])
 def get_rubric_score():
+    global evaluation_instance
     try:
         question_num = request.args.get('question_num', 0, type=int)
 
@@ -450,6 +463,8 @@ def get_rubric_score():
 
 @app.route('/scoreboard_breakdown', methods=['GET'])
 def get_scoreboard_breakdown():
+    global performance_instance
+    global interview_instance
     try:
         # Check if interview has data
         if not interview_instance.text_features or not interview_instance.audio_features or not interview_instance.video_features:
@@ -543,6 +558,7 @@ def get_scoreboard_breakdown():
 @app.route('/performance_analysis', methods=['GET'])
 def get_performance_analysis():
     try:
+        global interview_instance
         global performance_instance
         if not performance_instance or not performance_instance.analysis_dict:
             # If performance_instance doesn't exist or has no analysis, calculate it
@@ -608,51 +624,55 @@ def get_performance_analysis():
         print(f"Error in performance analysis: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/test_parallel', methods=['GET'])
-def test_parallel():
-    try:
-        start_time = time.time()
+@app.route('/_ah/health')
+def health_check():
+    return 'OK', 200
+
+# @app.route('/test_parallel', methods=['GET'])
+# def test_parallel():
+#     try:
+#         start_time = time.time()
         
-        # Simulate three different analysis tasks
-        def task1(x):
-            time.sleep(2)  # Simulate API call or heavy computation
-            return x * 2
+#         # Simulate three different analysis tasks
+#         def task1(x):
+#             time.sleep(2)  # Simulate API call or heavy computation
+#             return x * 2
 
-        def task2(x):
-            time.sleep(2)  # Simulate API call or heavy computation
-            return x * 3
+#         def task2(x):
+#             time.sleep(2)  # Simulate API call or heavy computation
+#             return x * 3
 
-        def task3(x):
-            time.sleep(2)  # Simulate API call or heavy computation
-            return x * 4
+#         def task3(x):
+#             time.sleep(2)  # Simulate API call or heavy computation
+#             return x * 4
 
-        # Submit tasks to thread pool
-        future1 = thread_pool.submit(task1, 10)
-        future2 = thread_pool.submit(task2, 10)
-        future3 = thread_pool.submit(task3, 10)
+#         # Submit tasks to thread pool
+#         future1 = thread_pool.submit(task1, 10)
+#         future2 = thread_pool.submit(task2, 10)
+#         future3 = thread_pool.submit(task3, 10)
 
-        # Get results
-        result1 = future1.result()
-        result2 = future2.result()
-        result3 = future3.result()
+#         # Get results
+#         result1 = future1.result()
+#         result2 = future2.result()
+#         result3 = future3.result()
 
-        end_time = time.time()
+#         end_time = time.time()
         
-        return jsonify({
-            'results': {
-                'task1': result1,
-                'task2': result2,
-                'task3': result3
-            },
-            'total_time': end_time - start_time
-        })
+#         return jsonify({
+#             'results': {
+#                 'task1': result1,
+#                 'task2': result2,
+#                 'task3': result3
+#             },
+#             'total_time': end_time - start_time
+#         })
 
-    except Exception as e:
-        print(f"Error in parallel processing: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+#     except Exception as e:
+#         print(f"Error in parallel processing: {str(e)}")
+#         return jsonify({'error': str(e)}), 500
 
-MAX_WORKERS = 3  # Adjust based on your needs
-thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+# MAX_WORKERS = 1  # Adjust based on your needs
+# thread_pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 if __name__ == '__main__':
     app.run(use_reloader=True, debug=True, host='0.0.0.0', port=80)
