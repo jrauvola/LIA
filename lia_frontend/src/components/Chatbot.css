@@ -5,6 +5,7 @@
   justify-content: center;
   padding: 20px;
   min-height: calc(100vh - 64px);
+  /* height: 1000vh; */
   width: 100%;
   background-color: #000000;
   box-sizing: border-box;
@@ -24,7 +25,7 @@
   height: 80vh;
   background-color: #000;
   border-radius: 20px;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .lia-video {
@@ -339,6 +340,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: 350px;
   transform: translateX(-50px);
+  transform: translateY(50px);
 }
 
 .control-button {
