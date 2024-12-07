@@ -1,0 +1,9 @@
+{
+    "name": "cloud-run-router",
+    "version": "1.0.0",
+    "main": "index.js",
+    "dependencies": {
+      "express": "^4.17.1",
+      "@google-cloud/firestore": "^6.4.1"
+    }
+  }
