@@ -7,9 +7,8 @@ import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 import TypewriterMessage from './TypewriterMessage';
 import { FaPlay, FaPause, FaVolumeMute } from 'react-icons/fa';
+import { API_URL } from './url';  // Add this at the top with other imports
 import { marked } from 'marked';
-
-const API_URL = 'https://backend-945640430357.us-central1.run.app';
 
 const ChatMessage = memo(({ role, message, isInterim = false }) => {
   const formatMessage = (msg) => {

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { marked } from 'marked';
 import './RubricPage.css';
+import { API_URL } from './url';  // Add this at the top with other imports
 import { useLocation, useNavigate } from 'react-router-dom';
 
-// Add API_URL constant at the top
-const API_URL = 'https://backend-945640430357.us-central1.run.app';
 
 const RubricPage = () => {
   const [rubricData, setRubricData] = useState(null);

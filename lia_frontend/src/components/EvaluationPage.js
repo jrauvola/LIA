@@ -3,9 +3,8 @@ import './EvaluationPage.css';
 import PerformanceAnalysis from './PerformanceAnalysis';
 import { marked } from 'marked';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_URL } from './url';  // Add this at the top with other imports
 import { ChevronDown } from 'lucide-react';
-
-const API_URL = 'https://backend-945640430357.us-central1.run.app';
 
 const metricDisplayNames = {
   // Text Features

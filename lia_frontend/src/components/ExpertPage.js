@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
 import './ExpertPage.css';
+import { API_URL } from './url';  // Add this at the top with other imports
 import { useLocation, useNavigate } from 'react-router-dom';
-
-// Add API_URL constant at the top
-const API_URL = 'https://backend-945640430357.us-central1.run.app';
 
 function ExpertPage() {
   const [expertData, setExpertData] = useState({
